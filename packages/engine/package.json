@@ -1,0 +1,24 @@
+{
+  "name": "@spriggle/engine",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:unit": "vitest run --testPathPattern=unit",
+    "test:property": "vitest run --testPathPattern=property",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "build": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@vitest/coverage-v8": "2.1.9",
+    "fast-check": "^3.22.0",
+    "typescript": "^5",
+    "vitest": "^2"
+  }
+}

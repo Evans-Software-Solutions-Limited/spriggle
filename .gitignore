@@ -1,0 +1,34 @@
+# dependencies
+node_modules
+
+# sst
+.sst
+
+# tmp files
+.#*
+
+# env 
+.env*.local
+.env
+
+# opennext
+.open-next
+
+# misc
+.DS_Store
+
+# expo cache
+**/.expo
+
+**/coverage/**
+
+# turbo cache
+.turbo
+**/.turbo
+
+# build output
+dist/
+build/
+
+# ios build
+packages/mobile/ios/build/

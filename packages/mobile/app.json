@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Spriggle",
+    "slug": "spriggle",
+    "version": "0.1.0",
+    "orientation": "landscape",
+    "scheme": "spriggle",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "icon": "./assets/icons/ios.png",
+      "bundleIdentifier": "com.bradleyevans96.spriggle",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
+      }
+    },
+    "web": {
+      "output": "static",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icons/splash-icon-light.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ECEDEE",
+          "dark": {
+            "image": "./assets/icons/splash-icon-dark.png",
+            "backgroundColor": "#0A0A0F"
+          }
+        }
+      ],
+      "expo-sqlite",
+      "expo-font",
+      "expo-apple-authentication"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {}
+    },
+    "owner": "bradleyevans96"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["bun.lock"],
+  "tasks": {
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": ["^build", "typecheck"],
+      "outputs": ["dist/**", "build/**"]
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test:unit": {
+      "outputs": []
+    },
+    "test:property": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false
+    }
+  }
+}
