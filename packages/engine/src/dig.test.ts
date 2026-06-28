@@ -24,140 +24,102 @@ describe("calculateDigScore", () => {
 });
 
 describe("isValidDig", () => {
-  it("accepts a horizontal group of exactly 5 same-type plants", () => {
+  it("accepts a click on a horizontal group of exactly 5 same-type plants", () => {
     const board = emptyBoard();
-    const group = [];
-    for (let c = 0; c < 5; c++) {
-      board[2][c] = "tomato";
-      group.push({ row: 2, col: c });
-    }
-    expect(isValidDig(board, group)).toBe(true);
+    for (let c = 0; c < 5; c++) board[2][c] = "tomato";
+    expect(isValidDig(board, { row: 2, col: 0 })).toBe(true);
+    expect(isValidDig(board, { row: 2, col: 4 })).toBe(true);
   });
 
-  it("accepts a connected L-shaped group of 5", () => {
+  it("accepts a click anywhere on a connected L-shaped group of 5", () => {
     const board = emptyBoard();
-    // vertical arm + horizontal foot
     board[0][0] = "flower";
     board[1][0] = "flower";
     board[2][0] = "flower";
     board[2][1] = "flower";
     board[2][2] = "flower";
-    const group = [
-      { row: 0, col: 0 },
-      { row: 1, col: 0 },
-      { row: 2, col: 0 },
-      { row: 2, col: 1 },
-      { row: 2, col: 2 },
-    ];
-    expect(isValidDig(board, group)).toBe(true);
+    expect(isValidDig(board, { row: 0, col: 0 })).toBe(true);
+    expect(isValidDig(board, { row: 2, col: 2 })).toBe(true);
   });
 
-  it("accepts a group at the board edge", () => {
+  it("accepts a click on a group at the board edge", () => {
     const board = emptyBoard();
-    const group = [];
     for (let c = BOARD_SIZE - 5; c < BOARD_SIZE; c++) {
       board[BOARD_SIZE - 1][c] = "pumpkin";
-      group.push({ row: BOARD_SIZE - 1, col: c });
     }
-    expect(isValidDig(board, group)).toBe(true);
+    expect(
+      isValidDig(board, { row: BOARD_SIZE - 1, col: BOARD_SIZE - 1 }),
+    ).toBe(true);
   });
 
-  it("rejects a group of 4", () => {
+  it("rejects a click on a group of only 4", () => {
     const board = emptyBoard();
-    const group = [];
-    for (let c = 0; c < 4; c++) {
-      board[0][c] = "aubergine";
-      group.push({ row: 0, col: c });
-    }
-    expect(isValidDig(board, group)).toBe(false);
+    for (let c = 0; c < 4; c++) board[0][c] = "aubergine";
+    expect(isValidDig(board, { row: 0, col: 0 })).toBe(false);
   });
 
-  it("rejects a selection of mixed types", () => {
+  it("rejects a click on an empty cell", () => {
     const board = emptyBoard();
-    for (let c = 0; c < 5; c++) board[0][c] = "watermelon";
-    board[0][4] = "flower"; // one different
-    const group = [
-      { row: 0, col: 0 },
-      { row: 0, col: 1 },
-      { row: 0, col: 2 },
-      { row: 0, col: 3 },
-      { row: 0, col: 4 },
-    ];
-    expect(isValidDig(board, group)).toBe(false);
+    expect(isValidDig(board, { row: 0, col: 0 })).toBe(false);
   });
 
-  it("rejects a selection that is not connected", () => {
+  it("rejects an out-of-bounds position", () => {
     const board = emptyBoard();
-    // two separate runs of the same type, total 5 but disconnected
+    expect(isValidDig(board, { row: -1, col: 0 })).toBe(false);
+    expect(isValidDig(board, { row: 0, col: BOARD_SIZE })).toBe(false);
+  });
+
+  it("does not count diagonally-adjacent same-type cells toward the group", () => {
+    const board = emptyBoard();
+    // 4 in a row + 1 diagonal (not orthogonally connected) => max group is 4
     board[0][0] = "tomato";
     board[0][1] = "tomato";
     board[0][2] = "tomato";
-    board[5][5] = "tomato";
-    board[5][6] = "tomato";
-    const group = [
-      { row: 0, col: 0 },
-      { row: 0, col: 1 },
-      { row: 0, col: 2 },
-      { row: 5, col: 5 },
-      { row: 5, col: 6 },
-    ];
-    expect(isValidDig(board, group)).toBe(false);
-  });
-
-  it("rejects a selection touching an empty cell", () => {
-    const board = emptyBoard();
-    const group = [
-      { row: 0, col: 0 },
-      { row: 0, col: 1 },
-      { row: 0, col: 2 },
-      { row: 0, col: 3 },
-      { row: 0, col: 4 },
-    ];
-    // leave board cells null (empty)
-    expect(isValidDig(board, group)).toBe(false);
+    board[0][3] = "tomato";
+    board[1][4] = "tomato"; // diagonal to (0,3)
+    expect(isValidDig(board, { row: 0, col: 0 })).toBe(false);
   });
 });
 
 describe("executeDig", () => {
-  it("removes exactly 5 plants and scores them", () => {
+  it("removes the whole group and scores it (exactly 5)", () => {
     const board = emptyBoard();
-    const group = [];
-    for (let c = 0; c < 5; c++) {
-      board[3][c] = "flower";
-      group.push({ row: 3, col: c });
-    }
-    const result = executeDig(stateOf(board, 0), group);
+    for (let c = 0; c < 5; c++) board[3][c] = "flower";
+    const result = executeDig(stateOf(board, 0), { row: 3, col: 2 });
 
     expect(result.success).toBe(true);
     expect(result.removedPositions).toHaveLength(5);
     expect(result.newState.score).toBe(30); // flower=6 × 5
     expect(result.newState.turns).toBe(1);
-    for (const pos of group) {
-      expect(result.newState.board[pos.row][pos.col]).toBeNull();
+    for (let c = 0; c < 5; c++) {
+      expect(result.newState.board[3][c]).toBeNull();
     }
   });
 
-  it("scores a large group correctly", () => {
+  it("digs the ENTIRE maximal group when clicking any cell in it (legacy gospel)", () => {
     const board = emptyBoard();
-    const group = [];
-    for (let c = 0; c < 8; c++) {
+    // A 10-cell group spanning two rows.
+    for (let c = 0; c < 5; c++) {
       board[0][c] = "tomato";
-      group.push({ row: 0, col: c });
+      board[1][c] = "tomato";
     }
-    const result = executeDig(stateOf(board, 100), group);
+    // Click one cell — the whole 10-cell group must be removed.
+    const result = executeDig(stateOf(board, 0), { row: 0, col: 0 });
     expect(result.success).toBe(true);
-    expect(result.newState.score).toBe(100 + 40); // tomato=5 × 8
+    expect(result.removedPositions).toHaveLength(10);
+    expect(result.newState.score).toBe(50); // tomato=5 × 10
+    for (let r = 0; r < 2; r++) {
+      for (let c = 0; c < 5; c++) {
+        expect(result.newState.board[r][c]).toBeNull();
+      }
+    }
   });
 
   it("returns unchanged state for an invalid dig (group of 4)", () => {
     const board = emptyBoard();
-    const group = [];
-    for (let c = 0; c < 4; c++) {
-      board[0][c] = "pumpkin";
-      group.push({ row: 0, col: c });
-    }
+    for (let c = 0; c < 4; c++) board[0][c] = "pumpkin";
     const state = stateOf(board, 50);
-    const result = executeDig(state, group);
+    const result = executeDig(state, { row: 0, col: 0 });
 
     expect(result.success).toBe(false);
     expect(result.newState).toBe(state);
@@ -166,15 +128,10 @@ describe("executeDig", () => {
 
   it("does not mutate the input board on a successful dig", () => {
     const board = emptyBoard();
-    const group = [];
+    for (let c = 0; c < 5; c++) board[1][c] = "watermelon";
+    executeDig(stateOf(board, 0), { row: 1, col: 0 });
     for (let c = 0; c < 5; c++) {
-      board[1][c] = "watermelon";
-      group.push({ row: 1, col: c });
-    }
-    executeDig(stateOf(board, 0), group);
-    // original board must still hold the plants
-    for (const pos of group) {
-      expect(board[pos.row][pos.col]).toBe("watermelon");
+      expect(board[1][c]).toBe("watermelon");
     }
   });
 });

@@ -8,23 +8,12 @@ import {
   MIN_DIG_GROUP_SIZE,
   POINTS_PER_PLANT_TYPE,
 } from "./types";
-
-/** Orthogonal direction offsets (up, down, left, right). */
-const DIRECTIONS: readonly Position[] = [
-  { row: -1, col: 0 },
-  { row: 1, col: 0 },
-  { row: 0, col: -1 },
-  { row: 0, col: 1 },
-];
+import { findConnectedGroup } from "./connected-groups";
 
 function isInBounds(pos: Position): boolean {
   return (
     pos.row >= 0 && pos.row < BOARD_SIZE && pos.col >= 0 && pos.col < BOARD_SIZE
   );
-}
-
-function posKey(pos: Position): string {
-  return `${pos.row},${pos.col}`;
 }
 
 /**
@@ -47,68 +36,35 @@ export function calculateDigScore(
 }
 
 /**
- * Validates a dig selection. A valid dig is a set of positions that:
- *  - contains at least MIN_DIG_GROUP_SIZE (5) cells,
- *  - are all in bounds and distinct,
- *  - all hold the same non-empty plant type, and
- *  - form a single orthogonally-connected group.
+ * Validates a dig at the given position.
+ *
+ * Mirrors the legacy GardenerGame: the player taps a single cell, and the
+ * engine expands it to the MAXIMAL orthogonally-connected group of the same
+ * plant type. A dig is valid when that group has at least
+ * MIN_DIG_GROUP_SIZE (5) plants. Digging a partial subset of a group is not
+ * possible — the whole connected group is always dug.
  */
-export function isValidDig(board: Board, positions: Position[]): boolean {
-  if (positions.length < MIN_DIG_GROUP_SIZE) return false;
-
-  const first = positions[0];
-  if (!isInBounds(first)) return false;
-
-  const plantType = board[first.row][first.col];
-  if (plantType === null) return false;
-
-  // All positions must be in bounds, distinct, and the same plant type.
-  const selection = new Set<string>();
-  for (const pos of positions) {
-    if (!isInBounds(pos)) return false;
-    if (board[pos.row][pos.col] !== plantType) return false;
-    const key = posKey(pos);
-    if (selection.has(key)) return false; // duplicate
-    selection.add(key);
-  }
-
-  // The selection must form a single connected component (orthogonal),
-  // checked by BFS restricted to the selected cells.
-  const visited = new Set<string>();
-  const queue: Position[] = [first];
-  visited.add(posKey(first));
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    for (const dir of DIRECTIONS) {
-      const neighbor: Position = {
-        row: current.row + dir.row,
-        col: current.col + dir.col,
-      };
-      const key = posKey(neighbor);
-      if (selection.has(key) && !visited.has(key)) {
-        visited.add(key);
-        queue.push(neighbor);
-      }
-    }
-  }
-
-  return visited.size === selection.size;
+export function isValidDig(board: Board, position: Position): boolean {
+  if (!isInBounds(position)) return false;
+  if (board[position.row][position.col] === null) return false;
+  return findConnectedGroup(board, position).length >= MIN_DIG_GROUP_SIZE;
 }
 
 /**
- * Executes a dig on the given positions.
+ * Executes a dig at the given position.
  *
- * On a valid dig: removes every selected plant (sets the cells to null),
- * adds the dig score to the player's score, and increments the turn count.
+ * On a valid dig: removes the ENTIRE maximal connected group of same-type
+ * plants containing `position` (sets those cells to null), adds the dig
+ * score (per-plant-type points × group size) to the player's score, and
+ * increments the turn count.
  * On an invalid dig: returns the state unchanged with success: false.
  *
  * NOTE: Refill (3 new plants) and game-over detection are wired into the
  * dig flow in later tasks (refill = task 6, game-over = task 7), so
  * `refillPositions` is empty here.
  */
-export function executeDig(state: GameState, positions: Position[]): DigResult {
-  if (!isValidDig(state.board, positions)) {
+export function executeDig(state: GameState, position: Position): DigResult {
+  if (!isValidDig(state.board, position)) {
     return {
       success: false,
       newState: state,
@@ -117,18 +73,17 @@ export function executeDig(state: GameState, positions: Position[]): DigResult {
     };
   }
 
-  const plantType = state.board[positions[0].row][
-    positions[0].col
-  ] as PlantType;
+  const plantType = state.board[position.row][position.col] as PlantType;
+  const group = findConnectedGroup(state.board, position);
   const board = cloneBoard(state.board);
 
-  for (const pos of positions) {
+  for (const pos of group) {
     board[pos.row][pos.col] = null;
   }
 
   const newState: GameState = {
     board,
-    score: state.score + calculateDigScore(plantType, positions.length),
+    score: state.score + calculateDigScore(plantType, group.length),
     turns: state.turns + 1,
     isGameOver: state.isGameOver,
   };
@@ -136,7 +91,7 @@ export function executeDig(state: GameState, positions: Position[]): DigResult {
   return {
     success: true,
     newState,
-    removedPositions: [...positions],
+    removedPositions: group,
     refillPositions: [],
   };
 }

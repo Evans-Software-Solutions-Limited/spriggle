@@ -47,9 +47,9 @@ Incremental implementation starting with the pure game engine (fully testable wi
 
 - [x] 4. Dig mechanic
   - [x] 4.1 Implement dig validation and execution
-    - Implement `isValidDig(board, positions)` checking group size ≥ 5 and same type
-    - Implement `executeDig(state, positions)` that removes plants and updates score
-    - Implement `calculateDigScore(plantCount)` with formula (points_per_plant × count)
+    - Implement `isValidDig(board, position)` checking the maximal connected group at the tapped cell is ≥ 5 same-type plants
+    - Implement `executeDig(state, position)` that removes the entire maximal group and updates score
+    - Implement `calculateDigScore(plantType, plantCount)` with formula (points_per_plant_type × count)
     - _Requirements: 2.1, 2.2, 2.3, 2.5_
   - [x] 4.2 Write property tests for dig mechanic
     - **Property 3: Valid dig removes exactly the connected group**
