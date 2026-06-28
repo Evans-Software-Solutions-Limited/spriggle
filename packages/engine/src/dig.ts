@@ -4,17 +4,11 @@ import {
   Position,
   DigResult,
   PlantType,
-  BOARD_SIZE,
   MIN_DIG_GROUP_SIZE,
   POINTS_PER_PLANT_TYPE,
 } from "./types";
 import { findConnectedGroup } from "./connected-groups";
-
-function isInBounds(pos: Position): boolean {
-  return (
-    pos.row >= 0 && pos.row < BOARD_SIZE && pos.col >= 0 && pos.col < BOARD_SIZE
-  );
-}
+import { isInBounds } from "./grid-utils";
 
 /**
  * Deep-clones a board so dig execution stays pure (no input mutation).
@@ -64,7 +58,10 @@ export function isValidDig(board: Board, position: Position): boolean {
  * `refillPositions` is empty here.
  */
 export function executeDig(state: GameState, position: Position): DigResult {
-  if (!isValidDig(state.board, position)) {
+  if (
+    !isInBounds(position) ||
+    state.board[position.row][position.col] === null
+  ) {
     return {
       success: false,
       newState: state,
@@ -74,9 +71,20 @@ export function executeDig(state: GameState, position: Position): DigResult {
   }
 
   const plantType = state.board[position.row][position.col] as PlantType;
+  // Compute the maximal connected group once and reuse it for the size
+  // check, scoring, and removal (avoids a second BFS via isValidDig).
   const group = findConnectedGroup(state.board, position);
-  const board = cloneBoard(state.board);
 
+  if (group.length < MIN_DIG_GROUP_SIZE) {
+    return {
+      success: false,
+      newState: state,
+      removedPositions: [],
+      refillPositions: [],
+    };
+  }
+
+  const board = cloneBoard(state.board);
   for (const pos of group) {
     board[pos.row][pos.col] = null;
   }

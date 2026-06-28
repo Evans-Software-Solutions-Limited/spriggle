@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as fc from "fast-check";
 import { isValidDig, executeDig, calculateDigScore } from "./dig";
-import { findConnectedGroup } from "./connected-groups";
 import {
   Board,
   GameState,
@@ -13,47 +12,80 @@ import {
   POINTS_PER_PLANT_TYPE,
 } from "./types";
 
+/** A horizontal run of 5–8 same-type cells. */
+const arbHorizontal: fc.Arbitrary<Position[]> = fc
+  .integer({ min: 5, max: BOARD_SIZE })
+  .chain((n) =>
+    fc
+      .record({
+        row: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
+        startCol: fc.integer({ min: 0, max: BOARD_SIZE - n }),
+      })
+      .map(({ row, startCol }) =>
+        Array.from({ length: n }, (_, i) => ({ row, col: startCol + i })),
+      ),
+  );
+
+/** A vertical run of 5–8 same-type cells. */
+const arbVertical: fc.Arbitrary<Position[]> = fc
+  .integer({ min: 5, max: BOARD_SIZE })
+  .chain((n) =>
+    fc
+      .record({
+        col: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
+        startRow: fc.integer({ min: 0, max: BOARD_SIZE - n }),
+      })
+      .map(({ col, startRow }) =>
+        Array.from({ length: n }, (_, i) => ({ row: startRow + i, col })),
+      ),
+  );
+
+/** An L-shape: vertical arm (≥3) + horizontal foot (≥3), sharing the corner. */
+const arbLShape: fc.Arbitrary<Position[]> = fc
+  .record({
+    arm: fc.integer({ min: 3, max: 6 }),
+    foot: fc.integer({ min: 3, max: 6 }),
+  })
+  .chain(({ arm, foot }) =>
+    fc
+      .record({
+        arm: fc.constant(arm),
+        foot: fc.constant(foot),
+        top: fc.integer({ min: 0, max: BOARD_SIZE - arm }),
+        left: fc.integer({ min: 0, max: BOARD_SIZE - foot }),
+      })
+      .map(({ top, left }) => {
+        const cells: Position[] = [];
+        for (let i = 0; i < arm; i++) cells.push({ row: top + i, col: left });
+        for (let j = 1; j < foot; j++)
+          cells.push({ row: top + arm - 1, col: left + j });
+        return cells;
+      }),
+  );
+
 /**
- * Generates a board with a single KNOWN maximal connected group: a
- * horizontal line of `length` cells of `lineType`, on a background filled
- * entirely with a different `bgType`. Because every cell orthogonally
- * adjacent to the line is the background type, the maximal connected group
- * of any line cell is exactly the line.
+ * Generates a board with a single KNOWN maximal connected group of varied
+ * shape (horizontal, vertical, or L). The board is filled with a different
+ * background type so the group of any group cell is exactly the placed shape.
+ * Also returns a randomly-chosen clicked cell within the group.
  */
 const arbValidDig = fc
-  .integer({ min: 5, max: BOARD_SIZE })
-  .chain((length) =>
-    fc.record({
-      length: fc.constant(length),
-      row: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
-      startCol: fc.integer({ min: 0, max: BOARD_SIZE - length }),
-      types: fc
-        .uniqueArray(fc.constantFrom(...PLANT_TYPES), {
-          minLength: 2,
-          maxLength: 2,
-        })
-        .map(([lineType, bgType]) => ({ lineType, bgType })),
+  .record({
+    cells: fc.oneof(arbHorizontal, arbVertical, arbLShape),
+    types: fc.uniqueArray(fc.constantFrom(...PLANT_TYPES), {
+      minLength: 2,
+      maxLength: 2,
     }),
-  )
-  .map(({ length, row, startCol, types }) => {
-    const { lineType, bgType } = types;
+    clickSeed: fc.nat(),
+  })
+  .map(({ cells, types, clickSeed }) => {
+    const [lineType, bgType] = types;
     const board: Board = Array.from({ length: BOARD_SIZE }, () =>
       new Array<Cell>(BOARD_SIZE).fill(bgType),
     );
-    const group: Position[] = [];
-    for (let i = 0; i < length; i++) {
-      board[row][startCol + i] = lineType;
-      group.push({ row, col: startCol + i });
-    }
-    // Click any cell within the line.
-    const clickIndex = startCol; // first cell is deterministic & in-group
-    return {
-      board,
-      group,
-      clicked: { row, col: clickIndex },
-      lineType,
-      length,
-    };
+    for (const c of cells) board[c.row][c.col] = lineType;
+    const clicked = cells[clickSeed % cells.length];
+    return { board, group: cells, clicked, lineType, length: cells.length };
   });
 
 function makeState(board: Board, score = 0): GameState {
@@ -65,7 +97,7 @@ describe("Feature: spriggle-ipad-game, Property 3: Valid dig removes exactly the
    * **Validates: Requirements 2.1**
    *
    * For any board containing a connected group of 5+ same-type plants,
-   * digging at a cell in that group removes the ENTIRE maximal group (all
+   * digging at any cell in that group removes the ENTIRE maximal group (all
    * those positions become null) AND no other cells are modified.
    */
   it("nulls exactly the maximal connected group and leaves all other cells unchanged", () => {
@@ -75,11 +107,9 @@ describe("Feature: spriggle-ipad-game, Property 3: Valid dig removes exactly the
         const result = executeDig(state, clicked);
 
         expect(result.success).toBe(true);
-
-        const dug = new Set(group.map((p) => `${p.row},${p.col}`));
-        // The removed set must equal the maximal group exactly.
         expect(result.removedPositions.length).toBe(group.length);
 
+        const dug = new Set(group.map((p) => `${p.row},${p.col}`));
         for (let row = 0; row < BOARD_SIZE; row++) {
           for (let col = 0; col < BOARD_SIZE; col++) {
             if (dug.has(`${row},${col}`)) {
@@ -139,7 +169,6 @@ describe("Feature: spriggle-ipad-game, Property 4: Invalid dig leaves board unch
         fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
         fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
         (row, col) => {
-          // Empty board.
           const board: Board = Array.from({ length: BOARD_SIZE }, () =>
             new Array<Cell>(BOARD_SIZE).fill(null),
           );
@@ -168,17 +197,14 @@ describe("Feature: spriggle-ipad-game, Property 5: Dig score formula", () => {
       fc.property(
         arbValidDig,
         fc.nat(),
-        ({ board, clicked, lineType }, startScore) => {
+        ({ board, clicked, lineType, length }, startScore) => {
           const state = makeState(board, startScore);
-          const groupSize = findConnectedGroup(board, clicked).length;
           const result = executeDig(state, clicked);
 
-          const expectedIncrement = POINTS_PER_PLANT_TYPE[lineType] * groupSize;
+          const expectedIncrement = POINTS_PER_PLANT_TYPE[lineType] * length;
           expect(result.success).toBe(true);
           expect(result.newState.score).toBe(startScore + expectedIncrement);
-          expect(calculateDigScore(lineType, groupSize)).toBe(
-            expectedIncrement,
-          );
+          expect(calculateDigScore(lineType, length)).toBe(expectedIncrement);
         },
       ),
       { numRuns: 100 },
