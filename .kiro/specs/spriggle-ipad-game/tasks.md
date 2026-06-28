@@ -45,18 +45,18 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Test retry logic when initial generation has no valid group
     - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 4. Dig mechanic
-  - [ ] 4.1 Implement dig validation and execution
-    - Implement `isValidDig(board, positions)` checking group size ≥ 5 and same type
-    - Implement `executeDig(state, positions)` that removes plants and updates score
-    - Implement `calculateDigScore(plantCount)` with formula (points_per_plant × count)
+- [x] 4. Dig mechanic
+  - [x] 4.1 Implement dig validation and execution
+    - Implement `isValidDig(board, position)` checking the maximal connected group at the tapped cell is ≥ 5 same-type plants
+    - Implement `executeDig(state, position)` that removes the entire maximal group and updates score
+    - Implement `calculateDigScore(plantType, plantCount)` with formula (points_per_plant_type × count)
     - _Requirements: 2.1, 2.2, 2.3, 2.5_
-  - [ ] 4.2 Write property tests for dig mechanic
+  - [x] 4.2 Write property tests for dig mechanic
     - **Property 3: Valid dig removes exactly the connected group**
     - **Property 4: Invalid dig leaves board unchanged**
     - **Property 5: Dig score formula**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.5**
-  - [ ] 4.3 Write unit tests for dig mechanic
+  - [x] 4.3 Write unit tests for dig mechanic
     - Test dig with exactly 5 plants, large groups, groups at board edges
     - Test rejection: group of 4, mixed types
     - _Requirements: 2.1, 2.2, 2.5_

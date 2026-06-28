@@ -108,8 +108,8 @@ interface GameEngine {
   initializeBoard(): GameState;
   findConnectedGroup(board: Board, position: Position): Position[];
   findAllConnectedGroups(board: Board): Position[][];
-  isValidDig(board: Board, positions: Position[]): boolean;
-  executeDig(state: GameState, positions: Position[]): DigResult;
+  isValidDig(board: Board, position: Position): boolean;
+  executeDig(state: GameState, position: Position): DigResult;
   isValidSwap(board: Board, pos1: Position, pos2: Position): boolean;
   executeSwap(state: GameState, pos1: Position, pos2: Position): SwapResult;
   refillBoard(
@@ -117,7 +117,7 @@ interface GameEngine {
     count: number,
   ): { board: Board; filledPositions: Position[] };
   isGameOver(board: Board): boolean;
-  calculateDigScore(plantCount: number): number;
+  calculateDigScore(plantType: PlantType, plantCount: number): number;
   serializeState(state: GameState): string;
   deserializeState(json: string): GameState;
 }
@@ -313,7 +313,7 @@ _For any_ newly initialized board, the board SHALL be 8×8, and exactly 10 cells
 
 **Property 3: Valid dig removes exactly the connected group**
 
-_For any_ board containing a connected group of 5+ same-type plants, executing a dig on that group SHALL result in all those positions becoming null AND no other cells being modified.
+_For any_ board where the maximal connected same-type group containing the tapped cell has 5+ plants, executing a dig at that cell SHALL result in all positions of that maximal group becoming null AND no other cells being modified. Digging always removes the entire connected group (matching the legacy GardenerGame); a partial subset cannot be dug.
 
 **Validates: Requirements 2.1**
 
@@ -321,7 +321,7 @@ _For any_ board containing a connected group of 5+ same-type plants, executing a
 
 **Property 4: Invalid dig leaves board unchanged**
 
-_For any_ board and any selection that is either (a) fewer than 5 connected same-type plants, or (b) contains mixed plant types, executing a dig SHALL fail and the board state SHALL remain identical to the pre-action state.
+_For any_ dig at a cell where (a) the maximal connected same-type group has fewer than 5 plants, or (b) the cell is empty, executing a dig SHALL fail and the board state SHALL remain identical to the pre-action state. (Mixed-type groups cannot occur — the engine derives a same-type group by construction from the tapped cell.)
 
 **Validates: Requirements 2.2, 2.5**
 
@@ -329,7 +329,7 @@ _For any_ board and any selection that is either (a) fewer than 5 connected same
 
 **Property 5: Dig score formula**
 
-_For any_ valid dig of N plants, the score SHALL increase by exactly (points_per_plant × N).
+_For any_ valid dig of a group of N plants of a given type, the score SHALL increase by exactly (points_per_plant_for_that_type × N), where the per-type points match the legacy GardenerGame values.
 
 **Validates: Requirements 2.3, 6.1**
 

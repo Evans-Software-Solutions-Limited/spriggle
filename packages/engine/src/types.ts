@@ -32,12 +32,9 @@ export interface Position {
   col: number;
 }
 
-/** Points awarded per plant dug (flat rate, kept for backward compatibility). */
-export const POINTS_PER_PLANT = 10;
-
 /**
  * Points awarded per plant type when dug.
- * Matches the legacy GardenerGame scoring system.
+ * Matches the legacy GardenerGame scoring system (per-plant-type values).
  */
 export const POINTS_PER_PLANT_TYPE: Record<PlantType, number> = {
   watermelon: 3,

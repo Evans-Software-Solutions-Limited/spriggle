@@ -1,28 +1,5 @@
 import { Board, Position, BOARD_SIZE } from "./types";
-
-/** Orthogonal direction offsets (up, down, left, right). */
-const DIRECTIONS: readonly Position[] = [
-  { row: -1, col: 0 },
-  { row: 1, col: 0 },
-  { row: 0, col: -1 },
-  { row: 0, col: 1 },
-];
-
-/**
- * Returns true if the position is within board bounds.
- */
-function isInBounds(pos: Position): boolean {
-  return (
-    pos.row >= 0 && pos.row < BOARD_SIZE && pos.col >= 0 && pos.col < BOARD_SIZE
-  );
-}
-
-/**
- * Converts a position to a unique string key for set lookups.
- */
-function posKey(pos: Position): string {
-  return `${pos.row},${pos.col}`;
-}
+import { DIRECTIONS, isInBounds, posKey } from "./grid-utils";
 
 /**
  * Finds the connected group containing the given position using BFS.

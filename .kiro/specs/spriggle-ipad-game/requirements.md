@@ -43,7 +43,7 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 
 1. WHEN a player selects a Connected_Group of 5 or more same-type Plants, THE Game_Engine SHALL remove all Plants in that group from the Game_Board
 2. WHEN a player attempts to dig a group of fewer than 5 connected same-type Plants, THE Game_Engine SHALL reject the action and leave the Game_Board unchanged
-3. WHEN a successful Dig completes, THE Game_Engine SHALL add the score equal to (points_per_plant × number_of_plants_dug) to the player's Score
+3. WHEN a successful Dig completes, THE Game_Engine SHALL add the score equal to (points_per_plant_type × number_of_plants_dug) to the player's Score, where points_per_plant_type is the per-type point value (matching the legacy GardenerGame)
 4. WHEN a successful Dig completes, THE Game_Engine SHALL trigger a Refill of exactly 3 new random Plants into empty cells
 5. WHEN a player selects a group containing different Plant types, THE Game_Engine SHALL reject the action
 
@@ -87,7 +87,7 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 
 #### Acceptance Criteria
 
-1. WHEN a Dig action succeeds, THE Game_Engine SHALL increase the Score by (points_per_plant × number_of_plants_dug)
+1. WHEN a Dig action succeeds, THE Game_Engine SHALL increase the Score by (points_per_plant_type × number_of_plants_dug), where points_per_plant_type is the per-type point value of the dug plant
 2. THE Game_Engine SHALL maintain the Score as a non-negative integer that never decreases during a game session
 3. WHEN a new game starts, THE Game_Engine SHALL initialize the Score to zero
 4. WHEN a Swap action succeeds, THE Game_Engine SHALL not modify the Score
