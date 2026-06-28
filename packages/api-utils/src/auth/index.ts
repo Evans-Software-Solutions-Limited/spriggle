@@ -1,3 +1,8 @@
 // Auth utilities for Spriggle
-// Will be populated in task 18.2 with multi-provider JWT verification
-export { verifyToken } from "../jwt/index";
+// Supabase JWT verification helpers used by protected handlers.
+export {
+  getAuthUser,
+  requireAuth,
+  getUser,
+  type SupabaseUser,
+} from "./supabaseAuth";

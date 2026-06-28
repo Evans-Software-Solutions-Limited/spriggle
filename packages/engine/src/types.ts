@@ -32,8 +32,20 @@ export interface Position {
   col: number;
 }
 
-/** Points awarded per plant dug. */
+/** Points awarded per plant dug (flat rate, kept for backward compatibility). */
 export const POINTS_PER_PLANT = 10;
+
+/**
+ * Points awarded per plant type when dug.
+ * Matches the legacy GardenerGame scoring system.
+ */
+export const POINTS_PER_PLANT_TYPE: Record<PlantType, number> = {
+  watermelon: 3,
+  flower: 6,
+  aubergine: 4,
+  tomato: 5,
+  pumpkin: 2,
+};
 
 /** Number of plants refilled after a dig action. */
 export const REFILL_AFTER_DIG = 3;

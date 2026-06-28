@@ -13,10 +13,7 @@ const DIRECTIONS: readonly Position[] = [
  */
 function isInBounds(pos: Position): boolean {
   return (
-    pos.row >= 0 &&
-    pos.row < BOARD_SIZE &&
-    pos.col >= 0 &&
-    pos.col < BOARD_SIZE
+    pos.row >= 0 && pos.row < BOARD_SIZE && pos.col >= 0 && pos.col < BOARD_SIZE
   );
 }
 
@@ -33,7 +30,10 @@ function posKey(pos: Position): string {
  * Returns all positions in the connected group that share the same plant type.
  * Returns an empty array if the cell is empty (null).
  */
-export function findConnectedGroup(board: Board, position: Position): Position[] {
+export function findConnectedGroup(
+  board: Board,
+  position: Position,
+): Position[] {
   const plantType = board[position.row][position.col];
   if (plantType === null) return [];
 

@@ -8,17 +8,20 @@
   },
   "scripts": {
     "test": "vitest run",
-    "test:unit": "vitest run --testPathPattern=unit",
-    "test:property": "vitest run --testPathPattern=property",
+    "test:unit": "vitest run --coverage --exclude 'src/**/*.property.test.ts'",
+    "test:property": "vitest run property",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "build": "tsc --noEmit"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@types/node": "^22",
     "@vitest/coverage-v8": "2.1.9",
+    "eslint": "^9.39.1",
     "fast-check": "^3.22.0",
     "typescript": "^5",
+    "typescript-eslint": "^8.48.0",
     "vitest": "^2"
   }
 }

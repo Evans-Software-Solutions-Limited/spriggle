@@ -32,16 +32,15 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Test edge cases: single cell, entire board same type, no groups of 5+
     - _Requirements: 15.1, 15.2, 15.3_
 
-- [ ] 3. Board initialization and structure
-  - [ ] 3.1 Implement board initialization
-    - Implement `initializeBoard()` that creates 8×8 grid with random plants
-    - Ensure at least one connected group of 5+ exists (retry logic)
+- [x] 3. Board initialization and structure
+  - [x] 3.1 Implement board initialization
+    - Implement `initializeBoard()` that creates an empty 8×8 grid and spawns 10 random plants
     - _Requirements: 1.1, 1.2_
-  - [ ] 3.2 Write property tests for board initialization and structure
+  - [x] 3.2 Write property tests for board initialization and structure
     - **Property 1: Board structure invariant**
     - **Property 2: Board initialization guarantees playability**
     - **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
-  - [ ] 3.3 Write unit tests for board initialization
+  - [x] 3.3 Write unit tests for board initialization
     - Verify board dimensions and cell validity
     - Test retry logic when initial generation has no valid group
     - _Requirements: 1.1, 1.2, 1.3_
