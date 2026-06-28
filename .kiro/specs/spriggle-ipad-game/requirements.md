@@ -30,8 +30,8 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 
 #### Acceptance Criteria
 
-1. WHEN a new game starts, THE Game_Engine SHALL initialize the Game_Board as an 8×8 grid populated with random Plants of 5 types
-2. WHEN the Game_Board is initialized, THE Game_Engine SHALL ensure at least one Connected_Group of 5 or more exists so the game is immediately playable
+1. WHEN a new game starts, THE Game_Engine SHALL initialize the Game_Board as an empty 8×8 grid and spawn 10 random Plants of 5 types into randomly selected cells
+2. WHEN the Game_Board is initialized, THE Game_Engine SHALL place each spawned Plant into a cell that was empty before that Plant was placed (matching the legacy GardenerGame initial spawn; no playable-group guarantee is enforced)
 3. THE Game_Engine SHALL represent each cell as either occupied by exactly one Plant type or empty
 4. WHEN the Game_Board state changes, THE Game_Engine SHALL validate that the board dimensions remain 8×8
 

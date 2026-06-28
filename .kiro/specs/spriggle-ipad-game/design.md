@@ -303,9 +303,9 @@ _For any_ game state produced by any sequence of operations (initialize, dig, sw
 
 ---
 
-**Property 2: Board initialization guarantees playability**
+**Property 2: Board initialization spawns the correct number of plants**
 
-_For any_ newly initialized board, the board SHALL be 8×8 with all cells populated by valid plant types, AND at least one connected group of 5 or more same-type plants SHALL exist.
+_For any_ newly initialized board, the board SHALL be 8×8, and exactly 10 cells SHALL be populated with valid plant types placed into randomly selected positions, with all remaining cells empty (null). Initialization mirrors the legacy GardenerGame: the board starts empty and the system spawns 10 random plants. No playable-group guarantee is enforced at initialization.
 
 **Validates: Requirements 1.1, 1.2**
 
@@ -509,7 +509,7 @@ _For any_ user in guest mode, attempts to submit scores to the global leaderboar
 | Invalid swap (non-adjacent, same type, empty cell) | Return `{ success: false }` with unchanged state |
 | Refill with insufficient empty cells               | Fill all available cells; no error thrown        |
 | Corrupted game state deserialization               | Return null; start new game                      |
-| Board initialization fails playability check       | Retry initialization (max 10 attempts)           |
+| Refill/spawn with fewer empty cells than requested | Fill all available cells; no error thrown        |
 
 ### Client Errors
 
@@ -557,7 +557,7 @@ All test types are required for MVP. The architecture's separation of game logic
 | Property                            | Test Description                                                             |
 | ----------------------------------- | ---------------------------------------------------------------------------- |
 | 1: Board structure invariant        | Generate random operation sequences, verify board stays 8×8 with valid cells |
-| 2: Board initialization playability | Generate many initializations, verify all have 5+ groups                     |
+| 2: Board initialization spawn count | Generate many initializations, verify exactly 10 plants spawned              |
 | 3: Valid dig removes group          | Generate boards with known groups, verify removal                            |
 | 4: Invalid dig unchanged            | Generate invalid selections, verify board unchanged                          |
 | 5: Dig score formula                | Generate valid digs of varying sizes, verify formula                         |
