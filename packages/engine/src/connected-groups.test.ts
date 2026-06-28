@@ -79,7 +79,7 @@ describe("findAllConnectedGroups", () => {
 
   it("returns one group when entire board is the same type", () => {
     const board: Board = Array.from({ length: BOARD_SIZE }, () =>
-      Array(BOARD_SIZE).fill("flower")
+      Array(BOARD_SIZE).fill("flower"),
     );
     const groups = findAllConnectedGroups(board);
     expect(groups).toHaveLength(1);
@@ -97,15 +97,23 @@ describe("findAllConnectedGroups", () => {
 
     const groups = findAllConnectedGroups(board);
     expect(groups).toHaveLength(2);
-    expect(groups.find((g) => g.length === 2 && g.some((p) => p.row === 0 && p.col === 0))).toBeDefined();
-    expect(groups.find((g) => g.length === 2 && g.some((p) => p.row === 2 && p.col === 2))).toBeDefined();
+    expect(
+      groups.find(
+        (g) => g.length === 2 && g.some((p) => p.row === 0 && p.col === 0),
+      ),
+    ).toBeDefined();
+    expect(
+      groups.find(
+        (g) => g.length === 2 && g.some((p) => p.row === 2 && p.col === 2),
+      ),
+    ).toBeDefined();
   });
 
   it("identifies that no groups of 5+ exist on a checkerboard", () => {
     const board: Board = Array.from({ length: BOARD_SIZE }, (_, row) =>
       Array.from({ length: BOARD_SIZE }, (_, col) =>
-        (row + col) % 2 === 0 ? "tomato" : "flower"
-      )
+        (row + col) % 2 === 0 ? "tomato" : "flower",
+      ),
     );
     const groups = findAllConnectedGroups(board);
     // On a checkerboard, each cell is its own group of size 1

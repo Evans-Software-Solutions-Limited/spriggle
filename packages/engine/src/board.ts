@@ -1,10 +1,4 @@
-import {
-  Board,
-  GameState,
-  BOARD_SIZE,
-  PLANT_TYPES,
-  PlantType,
-} from "./types";
+import { Board, GameState, BOARD_SIZE, PLANT_TYPES, PlantType } from "./types";
 
 /** Number of plants spawned on the board at game start. */
 export const INITIAL_SPAWN_COUNT = 10;

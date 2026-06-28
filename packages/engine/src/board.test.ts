@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { initializeBoard, INITIAL_SPAWN_COUNT, getEmptyCells, spawnPlants } from "./board";
+import {
+  initializeBoard,
+  INITIAL_SPAWN_COUNT,
+  getEmptyCells,
+  spawnPlants,
+} from "./board";
 import { BOARD_SIZE, PLANT_TYPES } from "./types";
 
 describe("initializeBoard", () => {
@@ -49,6 +54,17 @@ describe("getEmptyCells", () => {
     const empty = getEmptyCells(state.board);
     expect(empty.length).toBe(BOARD_SIZE * BOARD_SIZE - INITIAL_SPAWN_COUNT);
   });
+
+  it("returns empty array on a fully occupied board", () => {
+    const state = initializeBoard();
+    for (let row = 0; row < BOARD_SIZE; row++) {
+      for (let col = 0; col < BOARD_SIZE; col++) {
+        state.board[row][col] = "tomato";
+      }
+    }
+    const empty = getEmptyCells(state.board);
+    expect(empty.length).toBe(0);
+  });
 });
 
 describe("spawnPlants", () => {
@@ -67,5 +83,13 @@ describe("spawnPlants", () => {
     spawnPlants(state.board, 6);
     const empty = getEmptyCells(state.board);
     expect(empty.length).toBe(0); // both filled, not 6
+  });
+
+  it("spawnPlants(board, 0) is a no-op", () => {
+    const state = initializeBoard();
+    const before = JSON.stringify(state.board);
+    spawnPlants(state.board, 0);
+    const after = JSON.stringify(state.board);
+    expect(after).toBe(before);
   });
 });

@@ -1,13 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as fc from "fast-check";
 import { initializeBoard, INITIAL_SPAWN_COUNT } from "./board";
-import {
-  BOARD_SIZE,
-  PLANT_TYPES,
-  Cell,
-  Board,
-  GameState,
-} from "./types";
+import { BOARD_SIZE, PLANT_TYPES, Cell, Board, GameState } from "./types";
 
 /**
  * Arbitrary for generating a valid GameState (simulating states produced by operations).
@@ -18,11 +12,11 @@ const arbGameState: fc.Arbitrary<GameState> = fc
     fc.array(
       fc.oneof(
         fc.constantFrom(...PLANT_TYPES) as fc.Arbitrary<Cell>,
-        fc.constant(null) as fc.Arbitrary<Cell>
+        fc.constant(null) as fc.Arbitrary<Cell>,
       ),
-      { minLength: BOARD_SIZE, maxLength: BOARD_SIZE }
+      { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
     ),
-    { minLength: BOARD_SIZE, maxLength: BOARD_SIZE }
+    { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
   )
   .chain((board) =>
     fc.record({
@@ -30,7 +24,7 @@ const arbGameState: fc.Arbitrary<GameState> = fc
       score: fc.nat(),
       turns: fc.nat(),
       isGameOver: fc.boolean(),
-    })
+    }),
   );
 
 describe("Feature: spriggle-ipad-game, Property 1: Board structure invariant", () => {
@@ -56,7 +50,7 @@ describe("Feature: spriggle-ipad-game, Property 1: Board structure invariant", (
           }
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -76,7 +70,7 @@ describe("Feature: spriggle-ipad-game, Property 1: Board structure invariant", (
           }
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });
@@ -103,7 +97,7 @@ describe("Feature: spriggle-ipad-game, Property 2: Board initialization guarante
         }
         expect(occupied).toBe(INITIAL_SPAWN_COUNT);
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -120,7 +114,7 @@ describe("Feature: spriggle-ipad-game, Property 2: Board initialization guarante
           }
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -133,7 +127,7 @@ describe("Feature: spriggle-ipad-game, Property 2: Board initialization guarante
         expect(state.turns).toBe(0);
         expect(state.isGameOver).toBe(false);
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

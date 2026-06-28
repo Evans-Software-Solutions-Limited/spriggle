@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as fc from "fast-check";
 import { findConnectedGroup, findAllConnectedGroups } from "./connected-groups";
-import { Board, BOARD_SIZE, PLANT_TYPES, PlantType, Cell } from "./types";
+import { Board, BOARD_SIZE, PLANT_TYPES, Cell } from "./types";
 
 /**
  * Arbitrary for generating a valid board (8×8 grid with random plants, some nulls).
@@ -10,11 +10,11 @@ const arbBoard: fc.Arbitrary<Board> = fc.array(
   fc.array(
     fc.oneof(
       fc.constantFrom(...PLANT_TYPES) as fc.Arbitrary<Cell>,
-      fc.constant(null) as fc.Arbitrary<Cell>
+      fc.constant(null) as fc.Arbitrary<Cell>,
     ),
-    { minLength: BOARD_SIZE, maxLength: BOARD_SIZE }
+    { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
   ),
-  { minLength: BOARD_SIZE, maxLength: BOARD_SIZE }
+  { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
 );
 
 /**
@@ -25,7 +25,7 @@ const arbFullBoard: fc.Arbitrary<Board> = fc.array(
     minLength: BOARD_SIZE,
     maxLength: BOARD_SIZE,
   }),
-  { minLength: BOARD_SIZE, maxLength: BOARD_SIZE }
+  { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
 );
 
 /**
@@ -35,15 +35,6 @@ const arbPosition = fc.record({
   row: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
   col: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
 });
-
-function isOrthogonallyAdjacent(
-  a: { row: number; col: number },
-  b: { row: number; col: number }
-): boolean {
-  const dr = Math.abs(a.row - b.row);
-  const dc = Math.abs(a.col - b.col);
-  return (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
-}
 
 describe("Feature: spriggle-ipad-game, Property 14: Orthogonal adjacency only", () => {
   /**
@@ -79,7 +70,7 @@ describe("Feature: spriggle-ipad-game, Property 14: Orthogonal adjacency only", 
           }
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -122,7 +113,7 @@ describe("Feature: spriggle-ipad-game, Property 14: Orthogonal adjacency only", 
           }
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });
@@ -160,7 +151,7 @@ describe("Feature: spriggle-ipad-game, Property 15: Connected group detection co
           }
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -177,7 +168,7 @@ describe("Feature: spriggle-ipad-game, Property 15: Connected group detection co
           }
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -216,7 +207,7 @@ describe("Feature: spriggle-ipad-game, Property 15: Connected group detection co
           expect(visited.size).toBe(group.length);
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });
