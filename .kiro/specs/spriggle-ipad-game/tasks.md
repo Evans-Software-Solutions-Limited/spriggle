@@ -18,16 +18,16 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Create `src/engine/index.ts` exporting the GameEngine interface
     - _Requirements: 1.3_
 
-- [ ] 2. Connected group detection
-  - [ ] 2.1 Implement BFS-based connected group detection
+- [x] 2. Connected group detection
+  - [x] 2.1 Implement BFS-based connected group detection
     - Implement `findConnectedGroup(board, position)` using BFS with orthogonal adjacency only
     - Implement `findAllConnectedGroups(board)` to find all groups on the board
     - _Requirements: 15.1, 15.2, 15.3, 15.4_
-  - [ ] 2.2 Write property tests for connected group detection
+  - [x] 2.2 Write property tests for connected group detection
     - **Property 14: Orthogonal adjacency only**
     - **Property 15: Connected group detection correctness**
     - **Validates: Requirements 15.1, 15.2, 15.3**
-  - [ ] 2.3 Write unit tests for connected group detection
+  - [x] 2.3 Write unit tests for connected group detection
     - Test known board configurations with expected groups
     - Test edge cases: single cell, entire board same type, no groups of 5+
     - _Requirements: 15.1, 15.2, 15.3_
