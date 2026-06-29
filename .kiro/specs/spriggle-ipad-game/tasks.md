@@ -151,8 +151,8 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Use React Native Reanimated for smooth 60fps animations
     - _Requirements: 9.1, 9.2, 9.3_
 
-- [ ] 13. Screen navigation and game flow
-  - [ ] 13.1 Implement screen navigation with Expo Router
+- [-] 13. Screen navigation and game flow
+  - [-] 13.1 Implement screen navigation with Expo Router
     - Create screens: Main Menu, Game, Game Over, Leaderboard, Settings, Onboarding
     - Wire navigation between screens per design state diagram
     - _Requirements: 7.1_
