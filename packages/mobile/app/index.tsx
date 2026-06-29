@@ -86,6 +86,7 @@ export default function HomeScreen() {
           <Pressable
             style={[
               styles.menuCard,
+              styles.gridCard,
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.surfaceLine,
@@ -106,6 +107,7 @@ export default function HomeScreen() {
           <Pressable
             style={[
               styles.menuCard,
+              styles.gridCard,
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.surfaceLine,
@@ -126,6 +128,7 @@ export default function HomeScreen() {
           <Pressable
             style={[
               styles.menuCard,
+              styles.gridCard,
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.surfaceLine,
@@ -144,6 +147,7 @@ export default function HomeScreen() {
           <Pressable
             style={[
               styles.menuCard,
+              styles.gridCard,
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.surfaceLine,
@@ -241,6 +245,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 16,
+  },
+  gridCard: {
+    flexBasis: "47%",
+    flexGrow: 1,
   },
   cardIcon: {
     width: 44,
