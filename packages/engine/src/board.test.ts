@@ -5,7 +5,7 @@ import {
   getEmptyCells,
   spawnPlants,
 } from "./board";
-import { BOARD_SIZE, PLANT_TYPES } from "./types";
+import { BOARD_SIZE, PLANT_TYPES, Board } from "./types";
 
 describe("initializeBoard", () => {
   it("creates an 8×8 board", () => {
@@ -69,27 +69,32 @@ describe("getEmptyCells", () => {
 
 describe("spawnPlants", () => {
   it("fills fewer cells when board has limited empty space", () => {
-    const state = initializeBoard();
     // Fill most of the board
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        state.board[row][col] = "watermelon";
-      }
-    }
+    const board: Board = Array.from({ length: BOARD_SIZE }, () =>
+      new Array(BOARD_SIZE).fill("watermelon"),
+    );
     // Leave only 2 empty cells
-    state.board[0][0] = null;
-    state.board[0][1] = null;
+    board[0][0] = null;
+    board[0][1] = null;
 
-    spawnPlants(state.board, 6);
-    const empty = getEmptyCells(state.board);
+    const result = spawnPlants(board, 6);
+    const empty = getEmptyCells(result);
     expect(empty.length).toBe(0); // both filled, not 6
   });
 
   it("spawnPlants(board, 0) is a no-op", () => {
     const state = initializeBoard();
     const before = JSON.stringify(state.board);
-    spawnPlants(state.board, 0);
-    const after = JSON.stringify(state.board);
-    expect(after).toBe(before);
+    const result = spawnPlants(state.board, 0);
+    expect(JSON.stringify(result)).toBe(before);
+  });
+
+  it("does not mutate the input board", () => {
+    const board: Board = Array.from({ length: BOARD_SIZE }, () =>
+      new Array(BOARD_SIZE).fill(null),
+    );
+    const before = JSON.stringify(board);
+    spawnPlants(board, 5);
+    expect(JSON.stringify(board)).toBe(before);
   });
 });

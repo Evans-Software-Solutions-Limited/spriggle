@@ -98,9 +98,10 @@ describe("Feature: spriggle-ipad-game, Property 3: Valid dig removes exactly the
    *
    * For any board containing a connected group of 5+ same-type plants,
    * digging at any cell in that group removes the ENTIRE maximal group (all
-   * those positions become null) AND no other cells are modified.
+   * those positions become null or refilled) AND no previously-occupied
+   * non-group cells are modified.
    */
-  it("nulls exactly the maximal connected group and leaves all other cells unchanged", () => {
+  it("nulls exactly the maximal connected group and leaves all other occupied cells unchanged", () => {
     fc.assert(
       fc.property(arbValidDig, ({ board, group, clicked }) => {
         const state = makeState(board);
@@ -110,11 +111,20 @@ describe("Feature: spriggle-ipad-game, Property 3: Valid dig removes exactly the
         expect(result.removedPositions.length).toBe(group.length);
 
         const dug = new Set(group.map((p) => `${p.row},${p.col}`));
+        const refilled = new Set(
+          result.refillPositions.map((p) => `${p.row},${p.col}`),
+        );
+
         for (let row = 0; row < BOARD_SIZE; row++) {
           for (let col = 0; col < BOARD_SIZE; col++) {
-            if (dug.has(`${row},${col}`)) {
-              expect(result.newState.board[row][col]).toBeNull();
-            } else {
+            const key = `${row},${col}`;
+            if (dug.has(key)) {
+              // Dug cells become null unless they were refilled
+              if (!refilled.has(key)) {
+                expect(result.newState.board[row][col]).toBeNull();
+              }
+            } else if (!refilled.has(key)) {
+              // Non-dug, non-refilled cells must be unchanged
               expect(result.newState.board[row][col]).toBe(board[row][col]);
             }
           }

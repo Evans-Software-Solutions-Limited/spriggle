@@ -6,9 +6,12 @@ import {
   PlantType,
   MIN_DIG_GROUP_SIZE,
   POINTS_PER_PLANT_TYPE,
+  REFILL_AFTER_DIG,
 } from "./types";
 import { findConnectedGroup } from "./connected-groups";
 import { isInBounds } from "./grid-utils";
+import { refillBoard } from "./refill";
+import { isGameOver } from "./game-over";
 
 /**
  * Deep-clones a board so dig execution stays pure (no input mutation).
@@ -49,13 +52,9 @@ export function isValidDig(board: Board, position: Position): boolean {
  *
  * On a valid dig: removes the ENTIRE maximal connected group of same-type
  * plants containing `position` (sets those cells to null), adds the dig
- * score (per-plant-type points × group size) to the player's score, and
- * increments the turn count.
+ * score (per-plant-type points × group size) to the player's score,
+ * increments the turn count, and refills 3 random plants into empty cells.
  * On an invalid dig: returns the state unchanged with success: false.
- *
- * NOTE: Refill (3 new plants) and game-over detection are wired into the
- * dig flow in later tasks (refill = task 6, game-over = task 7), so
- * `refillPositions` is empty here.
  */
 export function executeDig(state: GameState, position: Position): DigResult {
   if (
@@ -89,17 +88,23 @@ export function executeDig(state: GameState, position: Position): DigResult {
     board[pos.row][pos.col] = null;
   }
 
-  const newState: GameState = {
+  // Refill 3 plants after a successful dig (Requirements 2.4, 4.1)
+  const { board: refilledBoard, filledPositions } = refillBoard(
     board,
+    REFILL_AFTER_DIG,
+  );
+
+  const newState: GameState = {
+    board: refilledBoard,
     score: state.score + calculateDigScore(plantType, group.length),
     turns: state.turns + 1,
-    isGameOver: state.isGameOver,
+    isGameOver: isGameOver(refilledBoard),
   };
 
   return {
     success: true,
     newState,
     removedPositions: group,
-    refillPositions: [],
+    refillPositions: filledPositions,
   };
 }
