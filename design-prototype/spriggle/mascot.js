@@ -2,14 +2,16 @@
    mascot(tool, opts) -> inline <svg> string.  tool: 'dig' | 'swap' | 'idle'
    Built so the same character reads at 80px (button) and 200px (hero). */
 
-function mascot(tool = 'dig', opts = {}) {
-  const s = opts.size || 220;          // square viewBox is 0 0 220 240
-  const cls = opts.cls ? ` class="${opts.cls}"` : '';
+function mascot(tool = "dig", opts = {}) {
+  const s = opts.size || 220; // square viewBox is 0 0 220 240
+  const cls = opts.cls ? ` class="${opts.cls}"` : "";
 
   // shared palette
-  const bodyTop = '#9fd36a', bodyBot = '#6fb33f', bodyEdge = '#4f8f2c';
-  const cheek = '#e8915a';
-  const ink = '#2f4a22';
+  const bodyTop = "#9fd36a",
+    bodyBot = "#6fb33f",
+    bodyEdge = "#4f8f2c";
+  const cheek = "#e8915a";
+  const ink = "#2f4a22";
 
   // sprout on the head
   const sprout = `
@@ -47,7 +49,7 @@ function mascot(tool = 'dig', opts = {}) {
 
   let rightArm, toolArt;
 
-  if (tool === 'swap') {
+  if (tool === "swap") {
     // both arms raised symmetrically, a small plant cradled in each hand,
     // swap arrows arcing between them — all kept well inside the viewBox
     rightArm = `
@@ -72,14 +74,14 @@ function mascot(tool = 'dig', opts = {}) {
       </g>`;
   }
 
-  return `<svg viewBox="0 0 220 240" width="${s}" height="${s * 240 / 220}"${cls} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  return `<svg viewBox="0 0 220 240" width="${s}" height="${(s * 240) / 220}"${cls} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${sprout}${face}${leftArm}${rightArm}${toolArt}
   </svg>`;
 }
 
 /* tool glyphs for the labelled selector buttons (always-visible, explicit) */
 function toolGlyph(tool, color, size = 26) {
-  if (tool === 'swap') {
+  if (tool === "swap") {
     return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-3-3"/><path d="M20 15H7l3 3"/></svg>`;
   }
   // dig = trowel

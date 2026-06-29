@@ -33,7 +33,12 @@ function findGroup(
     seen.add(key);
     if (board[p.row]?.[p.col] !== type) continue;
     result.push(p);
-    for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    for (const [dr, dc] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]) {
       const nr = p.row + dr;
       const nc = p.col + dc;
       if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
@@ -47,9 +52,7 @@ function findGroup(
 describe("useGameInteraction", () => {
   it("starts in dig mode with no selections", () => {
     const board = boardWithGroup();
-    const { result } = renderHook(() =>
-      useGameInteraction(board, findGroup),
-    );
+    const { result } = renderHook(() => useGameInteraction(board, findGroup));
     expect(result.current.tool).toBe("dig");
     expect(result.current.highlightedCells.size).toBe(0);
     expect(result.current.selectedCell).toBeNull();
@@ -57,9 +60,7 @@ describe("useGameInteraction", () => {
 
   it("highlights a valid dig group on first tap", () => {
     const board = boardWithGroup();
-    const { result } = renderHook(() =>
-      useGameInteraction(board, findGroup),
-    );
+    const { result } = renderHook(() => useGameInteraction(board, findGroup));
     act(() => result.current.handleCellPress(0, 0));
     expect(result.current.highlightedCells.size).toBe(5);
     expect(result.current.highlightedCells.has("0-0")).toBe(true);
@@ -84,14 +85,16 @@ describe("useGameInteraction", () => {
       useGameInteraction(board, findGroup, { onInvalidAction }),
     );
     act(() => result.current.handleCellPress(2, 2)); // tomato alone
-    expect(onInvalidAction).toHaveBeenCalledWith(2, 2, expect.stringContaining("1"));
+    expect(onInvalidAction).toHaveBeenCalledWith(
+      2,
+      2,
+      expect.stringContaining("1"),
+    );
   });
 
   it("ignores taps on empty cells in dig mode", () => {
     const board = boardWithGroup();
-    const { result } = renderHook(() =>
-      useGameInteraction(board, findGroup),
-    );
+    const { result } = renderHook(() => useGameInteraction(board, findGroup));
     act(() => result.current.handleCellPress(4, 4)); // empty
     expect(result.current.highlightedCells.size).toBe(0);
   });
@@ -115,9 +118,7 @@ describe("useGameInteraction", () => {
 
   it("deselects on tapping same cell in swap mode", () => {
     const board = boardWithGroup();
-    const { result } = renderHook(() =>
-      useGameInteraction(board, findGroup),
-    );
+    const { result } = renderHook(() => useGameInteraction(board, findGroup));
     act(() => result.current.setTool("swap"));
     act(() => result.current.handleCellPress(2, 2));
     expect(result.current.selectedCell).toBe("2-2");
@@ -127,9 +128,7 @@ describe("useGameInteraction", () => {
 
   it("clears selection when switching tools", () => {
     const board = boardWithGroup();
-    const { result } = renderHook(() =>
-      useGameInteraction(board, findGroup),
-    );
+    const { result } = renderHook(() => useGameInteraction(board, findGroup));
     act(() => result.current.handleCellPress(0, 0)); // highlight in dig
     expect(result.current.highlightedCells.size).toBe(5);
     act(() => result.current.setTool("swap"));
@@ -148,7 +147,11 @@ describe("useGameInteraction", () => {
     act(() => result.current.setTool("swap"));
     act(() => result.current.handleCellPress(4, 0));
     act(() => result.current.handleCellPress(4, 1));
-    expect(onInvalidAction).toHaveBeenCalledWith(4, 1, expect.stringContaining("different"));
+    expect(onInvalidAction).toHaveBeenCalledWith(
+      4,
+      1,
+      expect.stringContaining("different"),
+    );
   });
 
   it("rejects swap of non-adjacent cells with onInvalidAction", () => {
@@ -161,6 +164,10 @@ describe("useGameInteraction", () => {
     act(() => result.current.setTool("swap"));
     act(() => result.current.handleCellPress(2, 2)); // tomato at (2,2)
     act(() => result.current.handleCellPress(0, 7)); // flower at (0,7) — not adjacent
-    expect(onInvalidAction).toHaveBeenCalledWith(0, 7, expect.stringContaining("next to"));
+    expect(onInvalidAction).toHaveBeenCalledWith(
+      0,
+      7,
+      expect.stringContaining("next to"),
+    );
   });
 });

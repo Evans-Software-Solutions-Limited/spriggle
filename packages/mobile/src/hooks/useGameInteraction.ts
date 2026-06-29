@@ -9,12 +9,7 @@ export interface GameActionCallbacks {
   /** Called when a dig is attempted at (row, col). */
   onDig?: (row: number, col: number) => void;
   /** Called when a swap is attempted between two cells. */
-  onSwap?: (
-    row1: number,
-    col1: number,
-    row2: number,
-    col2: number,
-  ) => void;
+  onSwap?: (row1: number, col1: number, row2: number, col2: number) => void;
   /** Called when an invalid action is attempted (for visual feedback). */
   onInvalidAction?: (row: number, col: number, reason: string) => void;
 }
@@ -102,9 +97,7 @@ export function useGameInteraction(
         }
 
         // Highlight the group
-        const newHighlight = new Set(
-          group.map((p) => `${p.row}-${p.col}`),
-        );
+        const newHighlight = new Set(group.map((p) => `${p.row}-${p.col}`));
         setHighlightedCells(newHighlight);
         setHighlightOrigin(key);
       } else {
@@ -129,11 +122,7 @@ export function useGameInteraction(
 
         // Same type rejection (matching prototype's doSwap behaviour)
         if (cellA === cell) {
-          callbacks.onInvalidAction?.(
-            row,
-            col,
-            "Pick two different plants",
-          );
+          callbacks.onInvalidAction?.(row, col, "Pick two different plants");
           setSelectedCell(null);
           return;
         }

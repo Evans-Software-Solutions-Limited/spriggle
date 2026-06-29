@@ -6,7 +6,6 @@ import { Aubergine } from "../Aubergine";
 import { Tomato } from "../Tomato";
 import { Pumpkin } from "../Pumpkin";
 import { PlantIcon } from "../PlantIcon";
-import type { PlantTypeName } from "../PlantIcon";
 
 /**
  * Validates: Requirements 8.3

@@ -75,12 +75,16 @@ export function BoardCell({
         {/* Gold highlight ring — positioned outside cell via negative insets.
             No overflow:hidden on the cell so the glow extends outward. */}
         {highlighted && (
-          <View style={[styles.highlightRing, { borderRadius: borderRadius + 3 }]} />
+          <View
+            style={[styles.highlightRing, { borderRadius: borderRadius + 3 }]}
+          />
         )}
 
         {/* Swap selection ring */}
         {selected && (
-          <View style={[styles.selectRing, { borderRadius: borderRadius + 2 }]} />
+          <View
+            style={[styles.selectRing, { borderRadius: borderRadius + 2 }]}
+          />
         )}
 
         {/* Plant SVG — clipped to cell bounds via inner wrapper */}

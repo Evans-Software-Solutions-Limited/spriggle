@@ -1,160 +1,448 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="garden">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spriggle — Prototype</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="spriggle.css">
-<link rel="stylesheet" href="app.css">
-<style>
-  /* game-screen rail (shared by game.js) */
-  .board-col{height:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;}
-  .board-col .patch{width:100%;}
-  .rail{flex:1;display:flex;flex-direction:column;gap:16px;min-width:0;}
-  .rail-top{display:flex;align-items:center;justify-content:space-between;}
-  .score-card{padding:16px 20px;display:flex;align-items:flex-end;justify-content:space-between;box-shadow:var(--e-2);}
-  .score-card .lab{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-700);}
-  .score-card .val{font-family:var(--font-d);font-weight:700;font-size:46px;color:var(--ink);line-height:.9;margin-top:2px;}
-  .score-card .best{text-align:right;}
-  .score-card .best .bl{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
-  .score-card .best .bv{font-family:var(--font-d);font-weight:600;font-size:22px;color:var(--ink-soft);line-height:1;}
-  .tool-mod{flex:1;display:flex;flex-direction:column;padding:14px 16px 16px;background:linear-gradient(180deg,var(--surface-2),var(--surface));box-shadow:var(--e-2);}
-  .mascot-stage{flex:1;position:relative;display:flex;align-items:flex-end;justify-content:center;min-height:150px;}
-  .mascot-stage svg{position:relative;height:185px;width:auto;animation:idle 3.4s ease-in-out infinite;}
-  @keyframes idle{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-5px) rotate(1deg)}}
-  .speech{position:absolute;top:0;right:0;background:#fff;border:2px solid var(--surface-line);border-radius:14px 14px 14px 4px;padding:8px 12px;font-size:12.5px;font-weight:800;color:#3a2f23;max-width:170px;box-shadow:0 4px 10px -4px rgba(0,0,0,.2);z-index:2;}
-  [data-theme="moonlit"] .speech{background:var(--surface-2);color:var(--ink);}
-  .spawn{display:flex;gap:8px;margin:10px 0 14px;}
-  .spawn .pill{flex:1;border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:8px;border:2px solid transparent;font-weight:800;font-size:12px;}
-  .spawn .pill .n{font-family:var(--font-d);font-weight:700;font-size:18px;}
-  .spawn .pill.on{background:#e7efe0;color:var(--primary);border-color:#cfe0c2;}
-  .spawn .pill.off{background:var(--paper-2);color:var(--ink-soft);}
-  [data-theme="moonlit"] .spawn .pill.on{background:rgba(95,211,163,.16);border-color:rgba(95,211,163,.4);}
-  .spawn .pill .sd{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7;}
-  .selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .tool-btn{position:relative;border:2.5px solid var(--surface-line);background:var(--paper);border-radius:16px;padding:13px 10px 12px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:0 4px 0 var(--surface-line);transition:transform .08s;}
-  .tool-btn .row{display:flex;align-items:center;gap:8px;}
-  .tool-btn .tn{font-family:var(--font-d);font-weight:700;font-size:19px;color:var(--ink);}
-  .tool-btn .ts{font-size:11px;font-weight:700;color:var(--ink-soft);line-height:1.25;}
-  .tool-btn .ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface);flex:none;}
-  .tool-btn.active{background:var(--primary);border-color:var(--primary-700);box-shadow:0 4px 0 var(--primary-700),0 0 0 4px rgba(60,90,58,.18);}
-  .tool-btn.active .tn{color:var(--on-primary);}
-  .tool-btn.active .ts{color:color-mix(in srgb,var(--on-primary) 80%,transparent);}
-  .tool-btn.active .ico{background:var(--accent);}
-  .tool-btn:active{transform:translateY(2px);box-shadow:none;}
-  .kbd{position:absolute;top:8px;right:10px;font-size:10px;font-weight:800;color:var(--ink-soft);background:var(--surface);border-radius:6px;padding:1px 6px;opacity:.7;}
-  .tool-btn.active .kbd{color:var(--on-primary);background:rgba(255,255,255,.18);}
-  .rail-bottom{display:flex;gap:12px;}
-  .rail-bottom .coin-chip{flex:1;}
-  .coin-chip .plus{margin-left:auto;width:24px;height:24px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;}
-</style>
-</head>
-<body>
-  <div class="stage">
-    <div class="frame" id="frame">
-      <div id="screen"></div>
-      <div id="overlay"></div>
-      <div id="toasts"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spriggle — Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="spriggle.css" />
+    <link rel="stylesheet" href="app.css" />
+    <style>
+      /* game-screen rail (shared by game.js) */
+      .board-col {
+        height: 100%;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .board-col .patch {
+        width: 100%;
+      }
+      .rail {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+      .rail-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .score-card {
+        padding: 16px 20px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        box-shadow: var(--e-2);
+      }
+      .score-card .lab {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent-700);
+      }
+      .score-card .val {
+        font-family: var(--font-d);
+        font-weight: 700;
+        font-size: 46px;
+        color: var(--ink);
+        line-height: 0.9;
+        margin-top: 2px;
+      }
+      .score-card .best {
+        text-align: right;
+      }
+      .score-card .best .bl {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .score-card .best .bv {
+        font-family: var(--font-d);
+        font-weight: 600;
+        font-size: 22px;
+        color: var(--ink-soft);
+        line-height: 1;
+      }
+      .tool-mod {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 14px 16px 16px;
+        background: linear-gradient(180deg, var(--surface-2), var(--surface));
+        box-shadow: var(--e-2);
+      }
+      .mascot-stage {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        min-height: 150px;
+      }
+      .mascot-stage svg {
+        position: relative;
+        height: 185px;
+        width: auto;
+        animation: idle 3.4s ease-in-out infinite;
+      }
+      @keyframes idle {
+        0%,
+        100% {
+          transform: translateY(0) rotate(-1deg);
+        }
+        50% {
+          transform: translateY(-5px) rotate(1deg);
+        }
+      }
+      .speech {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #fff;
+        border: 2px solid var(--surface-line);
+        border-radius: 14px 14px 14px 4px;
+        padding: 8px 12px;
+        font-size: 12.5px;
+        font-weight: 800;
+        color: #3a2f23;
+        max-width: 170px;
+        box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.2);
+        z-index: 2;
+      }
+      [data-theme="moonlit"] .speech {
+        background: var(--surface-2);
+        color: var(--ink);
+      }
+      .spawn {
+        display: flex;
+        gap: 8px;
+        margin: 10px 0 14px;
+      }
+      .spawn .pill {
+        flex: 1;
+        border-radius: 12px;
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid transparent;
+        font-weight: 800;
+        font-size: 12px;
+      }
+      .spawn .pill .n {
+        font-family: var(--font-d);
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .spawn .pill.on {
+        background: #e7efe0;
+        color: var(--primary);
+        border-color: #cfe0c2;
+      }
+      .spawn .pill.off {
+        background: var(--paper-2);
+        color: var(--ink-soft);
+      }
+      [data-theme="moonlit"] .spawn .pill.on {
+        background: rgba(95, 211, 163, 0.16);
+        border-color: rgba(95, 211, 163, 0.4);
+      }
+      .spawn .pill .sd {
+        margin-left: auto;
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.7;
+      }
+      .selector {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .tool-btn {
+        position: relative;
+        border: 2.5px solid var(--surface-line);
+        background: var(--paper);
+        border-radius: 16px;
+        padding: 13px 10px 12px;
+        cursor: pointer;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: 0 4px 0 var(--surface-line);
+        transition: transform 0.08s;
+      }
+      .tool-btn .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tool-btn .tn {
+        font-family: var(--font-d);
+        font-weight: 700;
+        font-size: 19px;
+        color: var(--ink);
+      }
+      .tool-btn .ts {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--ink-soft);
+        line-height: 1.25;
+      }
+      .tool-btn .ico {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface);
+        flex: none;
+      }
+      .tool-btn.active {
+        background: var(--primary);
+        border-color: var(--primary-700);
+        box-shadow:
+          0 4px 0 var(--primary-700),
+          0 0 0 4px rgba(60, 90, 58, 0.18);
+      }
+      .tool-btn.active .tn {
+        color: var(--on-primary);
+      }
+      .tool-btn.active .ts {
+        color: color-mix(in srgb, var(--on-primary) 80%, transparent);
+      }
+      .tool-btn.active .ico {
+        background: var(--accent);
+      }
+      .tool-btn:active {
+        transform: translateY(2px);
+        box-shadow: none;
+      }
+      .kbd {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--ink-soft);
+        background: var(--surface);
+        border-radius: 6px;
+        padding: 1px 6px;
+        opacity: 0.7;
+      }
+      .tool-btn.active .kbd {
+        color: var(--on-primary);
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .rail-bottom {
+        display: flex;
+        gap: 12px;
+      }
+      .rail-bottom .coin-chip {
+        flex: 1;
+      }
+      .coin-chip .plus {
+        margin-left: auto;
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--on-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="frame" id="frame">
+        <div id="screen"></div>
+        <div id="overlay"></div>
+        <div id="toasts"></div>
+      </div>
     </div>
-  </div>
-  <div class="rotate"><div><div class="ph"></div><div style="font-size:22px;margin-bottom:8px">Rotate to play</div><div style="font-family:var(--font-u);font-weight:700;font-size:14px;opacity:.8">Spriggle is played in landscape.</div></div></div>
+    <div class="rotate">
+      <div>
+        <div class="ph"></div>
+        <div style="font-size: 22px; margin-bottom: 8px">Rotate to play</div>
+        <div
+          style="
+            font-family: var(--font-u);
+            font-weight: 700;
+            font-size: 14px;
+            opacity: 0.8;
+          "
+        >
+          Spriggle is played in landscape.
+        </div>
+      </div>
+    </div>
 
-<script src="plants.js"></script>
-<script src="board.js"></script>
-<script src="mascot.js"></script>
-<script src="game.js"></script>
-<script src="screens.js"></script>
-<script src="onboarding.js"></script>
-<script>
-/* ===================== APP SHELL ===================== */
-const DEFAULTS = { coins:1240, best:0, signedIn:false, name:'You', sound:true, music:true, haptics:true, onboarded:false, theme:'garden' };
-const App = {
-  state: Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('spriggle')||'{}')),
-  save(){ localStorage.setItem('spriggle', JSON.stringify(this.state)); },
-  fmt(n){ return (n||0).toLocaleString('en-US'); },
-  haptic(type){ /* expo-haptics intent: light/medium/success/warning — not wired in prototype */ },
+    <script src="plants.js"></script>
+    <script src="board.js"></script>
+    <script src="mascot.js"></script>
+    <script src="game.js"></script>
+    <script src="screens.js"></script>
+    <script src="onboarding.js"></script>
+    <script>
+      /* ===================== APP SHELL ===================== */
+      const DEFAULTS = {
+        coins: 1240,
+        best: 0,
+        signedIn: false,
+        name: "You",
+        sound: true,
+        music: true,
+        haptics: true,
+        onboarded: false,
+        theme: "garden",
+      };
+      const App = {
+        state: Object.assign(
+          {},
+          DEFAULTS,
+          JSON.parse(localStorage.getItem("spriggle") || "{}"),
+        ),
+        save() {
+          localStorage.setItem("spriggle", JSON.stringify(this.state));
+        },
+        fmt(n) {
+          return (n || 0).toLocaleString("en-US");
+        },
+        haptic(type) {
+          /* expo-haptics intent: light/medium/success/warning — not wired in prototype */
+        },
 
-  // ---- routing ----
-  stack:[{name:'splash'}], cleanup:null,
-  go(name, opts={}){
-    if(name==='home') this.stack=[{name:'home'}];
-    else if(name==='game') this.stack=[{name:'home'},{name:'game',opts}];
-    else if(name==='gameover') this.stack=[{name:'home'},{name:'gameover',opts}];
-    else this.stack.push({name,opts});
-    this.render();
-  },
-  back(){ if(this.stack.length>1) this.stack.pop(); this.render(); },
-  render(){
-    const top=this.stack[this.stack.length-1];
-    if(this.cleanup){ try{this.cleanup();}catch(e){} this.cleanup=null; }
-    document.getElementById('overlay').innerHTML='';
-    const host=document.getElementById('screen');
-    host.innerHTML='';
-    this.cleanup = Screens[top.name](host, top.opts||{}) || null;
-  },
+        // ---- routing ----
+        stack: [{ name: "splash" }],
+        cleanup: null,
+        go(name, opts = {}) {
+          if (name === "home") this.stack = [{ name: "home" }];
+          else if (name === "game")
+            this.stack = [{ name: "home" }, { name: "game", opts }];
+          else if (name === "gameover")
+            this.stack = [{ name: "home" }, { name: "gameover", opts }];
+          else this.stack.push({ name, opts });
+          this.render();
+        },
+        back() {
+          if (this.stack.length > 1) this.stack.pop();
+          this.render();
+        },
+        render() {
+          const top = this.stack[this.stack.length - 1];
+          if (this.cleanup) {
+            try {
+              this.cleanup();
+            } catch (e) {}
+            this.cleanup = null;
+          }
+          document.getElementById("overlay").innerHTML = "";
+          const host = document.getElementById("screen");
+          host.innerHTML = "";
+          this.cleanup = Screens[top.name](host, top.opts || {}) || null;
+        },
 
-  // ---- toasts ----
-  toast(msg, type=''){
-    const t=document.createElement('div'); t.className='toast '+type; t.textContent=msg;
-    document.getElementById('toasts').appendChild(t);
-    setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),260); }, 2100);
-  },
+        // ---- toasts ----
+        toast(msg, type = "") {
+          const t = document.createElement("div");
+          t.className = "toast " + type;
+          t.textContent = msg;
+          document.getElementById("toasts").appendChild(t);
+          setTimeout(() => {
+            t.classList.add("out");
+            setTimeout(() => t.remove(), 260);
+          }, 2100);
+        },
 
-  // ---- modal sheet ----
-  sheet(html, onAct){
-    const ov=document.getElementById('overlay');
-    const scrim=document.createElement('div'); scrim.className='scrim';
-    scrim.innerHTML=`<div class="sheet">${html}</div>`;
-    ov.appendChild(scrim);
-    const close=()=>scrim.remove();
-    scrim.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); if(b) onAct(b.dataset.act, close); else if(e.target===scrim) close(); });
-    return close;
-  },
+        // ---- modal sheet ----
+        sheet(html, onAct) {
+          const ov = document.getElementById("overlay");
+          const scrim = document.createElement("div");
+          scrim.className = "scrim";
+          scrim.innerHTML = `<div class="sheet">${html}</div>`;
+          ov.appendChild(scrim);
+          const close = () => scrim.remove();
+          scrim.addEventListener("click", (e) => {
+            const b = e.target.closest("[data-act]");
+            if (b) onAct(b.dataset.act, close);
+            else if (e.target === scrim) close();
+          });
+          return close;
+        },
 
-  // ---- rewarded ad (AdMob intent) ----
-  rewardedAd(onReward){
-    const ov=document.getElementById('overlay');
-    const scrim=document.createElement('div'); scrim.className='scrim';
-    scrim.innerHTML=`<div class="sheet" style="width:min(460px,80%);text-align:center">
+        // ---- rewarded ad (AdMob intent) ----
+        rewardedAd(onReward) {
+          const ov = document.getElementById("overlay");
+          const scrim = document.createElement("div");
+          scrim.className = "scrim";
+          scrim.innerHTML = `<div class="sheet" style="width:min(460px,80%);text-align:center">
       <div style="font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px">Rewarded ad · AdMob</div>
       <div id="adbody"></div></div>`;
-    ov.appendChild(scrim);
-    const body=scrim.querySelector('#adbody');
-    body.innerHTML=`<div class="center-col" style="gap:16px;padding:18px 0">
+          ov.appendChild(scrim);
+          const body = scrim.querySelector("#adbody");
+          body.innerHTML = `<div class="center-col" style="gap:16px;padding:18px 0">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.4" stroke-linecap="round" class="spin"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>
       <div style="font-weight:800;color:var(--ink-soft)">Loading ad…</div></div>`;
-    setTimeout(()=>{
-      body.innerHTML=`<div class="center-col" style="gap:14px">
+          setTimeout(() => {
+            body.innerHTML = `<div class="center-col" style="gap:14px">
         <div style="width:100%;height:150px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--primary),var(--accent));display:grid;place-items:center;color:#fff;font-family:var(--font-d);font-weight:700;font-size:22px">Your ad here</div>
         <div style="font-weight:800;font-size:14px;color:var(--ink)">Reward: keep your run going 🌱</div>
         <div style="display:flex;gap:10px;width:100%">
           <button class="btn btn-ghost btn-md" id="adx" style="flex:1">No thanks</button>
           <button class="btn btn-accent btn-md" id="adok" style="flex:2">Claim reward</button></div></div>`;
-      body.querySelector('#adok').onclick=()=>{ scrim.remove(); App.toast('Reward granted — keep digging!','ok'); onReward&&onReward(); };
-      body.querySelector('#adx').onclick=()=>scrim.remove();
-    }, 1400);
-  },
+            body.querySelector("#adok").onclick = () => {
+              scrim.remove();
+              App.toast("Reward granted — keep digging!", "ok");
+              onReward && onReward();
+            };
+            body.querySelector("#adx").onclick = () => scrim.remove();
+          }, 1400);
+        },
 
-  // ---- theme ----
-  setTheme(t){ this.state.theme=t; document.documentElement.setAttribute('data-theme',t); this.save(); },
-};
-document.documentElement.setAttribute('data-theme', App.state.theme);
+        // ---- theme ----
+        setTheme(t) {
+          this.state.theme = t;
+          document.documentElement.setAttribute("data-theme", t);
+          this.save();
+        },
+      };
+      document.documentElement.setAttribute("data-theme", App.state.theme);
 
-// frame scaling — fit to viewport with a small margin so it never overflows
-function fit(){
-  const f=document.getElementById('frame');
-  const margin=28;
-  const s=Math.min((window.innerWidth-margin)/1194, (window.innerHeight-margin)/834);
-  f.style.transform=`scale(${s})`;
-}
-window.addEventListener('resize', fit);
-window.addEventListener('load', fit);
-fit(); setTimeout(fit,60);
+      // frame scaling — fit to viewport with a small margin so it never overflows
+      function fit() {
+        const f = document.getElementById("frame");
+        const margin = 28;
+        const s = Math.min(
+          (window.innerWidth - margin) / 1194,
+          (window.innerHeight - margin) / 834,
+        );
+        f.style.transform = `scale(${s})`;
+      }
+      window.addEventListener("resize", fit);
+      window.addEventListener("load", fit);
+      fit();
+      setTimeout(fit, 60);
 
-App.render();
-</script>
-</body>
+      App.render();
+    </script>
+  </body>
 </html>

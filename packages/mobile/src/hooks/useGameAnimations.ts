@@ -50,12 +50,13 @@ export function useGameAnimations(): GameAnimationsState {
   // Track mount state and clean up timers on unmount
   useEffect(() => {
     mountedRef.current = true;
+    const timers = timersRef.current;
     return () => {
       mountedRef.current = false;
-      for (const timer of timersRef.current) {
+      for (const timer of timers) {
         clearTimeout(timer);
       }
-      timersRef.current.clear();
+      timers.clear();
     };
   }, []);
 

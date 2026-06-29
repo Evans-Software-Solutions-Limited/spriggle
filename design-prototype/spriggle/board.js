@@ -8,7 +8,7 @@
 */
 
 function grassTuft(scale = 1, flip = false) {
-  return `<svg class="tuft" width="${64*scale}" height="${44*scale}" viewBox="0 0 64 44" style="${flip?'transform:scaleX(-1);':''}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  return `<svg class="tuft" width="${64 * scale}" height="${44 * scale}" viewBox="0 0 64 44" style="${flip ? "transform:scaleX(-1);" : ""}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <g fill="var(--grass)" stroke="var(--grass-deep)" stroke-width="1.6" stroke-linejoin="round">
       <path d="M18 44 C 10 30 8 18 12 6 C 18 16 20 30 24 44 Z"/>
       <path d="M32 44 C 28 26 28 12 33 2 C 38 14 38 30 38 44 Z"/>
@@ -25,13 +25,19 @@ function renderPatch(board, opts = {}) {
   const cols = board[0].length;
   const rows = board.length;
 
-  let cells = '';
+  let cells = "";
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const v = board[r][c];
-      if (v === null || v === undefined) { cells += `<div class="cell" style="visibility:hidden"></div>`; continue; }
-      if (v < 0) { cells += `<div class="cell empty"></div>`; continue; }
-      const hlc = hl.has(r + '-' + c) ? ' hl' : '';
+      if (v === null || v === undefined) {
+        cells += `<div class="cell" style="visibility:hidden"></div>`;
+        continue;
+      }
+      if (v < 0) {
+        cells += `<div class="cell empty"></div>`;
+        continue;
+      }
+      const hlc = hl.has(r + "-" + c) ? " hl" : "";
       cells += `<div class="cell${hlc}">${juicy(PLANTS[v], v)}</div>`;
     }
   }
@@ -46,7 +52,7 @@ function renderPatch(board, opts = {}) {
 
   return `<div class="patch">
     ${tufts}
-    ${opts.overlay || ''}
+    ${opts.overlay || ""}
     <div class="soil">
       <div class="grid" style="grid-template-columns:repeat(${cols},1fr);gap:${gap}px;">${cells}</div>
     </div>
