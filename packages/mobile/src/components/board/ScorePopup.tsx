@@ -55,8 +55,14 @@ export function ScorePopup({
     });
   }, [translateY, opacity, scale, onComplete]);
 
+  // Include translateX: -50 in the animated style so it doesn't get
+  // overridden by the transform array (RN merges the last transform).
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }, { scale: scale.value }],
+    transform: [
+      { translateX: -50 },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
     opacity: opacity.value,
   }));
 
@@ -80,7 +86,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     zIndex: 9,
     alignItems: "center",
-    transform: [{ translateX: -50 }], // center horizontally
   },
   bubble: {
     backgroundColor: "#3a2f23",
@@ -89,7 +94,6 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     flexDirection: "row",
     alignItems: "center",
-    // Pop shadow
     shadowColor: "rgba(40,30,12,1)",
     shadowOffset: { width: 0, height: 18 },
     shadowOpacity: 0.55,

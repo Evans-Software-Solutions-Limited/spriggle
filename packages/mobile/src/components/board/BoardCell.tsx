@@ -58,32 +58,37 @@ export function BoardCell({
     transform: [{ translateY: bobY.value }],
   }));
 
-  const cellStyle = [
-    styles.cell,
-    { width: size, height: size, borderRadius: size * 0.26 },
-    plant === null && styles.cellEmpty,
-  ];
+  const borderRadius = size * 0.26;
 
   return (
     <Animated.View style={animatedStyle}>
       <Pressable
         onPress={onPress}
-        style={cellStyle}
+        style={[
+          styles.cell,
+          { width: size, height: size, borderRadius },
+          plant === null && styles.cellEmpty,
+        ]}
         accessibilityRole="button"
-        accessibilityLabel={
-          plant ? `${plant} at cell` : "Empty cell"
-        }
+        accessibilityLabel={plant ? `${plant} at cell` : "Empty cell"}
       >
-        {/* Gold highlight ring for pre-dig preview */}
-        {highlighted && <View style={styles.highlightRing} />}
+        {/* Gold highlight ring — positioned outside cell via negative insets.
+            No overflow:hidden on the cell so the glow extends outward. */}
+        {highlighted && (
+          <View style={[styles.highlightRing, { borderRadius: borderRadius + 3 }]} />
+        )}
 
         {/* Swap selection ring */}
-        {selected && <View style={styles.selectRing} />}
+        {selected && (
+          <View style={[styles.selectRing, { borderRadius: borderRadius + 2 }]} />
+        )}
 
-        {/* Plant SVG — slightly oversized to match prototype (108%) */}
+        {/* Plant SVG — clipped to cell bounds via inner wrapper */}
         {plant && (
-          <View style={styles.plantContainer}>
-            <PlantIcon type={plant} size={size * 1.08} />
+          <View style={[styles.plantClip, { borderRadius }]}>
+            <View style={styles.plantContainer}>
+              <PlantIcon type={plant} size={size * 1.08} />
+            </View>
           </View>
         )}
       </Pressable>
@@ -95,12 +100,10 @@ const styles = StyleSheet.create({
   cell: {
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
-    // Soil hole gradient approximation
+    // No overflow:hidden here — rings extend outside
     backgroundColor: "#33230f",
   },
   cellEmpty: {
-    // Deeper hole for empty cells
     backgroundColor: "#241708",
   },
   highlightRing: {
@@ -109,10 +112,8 @@ const styles = StyleSheet.create({
     left: -3,
     right: -3,
     bottom: -3,
-    borderRadius: 99,
     borderWidth: 3,
     borderColor: "#d9a23c",
-    // Glow effect via shadow
     shadowColor: "#d9a23c",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
@@ -124,7 +125,6 @@ const styles = StyleSheet.create({
     left: -2,
     right: -2,
     bottom: -2,
-    borderRadius: 99,
     borderWidth: 3,
     borderColor: "#7a9a5b",
     shadowColor: "#7a9a5b",
@@ -132,9 +132,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 6,
   },
+  plantClip: {
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
+  },
   plantContainer: {
     marginTop: "-5%",
-    // Drop shadow matching prototype: filter: drop-shadow(0 5px 4px rgba(0,0,0,.32))
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.32,

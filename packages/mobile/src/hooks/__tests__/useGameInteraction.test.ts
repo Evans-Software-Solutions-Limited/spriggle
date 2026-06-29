@@ -135,4 +135,32 @@ describe("useGameInteraction", () => {
     act(() => result.current.setTool("swap"));
     expect(result.current.highlightedCells.size).toBe(0);
   });
+
+  it("rejects swap of same-type plants with onInvalidAction", () => {
+    const board = boardWithGroup();
+    // Place two adjacent watermelons that aren't in the row-0 group
+    board[4][0] = "tomato";
+    board[4][1] = "tomato";
+    const onInvalidAction = jest.fn();
+    const { result } = renderHook(() =>
+      useGameInteraction(board, findGroup, { onInvalidAction }),
+    );
+    act(() => result.current.setTool("swap"));
+    act(() => result.current.handleCellPress(4, 0));
+    act(() => result.current.handleCellPress(4, 1));
+    expect(onInvalidAction).toHaveBeenCalledWith(4, 1, expect.stringContaining("different"));
+  });
+
+  it("rejects swap of non-adjacent cells with onInvalidAction", () => {
+    const board = boardWithGroup();
+    board[0][7] = "flower";
+    const onInvalidAction = jest.fn();
+    const { result } = renderHook(() =>
+      useGameInteraction(board, findGroup, { onInvalidAction }),
+    );
+    act(() => result.current.setTool("swap"));
+    act(() => result.current.handleCellPress(2, 2)); // tomato at (2,2)
+    act(() => result.current.handleCellPress(0, 7)); // flower at (0,7) — not adjacent
+    expect(onInvalidAction).toHaveBeenCalledWith(0, 7, expect.stringContaining("next to"));
+  });
 });

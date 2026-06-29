@@ -123,8 +123,35 @@ export function useGameInteraction(
           return;
         }
 
-        // Second selection — attempt swap
+        // Second selection — validate and attempt swap
         const [r1, c1] = selectedCell.split("-").map(Number);
+        const cellA = board[r1]?.[c1];
+
+        // Same type rejection (matching prototype's doSwap behaviour)
+        if (cellA === cell) {
+          callbacks.onInvalidAction?.(
+            row,
+            col,
+            "Pick two different plants",
+          );
+          setSelectedCell(null);
+          return;
+        }
+
+        // Adjacency check (orthogonal only)
+        const isAdjacent =
+          (Math.abs(r1 - row) === 1 && c1 === col) ||
+          (Math.abs(c1 - col) === 1 && r1 === row);
+        if (!isAdjacent) {
+          callbacks.onInvalidAction?.(
+            row,
+            col,
+            "Plants must be next to each other",
+          );
+          setSelectedCell(null);
+          return;
+        }
+
         callbacks.onSwap?.(r1, c1, row, col);
         setSelectedCell(null);
       }

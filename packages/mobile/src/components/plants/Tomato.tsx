@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import Svg, {
   Defs,
   RadialGradient,
@@ -16,6 +16,8 @@ interface TomatoProps {
  * Differentiated by: round silhouette, red colour, star-leaf pattern on top.
  */
 export function Tomato({ size = 100 }: TomatoProps) {
+  const gid = useId().replace(/:/g, "");
+
   return (
     <Svg
       viewBox="0 0 100 100"
@@ -27,7 +29,7 @@ export function Tomato({ size = 100 }: TomatoProps) {
       <Ellipse cx="50" cy="88" rx="24" ry="5" fill="#000" opacity={0.28} />
 
       <Defs>
-        <RadialGradient id="jgTomato" cx="38%" cy="30%" r="78%">
+        <RadialGradient id={`gTo${gid}`} cx="38%" cy="30%" r="78%">
           <Stop offset="0%" stopColor="#ff8a5c" />
           <Stop offset="55%" stopColor="#f0392f" />
           <Stop offset="100%" stopColor="#c4241c" />
@@ -35,7 +37,7 @@ export function Tomato({ size = 100 }: TomatoProps) {
       </Defs>
 
       {/* Body */}
-      <Ellipse cx="50" cy="59" rx="31" ry="28" fill="url(#jgTomato)" />
+      <Ellipse cx="50" cy="59" rx="31" ry="28" fill={`url(#gTo${gid})`} />
 
       {/* Star leaf on top */}
       <Path

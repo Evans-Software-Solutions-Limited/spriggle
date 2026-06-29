@@ -17,9 +17,12 @@ interface SwapAnimationProps {
   plantB: PlantTypeName;
   /** Size of each cell in points. */
   cellSize: number;
-  /** Pixel offset between the two cells (signed: positive = B is right/below A). */
-  offsetX: number;
-  offsetY: number;
+  /** Starting position of cell A (pixels from board top-left). */
+  startAX: number;
+  startAY: number;
+  /** Starting position of cell B (pixels from board top-left). */
+  startBX: number;
+  startBY: number;
   /** Called when the swap animation completes. */
   onComplete?: () => void;
 }
@@ -33,10 +36,15 @@ export function SwapAnimation({
   plantA,
   plantB,
   cellSize,
-  offsetX,
-  offsetY,
+  startAX,
+  startAY,
+  startBX,
+  startBY,
   onComplete,
 }: SwapAnimationProps) {
+  const offsetX = startBX - startAX;
+  const offsetY = startBY - startAY;
+
   const progressA = useSharedValue(0);
   const progressB = useSharedValue(0);
 
@@ -47,14 +55,18 @@ export function SwapAnimation({
       easing: Easing.inOut(Easing.ease),
     });
     // Plant B slides to A's position
-    progressB.value = withTiming(1, {
-      duration: 250,
-      easing: Easing.inOut(Easing.ease),
-    }, (finished) => {
-      if (finished && onComplete) {
-        runOnJS(onComplete)();
-      }
-    });
+    progressB.value = withTiming(
+      1,
+      {
+        duration: 250,
+        easing: Easing.inOut(Easing.ease),
+      },
+      (finished) => {
+        if (finished && onComplete) {
+          runOnJS(onComplete)();
+        }
+      },
+    );
   }, [progressA, progressB, onComplete]);
 
   const styleA = useAnimatedStyle(() => ({
@@ -73,10 +85,14 @@ export function SwapAnimation({
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Animated.View style={[styles.plant, styleA]}>
+      <Animated.View
+        style={[styles.plant, { left: startAX, top: startAY }, styleA]}
+      >
         <PlantIcon type={plantA} size={cellSize * 1.08} />
       </Animated.View>
-      <Animated.View style={[styles.plant, styleB]}>
+      <Animated.View
+        style={[styles.plant, { left: startBX, top: startBY }, styleB]}
+      >
         <PlantIcon type={plantB} size={cellSize * 1.08} />
       </Animated.View>
     </View>

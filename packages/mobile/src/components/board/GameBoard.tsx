@@ -57,7 +57,6 @@ export function GameBoard({
   return (
     <View style={styles.patch}>
       {/* Grass tufts overlapping edges */}
-      <GrassTuft scale={0.95} />
       <View style={[styles.tuftPos1]}>
         <GrassTuft scale={0.95} />
       </View>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import Svg, {
   Defs,
   RadialGradient,
@@ -16,6 +16,8 @@ interface FlowerProps {
  * Differentiated by: radial petal silhouette, golden-yellow colour, centre dot pattern.
  */
 export function Flower({ size = 100 }: FlowerProps) {
+  const gid = useId().replace(/:/g, "");
+
   // 7 petals evenly distributed
   const petals = Array.from({ length: 7 }, (_, i) => {
     const angle = i * (360 / 7);
@@ -26,7 +28,7 @@ export function Flower({ size = 100 }: FlowerProps) {
         cy="27"
         rx="9"
         ry="16"
-        fill="url(#jgFlower)"
+        fill={`url(#gFl${gid})`}
         transform={`rotate(${angle} 50 50)`}
       />
     );
@@ -43,7 +45,7 @@ export function Flower({ size = 100 }: FlowerProps) {
       <Ellipse cx="50" cy="88" rx="24" ry="5" fill="#000" opacity={0.28} />
 
       <Defs>
-        <RadialGradient id="jgFlower" cx="40%" cy="32%" r="75%">
+        <RadialGradient id={`gFl${gid}`} cx="40%" cy="32%" r="75%">
           <Stop offset="0%" stopColor="#ffe08a" />
           <Stop offset="70%" stopColor="#ffc23d" />
           <Stop offset="100%" stopColor="#e89412" />

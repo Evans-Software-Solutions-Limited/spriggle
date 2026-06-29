@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { CellAnimationState } from "../components/board/AnimatedCell";
 
 interface ScorePopupData {
@@ -35,6 +35,7 @@ interface GameAnimationsState {
 /**
  * Hook that orchestrates game animations (dig, spawn, shake, score popups).
  * Container-level logic that drives the AnimatedCell and ScorePopup presenters.
+ * Tracks timers and cancels on unmount to prevent setState-on-unmounted leaks.
  */
 export function useGameAnimations(): GameAnimationsState {
   const [cellAnimations, setCellAnimations] = useState<
@@ -43,6 +44,31 @@ export function useGameAnimations(): GameAnimationsState {
   const [scorePopups, setScorePopups] = useState<ScorePopupData[]>([]);
   const [isBusy, setIsBusy] = useState(false);
   const popupIdRef = useRef(0);
+  const mountedRef = useRef(true);
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  // Track mount state and clean up timers on unmount
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      for (const timer of timersRef.current) {
+        clearTimeout(timer);
+      }
+      timersRef.current.clear();
+    };
+  }, []);
+
+  /** Creates a cancellable delay that respects unmount. */
+  const delay = useCallback((ms: number): Promise<void> => {
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        timersRef.current.delete(timer);
+        resolve();
+      }, ms);
+      timersRef.current.add(timer);
+    });
+  }, []);
 
   const animateDig = useCallback(
     async (
@@ -71,7 +97,8 @@ export function useGameAnimations(): GameAnimationsState {
       });
 
       // Wait for clearing animation (300ms)
-      await new Promise((resolve) => setTimeout(resolve, 320));
+      await delay(320);
+      if (!mountedRef.current) return;
 
       // Reset animations
       setCellAnimations((prev) => {
@@ -84,7 +111,7 @@ export function useGameAnimations(): GameAnimationsState {
 
       setIsBusy(false);
     },
-    [],
+    [delay],
   );
 
   const animateSpawn = useCallback(
@@ -101,9 +128,9 @@ export function useGameAnimations(): GameAnimationsState {
       });
 
       // Wait for staggered spawn to complete
-      // Stagger: 60 + index * 45ms per cell, plus spring settle (~220ms)
       const totalTime = 60 + positions.length * 45 + 220;
-      await new Promise((resolve) => setTimeout(resolve, totalTime));
+      await delay(totalTime);
+      if (!mountedRef.current) return;
 
       // Reset animations
       setCellAnimations((prev) => {
@@ -116,7 +143,7 @@ export function useGameAnimations(): GameAnimationsState {
 
       setIsBusy(false);
     },
-    [],
+    [delay],
   );
 
   const animateShake = useCallback(
@@ -128,8 +155,8 @@ export function useGameAnimations(): GameAnimationsState {
         return next;
       });
 
-      // Shake duration ~420ms
-      await new Promise((resolve) => setTimeout(resolve, 420));
+      await delay(420);
+      if (!mountedRef.current) return;
 
       setCellAnimations((prev) => {
         const next = new Map(prev);
@@ -137,7 +164,7 @@ export function useGameAnimations(): GameAnimationsState {
         return next;
       });
     },
-    [],
+    [delay],
   );
 
   const dismissPopup = useCallback((id: string) => {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import Svg, {
   Defs,
   RadialGradient,
@@ -16,6 +16,8 @@ interface PumpkinProps {
  * Differentiated by: tri-lobe silhouette, orange colour, vine/segment pattern.
  */
 export function Pumpkin({ size = 100 }: PumpkinProps) {
+  const gid = useId().replace(/:/g, "");
+
   return (
     <Svg
       viewBox="0 0 100 100"
@@ -27,7 +29,7 @@ export function Pumpkin({ size = 100 }: PumpkinProps) {
       <Ellipse cx="50" cy="88" rx="24" ry="5" fill="#000" opacity={0.28} />
 
       <Defs>
-        <RadialGradient id="jgPumpkin" cx="40%" cy="32%" r="80%">
+        <RadialGradient id={`gPk${gid}`} cx="40%" cy="32%" r="80%">
           <Stop offset="0%" stopColor="#ffb35c" />
           <Stop offset="60%" stopColor="#f2852a" />
           <Stop offset="100%" stopColor="#cc5f18" />
@@ -35,9 +37,9 @@ export function Pumpkin({ size = 100 }: PumpkinProps) {
       </Defs>
 
       {/* Three lobes */}
-      <Ellipse cx="32" cy="61" rx="18" ry="24" fill="url(#jgPumpkin)" />
-      <Ellipse cx="68" cy="61" rx="18" ry="24" fill="url(#jgPumpkin)" />
-      <Ellipse cx="50" cy="61" rx="27" ry="27" fill="url(#jgPumpkin)" />
+      <Ellipse cx="32" cy="61" rx="18" ry="24" fill={`url(#gPk${gid})`} />
+      <Ellipse cx="68" cy="61" rx="18" ry="24" fill={`url(#gPk${gid})`} />
+      <Ellipse cx="50" cy="61" rx="27" ry="27" fill={`url(#gPk${gid})`} />
 
       {/* Segment lines */}
       <Path

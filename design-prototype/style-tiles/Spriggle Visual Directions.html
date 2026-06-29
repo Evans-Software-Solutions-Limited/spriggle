@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spriggle — Visual Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --page: #e8e6e0;
+    --page-2: #dedbd3;
+    --label: #4a4640;
+    --label-soft: #8a8478;
+  }
+  body {
+    background:
+      radial-gradient(circle at 18% 12%, #efece5, transparent 55%),
+      var(--page);
+    color: var(--label);
+    font-family: 'Hanken Grotesk', sans-serif;
+    padding: 56px 44px 90px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- page header ---------- */
+  .masthead { max-width: 1500px; margin: 0 auto 46px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-weight: 700; color: var(--label-soft); margin-bottom: 14px;
+  }
+  .masthead h1 {
+    font-family: 'Hanken Grotesk', sans-serif; font-weight: 800;
+    font-size: 38px; letter-spacing: -0.02em; color: #2a2620; margin-bottom: 12px;
+  }
+  .masthead p { max-width: 720px; font-size: 16px; line-height: 1.6; color: #5d584f; }
+  .masthead .hint {
+    margin-top: 18px; font-size: 13.5px; color: var(--label-soft);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .masthead .hint b { color: #5d584f; font-weight: 700; }
+
+  /* ---------- grid of direction cards ---------- */
+  .board { max-width: 1500px; margin: 0 auto; display: grid;
+    grid-template-columns: repeat(3, 1fr); gap: 28px; align-items: start; }
+  @media (max-width: 1240px) { .board { grid-template-columns: 1fr; max-width: 520px; } }
+
+  .card {
+    border-radius: 26px; overflow: hidden;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 44px -22px rgba(40,34,26,0.5), 0 4px 14px -8px rgba(40,34,26,0.3);
+  }
+  .card-head { padding: 26px 26px 22px; position: relative; }
+  .card-num {
+    font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700;
+    opacity: 0.62; margin-bottom: 10px;
+  }
+  .card-name { font-size: 30px; line-height: 1.02; margin-bottom: 8px; }
+  .card-tag { font-size: 13.5px; line-height: 1.5; opacity: 0.82; max-width: 38ch; }
+  .card-body { padding: 8px 26px 30px; }
+
+  .sect-label {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 700;
+    opacity: 0.5; margin: 26px 2px 12px;
+  }
+  .sect-label:first-child { margin-top: 8px; }
+
+  /* palette */
+  .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sw { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .sw .chip { width: 100%; height: 44px; border-radius: 11px; box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 2px 6px -3px rgba(0,0,0,0.4); }
+  .sw .cap { font-size: 9.5px; letter-spacing: 0.04em; opacity: 0.6; font-weight: 600; text-align: center; }
+  .sw-row2 { display: flex; gap: 8px; margin-top: 8px; }
+  .sw-row2 .mini { flex: 1; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+
+  /* type specimen */
+  .type-spec .wordmark { line-height: 0.95; margin-bottom: 8px; }
+  .type-spec .subtype { font-size: 13px; opacity: 0.85; }
+  .type-meta { font-size: 11px; opacity: 0.55; margin-top: 10px; font-family: 'Hanken Grotesk'; letter-spacing: 0.02em; }
+
+  /* plant icon row */
+  .icons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .icon-cell { aspect-ratio: 1; border-radius: 14px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .icon-cell svg { width: 86%; height: 86%; display: block; }
+  .icon-cell .name { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 7.5px; letter-spacing: 0.04em; font-weight: 700; opacity: 0.55; }
+
+  /* board preview */
+  .board-prev { border-radius: 16px; padding: 10px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+  .cell { aspect-ratio: 1; border-radius: 9px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .cell svg { width: 88%; height: 88%; }
+  .cell.empty { }
+
+  /* components */
+  .comp-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn { border: none; cursor: pointer; font-family: inherit; }
+  .toolsel { display: inline-flex; border-radius: 14px; padding: 4px; gap: 4px; }
+  .toolsel .tool { display: flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 10px; font-size: 13px; font-weight: 700; }
+  .toolsel .tool .ti { width: 16px; height: 16px; }
+  .score-chip { display: inline-flex; align-items: center; gap: 9px; padding: 9px 15px; border-radius: 13px; font-weight: 700; }
+  .score-chip .label { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.6; }
+  .score-chip .val { font-size: 18px; }
+  .coin-chip { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 999px; font-weight: 700; font-size: 14px; }
+  .coin-chip .dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
+
+  .note { font-size: 11.5px; line-height: 1.5; opacity: 0.7; margin-top: 22px; padding-top: 16px; border-top: 1px dashed; }
+</style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="eyebrow">Spriggle · Design exploration 01</div>
+    <h1>Three visual directions</h1>
+    <p>Per the brief, the look is deliberately open — so here are three genuinely different points of view. Each shows palette, type, the five plant marks (distinguished by <b>shape + colour + pattern</b>, never colour alone), the same 8×8 board, and a few components. Tell me which to develop — or mix elements across them.</p>
+    <div class="hint">▸ <span><b>The board is identical in all three</b> so you can compare how each direction reads at game scale.</span></div>
+  </header>
+
+  <div class="board" id="cards"></div>
+
+<script src="plants.js"></script>
+<script>
+/* same board layout across all 3 directions, -1 = empty soil */
+const BOARD = [
+  [0,0,3,3,1,4,4,2],
+  [0,3,3,1,1,4,2,2],
+  [2,3,1,1,0,4,4,2],
+  [2,2,0,0,0,3,4,1],
+  [4,2,2,0,3,3,3,1],
+  [4,4,1,1,3,0,0,1],
+  [1,4,1,2,2,0,3,3],
+  [1,1,2,2,2,4,3,0],
+];
+
+const PLANT_NAMES = ['Melon','Bloom','Auber','Tomato','Pumpkin'];
+
+/* ---- per-direction theme config ---- */
+const DIRECTIONS = [
+  {
+    key: 'heirloom',
+    num: 'Direction A',
+    name: 'Heirloom Garden',
+    tag: 'Warm, refined, a little hand-made — like a modern seed catalogue. Cream paper, deep botanical green, terracotta. Characterful serif display.',
+    fonts: { display: "'Young Serif', serif", ui: "'Hanken Grotesk', sans-serif" },
+    head: { bg: '#3c5a3a', fg: '#f3ead7' },
+    body: { bg: '#f6efe0', fg: '#3a2f23' },
+    palette: [
+      ['#f6efe0','Paper'],['#eadfc6','Surface'],['#3c5a3a','Primary'],['#c8693f','Accent'],['#7a9a5b','Leaf']
+    ],
+    states: [['#5b8f5b','OK','#fff'],['#d9a23c','WARN','#3a2f23'],['#c0473a','ERR','#fff']],
+    tileBg: '#efe4cd', boardBg: '#cbb99a', cellEmpty: '#d8c8a8',
+    wordmark: { size: 46, color: '#3c5a3a' },
+    typeMeta: 'Young Serif · Hanken Grotesk',
+    toolsel: { bg: '#eadfc6', activeBg: '#3c5a3a', activeFg: '#f3ead7', idleFg: '#7a6f5c' },
+    score: { bg: '#eadfc6', fg: '#3a2f23' },
+    coin: { bg: '#f3e3c2', fg: '#7a5a1e', dot: '#d9a23c' },
+    btn: { bg: '#c8693f', fg: '#fff' },
+  },
+  {
+    key: 'juicy',
+    num: 'Direction B',
+    name: 'Juicy Arcade',
+    tag: 'Bold and tactile. Dark soil so the fruit pops like glossy gems, saturated colour, rounded chunky type. The fun, satisfying, candy-shop energy.',
+    fonts: { display: "'Fredoka', sans-serif", ui: "'Nunito', sans-serif" },
+    head: { bg: '#241b39', fg: '#ffe9c7' },
+    body: { bg: '#2c2247', fg: '#efe6ff' },
+    palette: [
+      ['#241b39','Soil'],['#3a2d5c','Surface'],['#ff5d8f','Primary'],['#ffc23d','Accent'],['#34d29b','Mint']
+    ],
+    states: [['#34d29b','OK','#10231b'],['#ffc23d','WARN','#3a2410'],['#ff5d6c','ERR','#fff']],
+    tileBg: '#3a2d5c', boardBg: '#1c1530', cellEmpty: '#231a3c',
+    wordmark: { size: 52, color: '#ffc23d' },
+    typeMeta: 'Fredoka · Nunito',
+    toolsel: { bg: '#1c1530', activeBg: '#ff5d8f', activeFg: '#fff', idleFg: '#9b8fc0' },
+    score: { bg: '#1c1530', fg: '#ffe9c7' },
+    coin: { bg: '#3a2d5c', fg: '#ffc23d', dot: '#ffc23d' },
+    btn: { bg: '#34d29b', fg: '#10231b' },
+  },
+  {
+    key: 'mono',
+    num: 'Direction C',
+    name: 'Botanical Mono',
+    tag: 'Cool, graphic, editorial. Minimal palette, lots of air, geometric plant marks built from pure shapes + accessibility patterns. Confident and modern.',
+    fonts: { display: "'Bricolage Grotesque', sans-serif", ui: "'Space Grotesk', sans-serif" },
+    head: { bg: '#11241d', fg: '#e7f0e9' },
+    body: { bg: '#f4f6f3', fg: '#1d2b24' },
+    palette: [
+      ['#f4f6f3','Canvas'],['#ffffff','Surface'],['#11241d','Ink'],['#1f8a5b','Primary'],['#e9b23a','Accent']
+    ],
+    states: [['#1f8a5b','OK','#fff'],['#e9b23a','WARN','#11241d'],['#d3493b','ERR','#fff']],
+    tileBg: '#ffffff', boardBg: '#e2e7e1', cellEmpty: '#eef1ec',
+    wordmark: { size: 48, color: '#11241d' },
+    typeMeta: 'Bricolage Grotesque · Space Grotesk',
+    toolsel: { bg: '#e8ece7', activeBg: '#11241d', activeFg: '#fff', idleFg: '#5e6b62' },
+    score: { bg: '#fff', fg: '#1d2b24' },
+    coin: { bg: '#fff', fg: '#11241d', dot: '#e9b23a' },
+    btn: { bg: '#1f8a5b', fg: '#fff' },
+  },
+];
+
+const digIcon = (c) => `<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3l7 7-3 3-7-7z"/><path d="M11 6L4 13v7h7l7-7"/></svg>`;
+const swapIcon = (c) => `<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>`;
+
+function renderCard(d) {
+  const render = RENDERERS[d.key];
+  const tileShadow = d.key === 'juicy' ? 'none' : '0 1px 2px rgba(0,0,0,0.06)';
+
+  // palette
+  const swatches = d.palette.map(([c, cap]) =>
+    `<div class="sw"><div class="chip" style="background:${c}"></div><div class="cap">${cap}</div></div>`).join('');
+  const states = d.states.map(([c, cap, fg]) =>
+    `<div class="mini" style="background:${c};color:${fg}">${cap}</div>`).join('');
+
+  // plant icons (5 + empty soil)
+  let icons = '';
+  for (let i = 0; i < 5; i++) {
+    icons += `<div class="icon-cell" style="background:${d.tileBg};box-shadow:${tileShadow}">${render(PLANTS[i], i)}<span class="name" style="color:${d.body.fg}">${PLANT_NAMES[i]}</span></div>`;
+  }
+  icons += `<div class="icon-cell" style="background:${d.cellEmpty};box-shadow:inset 0 2px 6px rgba(0,0,0,0.12)"><span class="name" style="color:${d.body.fg}">Soil</span></div>`;
+
+  // board
+  let cells = '';
+  for (const row of BOARD) for (const v of row) {
+    if (v < 0) cells += `<div class="cell empty" style="background:${d.cellEmpty};box-shadow:inset 0 2px 5px rgba(0,0,0,0.14)"></div>`;
+    else cells += `<div class="cell" style="background:${d.tileBg};box-shadow:${tileShadow}">${render(PLANTS[v], v)}</div>`;
+  }
+
+  return `
+  <div class="card" style="background:${d.body.bg};font-family:${d.fonts.ui};color:${d.body.fg}">
+    <div class="card-head" style="background:${d.head.bg};color:${d.head.fg};font-family:${d.fonts.ui}">
+      <div class="card-num">${d.num}</div>
+      <div class="card-name" style="font-family:${d.fonts.display}">${d.name}</div>
+      <div class="card-tag">${d.tag}</div>
+    </div>
+    <div class="card-body">
+      <div class="sect-label">Palette · roles</div>
+      <div class="swatches">${swatches}</div>
+      <div class="sw-row2">${states}</div>
+
+      <div class="sect-label">Type</div>
+      <div class="type-spec">
+        <div class="wordmark" style="font-family:${d.fonts.display};font-size:${d.wordmark.size}px;color:${d.wordmark.color}">Spriggle</div>
+        <div class="subtype" style="font-family:${d.fonts.ui}">Match 5 · dig the garden · beat your best</div>
+        <div class="type-meta">${d.typeMeta}</div>
+      </div>
+
+      <div class="sect-label">Plant marks — shape · colour · pattern</div>
+      <div class="icons">${icons}</div>
+
+      <div class="sect-label">The board — 8×8 at game scale</div>
+      <div class="board-prev" style="background:${d.boardBg}">${cells}</div>
+
+      <div class="sect-label">Components</div>
+      <div class="comp-row" style="margin-bottom:12px">
+        <div class="toolsel" style="background:${d.toolsel.bg}">
+          <div class="tool" style="background:${d.toolsel.activeBg};color:${d.toolsel.activeFg}">${digIcon(d.toolsel.activeFg)} Dig</div>
+          <div class="tool" style="color:${d.toolsel.idleFg}">${swapIcon(d.toolsel.idleFg)} Swap</div>
+        </div>
+      </div>
+      <div class="comp-row">
+        <div class="score-chip" style="background:${d.score.bg};color:${d.score.fg}"><span class="label">Score</span><span class="val" style="font-family:${d.fonts.display}">24,80</span></div>
+        <div class="coin-chip" style="background:${d.coin.bg};color:${d.coin.fg}"><span class="dot" style="background:${d.coin.dot}"></span>1,240</div>
+        <button class="btn" style="background:${d.btn.bg};color:${d.btn.fg};font-family:${d.fonts.ui};font-weight:700;padding:11px 20px;border-radius:13px;font-size:14px">Play Classic</button>
+      </div>
+
+      <div class="note" style="border-color:${d.body.fg}33">Plant identities stay distinct by silhouette first: wedge · burst · teardrop · round-with-leaf · ribbed-squat — so colour-blind players still read the board.</div>
+    </div>
+  </div>`;
+}
+
+document.getElementById('cards').innerHTML = DIRECTIONS.map(renderCard).join('');
+</script>
+</body>
+</html>
