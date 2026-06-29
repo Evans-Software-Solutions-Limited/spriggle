@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useTheme, fonts, radii, spacing } from "@/theme";
+import { useTheme, fonts, radii, spacing } from "../src/theme";
 
 /**
  * Game Over screen — container.

@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { useTheme, fonts, radii } from "@/theme";
+import { useTheme, fonts, radii } from "../src/theme";
 
 /**
  * Home / Hub screen — container.

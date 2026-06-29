@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { useTheme, fonts, radii, spacing } from "@/theme";
-import { GameBoard } from "@/components/board";
-import type { BoardData } from "@/components/board";
-import { useGameInteraction } from "@/hooks/useGameInteraction";
-import type { PlantTypeName } from "@/components/plants";
+import { useTheme, fonts, radii, spacing } from "../src/theme";
+import { GameBoard } from "../src/components/board";
+import type { BoardData } from "../src/components/board";
+import { useGameInteraction } from "../src/hooks/useGameInteraction";
+import type { PlantTypeName } from "../src/components/plants";
 
 const PLANT_TYPES: PlantTypeName[] = [
   "watermelon",
@@ -20,7 +20,6 @@ function generateMockBoard(): BoardData {
   const board: BoardData = Array.from({ length: 8 }, () =>
     Array.from({ length: 8 }, () => null),
   );
-  // Spawn 10 random plants (matching engine init)
   let placed = 0;
   while (placed < 10) {
     const r = Math.floor(Math.random() * 8);
@@ -33,7 +32,7 @@ function generateMockBoard(): BoardData {
   return board;
 }
 
-/** Simple BFS group finder for the interaction hook (mirrors engine logic). */
+/** Simple BFS group finder for the interaction hook. */
 function findConnectedGroup(
   board: (PlantTypeName | null)[][],
   row: number,
@@ -67,11 +66,6 @@ function findConnectedGroup(
   return result;
 }
 
-/**
- * Game screen — container.
- * Landscape two-panel: board-col (left ~60%) + rail (right ~40%).
- * Matches prototype's Screens.game layout.
- */
 export default function GameScreen() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -79,20 +73,13 @@ export default function GameScreen() {
   const [score] = useState(0);
 
   const interaction = useGameInteraction(board, findConnectedGroup, {
-    onDig: () => {
-      /* Engine wiring in later task */
-    },
-    onSwap: () => {
-      /* Engine wiring in later task */
-    },
-    onInvalidAction: () => {
-      /* Shake animation in later task */
-    },
+    onDig: () => {},
+    onSwap: () => {},
+    onInvalidAction: () => {},
   });
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.paper }]}>
-      {/* Board column (left) */}
       <View style={styles.boardCol}>
         <GameBoard
           board={board}
@@ -102,9 +89,7 @@ export default function GameScreen() {
         />
       </View>
 
-      {/* Rail (right) */}
       <View style={styles.rail}>
-        {/* Top: brand + pause */}
         <View style={styles.railTop}>
           <Text style={[styles.railBrand, { color: colors.primary }]}>
             Spriggle
@@ -124,7 +109,6 @@ export default function GameScreen() {
           </Pressable>
         </View>
 
-        {/* Score card */}
         <View
           style={[
             styles.scoreCard,
@@ -140,15 +124,8 @@ export default function GameScreen() {
           <Text style={[styles.scoreValue, { color: colors.ink }]}>
             {score.toLocaleString()}
           </Text>
-          <View style={styles.bestRow}>
-            <Text style={[styles.bestLabel, { color: colors.inkFaint }]}>
-              Best
-            </Text>
-            <Text style={[styles.bestValue, { color: colors.inkSoft }]}>0</Text>
-          </View>
         </View>
 
-        {/* Speech bubble + mascot area */}
         <View
           style={[
             styles.toolMod,
@@ -158,43 +135,12 @@ export default function GameScreen() {
             },
           ]}
         >
-          <View style={styles.speechBubble}>
-            <Text style={[styles.speechText, { color: colors.ink }]}>
-              {interaction.tool === "dig"
-                ? "Dig a patch of 5 or more!"
-                : "Swap two to build a bigger patch."}
-            </Text>
-          </View>
+          <Text style={[styles.speechText, { color: colors.ink }]}>
+            {interaction.tool === "dig"
+              ? "Dig a patch of 5 or more!"
+              : "Swap two to build a bigger patch."}
+          </Text>
 
-          {/* Spawn pills */}
-          <View style={styles.spawnRow}>
-            <View
-              style={[
-                styles.pill,
-                interaction.tool === "dig" && {
-                  backgroundColor: colors.primary300,
-                },
-              ]}
-            >
-              <Text style={[styles.pillText, { color: colors.ink }]}>
-                +3 per dig
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.pill,
-                interaction.tool === "swap" && {
-                  backgroundColor: colors.primary300,
-                },
-              ]}
-            >
-              <Text style={[styles.pillText, { color: colors.ink }]}>
-                +6 per swap
-              </Text>
-            </View>
-          </View>
-
-          {/* Tool selector */}
           <View style={styles.selector}>
             <Pressable
               style={[
@@ -209,7 +155,6 @@ export default function GameScreen() {
               ]}
               onPress={() => interaction.setTool("dig")}
               accessibilityLabel="Dig tool"
-              accessibilityState={{ selected: interaction.tool === "dig" }}
             >
               <Text
                 style={[
@@ -223,19 +168,6 @@ export default function GameScreen() {
                 ]}
               >
                 Dig
-              </Text>
-              <Text
-                style={[
-                  styles.toolBtnSub,
-                  {
-                    color:
-                      interaction.tool === "dig"
-                        ? colors.onPrimary
-                        : colors.inkSoft,
-                  },
-                ]}
-              >
-                Clear 5+
               </Text>
             </Pressable>
             <Pressable
@@ -251,7 +183,6 @@ export default function GameScreen() {
               ]}
               onPress={() => interaction.setTool("swap")}
               accessibilityLabel="Swap tool"
-              accessibilityState={{ selected: interaction.tool === "swap" }}
             >
               <Text
                 style={[
@@ -266,19 +197,6 @@ export default function GameScreen() {
               >
                 Swap
               </Text>
-              <Text
-                style={[
-                  styles.toolBtnSub,
-                  {
-                    color:
-                      interaction.tool === "swap"
-                        ? colors.onPrimary
-                        : colors.inkSoft,
-                  },
-                ]}
-              >
-                Trade two
-              </Text>
             </Pressable>
           </View>
         </View>
@@ -288,28 +206,15 @@ export default function GameScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, flexDirection: "row", gap: 26 },
-  boardCol: {
-    flex: 0.6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  rail: {
-    flex: 0.4,
-    paddingVertical: spacing.s4,
-    paddingRight: spacing.s4,
-    gap: 14,
-  },
+  screen: { flex: 1, flexDirection: "row", gap: 26, padding: 16 },
+  boardCol: { flex: 0.6, alignItems: "center", justifyContent: "center" },
+  rail: { flex: 0.4, paddingVertical: spacing.s4, gap: 14 },
   railTop: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  railBrand: {
-    fontFamily: fonts.display,
-    fontWeight: "700",
-    fontSize: 30,
-  },
+  railBrand: { fontFamily: fonts.display, fontWeight: "700", fontSize: 30 },
   iconBtn: {
     width: 50,
     height: 50,
@@ -318,17 +223,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  scoreCard: {
-    borderRadius: radii.md,
-    borderWidth: 2,
-    padding: spacing.s4,
-  },
+  scoreCard: { borderRadius: radii.md, borderWidth: 2, padding: spacing.s4 },
   scoreLabel: {
     fontFamily: fonts.ui,
     fontWeight: "800",
     fontSize: 12,
     textTransform: "uppercase",
-    letterSpacing: 1,
   },
   scoreValue: {
     fontFamily: fonts.display,
@@ -336,30 +236,16 @@ const styles = StyleSheet.create({
     fontSize: 42,
     lineHeight: 48,
   },
-  bestRow: { flexDirection: "row", gap: 8, marginTop: 4 },
-  bestLabel: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 12 },
-  bestValue: { fontFamily: fonts.display, fontWeight: "700", fontSize: 14 },
   toolMod: {
     flex: 1,
     borderRadius: radii.md,
     borderWidth: 2,
     padding: spacing.s4,
     gap: 12,
+    justifyContent: "space-between",
   },
-  speechBubble: { paddingVertical: 6 },
-  speechText: {
-    fontFamily: fonts.ui,
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  spawnRow: { flexDirection: "row", gap: 8 },
-  pill: {
-    borderRadius: radii.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  pillText: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 12 },
-  selector: { flexDirection: "row", gap: 10, marginTop: "auto" },
+  speechText: { fontFamily: fonts.ui, fontWeight: "700", fontSize: 15 },
+  selector: { flexDirection: "row", gap: 10 },
   toolBtn: {
     flex: 1,
     borderRadius: radii.md,
@@ -367,10 +253,5 @@ const styles = StyleSheet.create({
     padding: spacing.s3,
     alignItems: "center",
   },
-  toolBtnLabel: {
-    fontFamily: fonts.display,
-    fontWeight: "700",
-    fontSize: 18,
-  },
-  toolBtnSub: { fontFamily: fonts.ui, fontWeight: "700", fontSize: 11 },
+  toolBtnLabel: { fontFamily: fonts.display, fontWeight: "700", fontSize: 18 },
 });
