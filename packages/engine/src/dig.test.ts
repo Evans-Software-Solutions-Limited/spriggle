@@ -82,7 +82,7 @@ describe("isValidDig", () => {
 });
 
 describe("executeDig", () => {
-  it("removes the whole group and scores it (exactly 5)", () => {
+  it("removes the whole group, scores it, and refills 3 plants (exactly 5)", () => {
     const board = emptyBoard();
     for (let c = 0; c < 5; c++) board[3][c] = "flower";
     const result = executeDig(stateOf(board, 0), { row: 3, col: 2 });
@@ -91,9 +91,8 @@ describe("executeDig", () => {
     expect(result.removedPositions).toHaveLength(5);
     expect(result.newState.score).toBe(30); // flower=6 × 5
     expect(result.newState.turns).toBe(1);
-    for (let c = 0; c < 5; c++) {
-      expect(result.newState.board[3][c]).toBeNull();
-    }
+    // After dig, 5 cells cleared → 59 empty. Refill adds 3 plants.
+    expect(result.refillPositions).toHaveLength(3);
   });
 
   it("digs the ENTIRE maximal group when clicking any cell in it (legacy gospel)", () => {
@@ -108,11 +107,8 @@ describe("executeDig", () => {
     expect(result.success).toBe(true);
     expect(result.removedPositions).toHaveLength(10);
     expect(result.newState.score).toBe(50); // tomato=5 × 10
-    for (let r = 0; r < 2; r++) {
-      for (let c = 0; c < 5; c++) {
-        expect(result.newState.board[r][c]).toBeNull();
-      }
-    }
+    // Refill adds 3 plants into the now-empty board
+    expect(result.refillPositions).toHaveLength(3);
   });
 
   it("returns unchanged state for an invalid dig (group of 4)", () => {

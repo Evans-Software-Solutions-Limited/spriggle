@@ -61,63 +61,63 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Test rejection: group of 4, mixed types
     - _Requirements: 2.1, 2.2, 2.5_
 
-- [ ] 5. Swap mechanic
-  - [ ] 5.1 Implement swap validation and execution
+- [x] 5. Swap mechanic
+  - [x] 5.1 Implement swap validation and execution
     - Implement `isValidSwap(board, pos1, pos2)` checking adjacency, different types, non-empty
     - Implement `executeSwap(state, pos1, pos2)` that exchanges plants
     - _Requirements: 3.1, 3.2, 3.3, 3.5_
-  - [ ] 5.2 Write property tests for swap mechanic
+  - [x] 5.2 Write property tests for swap mechanic
     - **Property 7: Valid swap exchanges exactly two cells**
     - **Property 8: Invalid swap leaves board unchanged**
     - **Property 13: Swap does not modify score**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.5, 6.4**
-  - [ ] 5.3 Write unit tests for swap mechanic
+  - [x] 5.3 Write unit tests for swap mechanic
     - Test valid swaps in all directions
     - Test rejection: diagonal, same type, empty cell
     - _Requirements: 3.1, 3.2, 3.3, 3.5_
 
-- [ ] 6. Board refill logic
-  - [ ] 6.1 Implement board refill
+- [x] 6. Board refill logic
+  - [x] 6.1 Implement board refill
     - Implement `refillBoard(board, count)` placing plants into random empty cells
     - Handle edge case where fewer empty cells than refill count
     - Wire refill into executeDig (3 plants) and executeSwap (6 plants)
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
-  - [ ] 6.2 Write property tests for refill
+  - [x] 6.2 Write property tests for refill
     - **Property 6: Dig triggers exactly 3 refills**
     - **Property 9: Swap triggers exactly 6 refills**
     - **Property 10: Refill only fills empty cells**
     - **Validates: Requirements 2.4, 3.4, 4.1, 4.2, 4.4**
-  - [ ] 6.3 Write unit tests for refill
+  - [x] 6.3 Write unit tests for refill
     - Test refill with many empty cells, exactly N empty cells, fewer than N empty cells
     - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ] 7. Game over detection and scoring invariants
-  - [ ] 7.1 Implement game over detection
+- [x] 7. Game over detection and scoring invariants
+  - [x] 7.1 Implement game over detection
     - Implement `isGameOver(board)` checking full board AND no 5+ group
     - Wire game-over check after every refill
     - _Requirements: 5.1, 5.3, 5.4_
-  - [ ] 7.2 Write property tests for game over and scoring
+  - [x] 7.2 Write property tests for game over and scoring
     - **Property 11: Game over if and only if full board with no valid group**
     - **Property 12: Score monotonicity**
     - **Validates: Requirements 5.1, 5.3, 6.2**
-  - [ ] 7.3 Write unit tests for game over
+  - [x] 7.3 Write unit tests for game over
     - Test full board with no groups (game over), full board with one group (not game over)
     - Test partially filled board (never game over)
     - _Requirements: 5.1, 5.3_
 
-- [ ] 8. Game state serialization
-  - [ ] 8.1 Implement game state serialization and deserialization
+- [x] 8. Game state serialization
+  - [x] 8.1 Implement game state serialization and deserialization
     - Implement `serializeState(state)` converting GameState to JSON string
     - Implement `deserializeState(json)` with validation and error handling
     - _Requirements: 16.1, 16.2, 16.3_
-  - [ ] 8.2 Write property test for serialization round-trip
+  - [x] 8.2 Write property test for serialization round-trip
     - **Property 16: Game state serialization round-trip**
     - **Validates: Requirements 16.3**
-  - [ ] 8.3 Write unit tests for serialization
+  - [x] 8.3 Write unit tests for serialization
     - Test with known game states, corrupted JSON handling
     - _Requirements: 16.1, 16.2_
 
-- [ ] 9. Checkpoint - Game engine complete
+- [x] 9. Checkpoint - Game engine complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. SVG plant components and accessibility
