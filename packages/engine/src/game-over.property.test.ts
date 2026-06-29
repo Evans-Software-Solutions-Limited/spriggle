@@ -112,58 +112,55 @@ describe("Feature: spriggle-ipad-game, Property 12: Score monotonicity", () => {
      * room for swaps, then applies a sequence of random actions.
      */
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 5 }),
-        (numDigs) => {
-          // Build a board with multiple diggable horizontal groups
-          const board: Board = Array.from({ length: BOARD_SIZE }, () =>
-            new Array<Cell>(BOARD_SIZE).fill(null),
-          );
+      fc.property(fc.integer({ min: 1, max: 5 }), (numDigs) => {
+        // Build a board with multiple diggable horizontal groups
+        const board: Board = Array.from({ length: BOARD_SIZE }, () =>
+          new Array<Cell>(BOARD_SIZE).fill(null),
+        );
 
-          // Place diggable groups in different rows
-          const type: PlantType = "tomato";
-          for (let i = 0; i < Math.min(numDigs, BOARD_SIZE); i++) {
-            for (let c = 0; c < 5; c++) {
-              board[i][c] = type;
-            }
+        // Place diggable groups in different rows
+        const type: PlantType = "tomato";
+        for (let i = 0; i < Math.min(numDigs, BOARD_SIZE); i++) {
+          for (let c = 0; c < 5; c++) {
+            board[i][c] = type;
           }
+        }
 
-          let state = makeState(board);
-          let previousScore = state.score;
+        let state = makeState(board);
+        let previousScore = state.score;
 
-          // Execute digs on the placed groups
-          for (let i = 0; i < Math.min(numDigs, BOARD_SIZE); i++) {
-            const result = executeDig(state, { row: i, col: 0 });
-            if (result.success) {
-              state = result.newState;
-              expect(state.score).toBeGreaterThanOrEqual(previousScore);
-              previousScore = state.score;
-            }
+        // Execute digs on the placed groups
+        for (let i = 0; i < Math.min(numDigs, BOARD_SIZE); i++) {
+          const result = executeDig(state, { row: i, col: 0 });
+          if (result.success) {
+            state = result.newState;
+            expect(state.score).toBeGreaterThanOrEqual(previousScore);
+            previousScore = state.score;
           }
+        }
 
-          // Try a swap if possible (score should stay the same or not decrease)
-          // Find two adjacent different-type cells for a swap
-          for (let r = 0; r < BOARD_SIZE; r++) {
-            for (let c = 0; c < BOARD_SIZE - 1; c++) {
-              const cell1 = state.board[r][c];
-              const cell2 = state.board[r][c + 1];
-              if (cell1 !== null && cell2 !== null && cell1 !== cell2) {
-                const swapResult = executeSwap(
-                  state,
-                  { row: r, col: c },
-                  { row: r, col: c + 1 },
+        // Try a swap if possible (score should stay the same or not decrease)
+        // Find two adjacent different-type cells for a swap
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          for (let c = 0; c < BOARD_SIZE - 1; c++) {
+            const cell1 = state.board[r][c];
+            const cell2 = state.board[r][c + 1];
+            if (cell1 !== null && cell2 !== null && cell1 !== cell2) {
+              const swapResult = executeSwap(
+                state,
+                { row: r, col: c },
+                { row: r, col: c + 1 },
+              );
+              if (swapResult.success) {
+                expect(swapResult.newState.score).toBeGreaterThanOrEqual(
+                  previousScore,
                 );
-                if (swapResult.success) {
-                  expect(swapResult.newState.score).toBeGreaterThanOrEqual(
-                    previousScore,
-                  );
-                  return; // We proved monotonicity for this sequence
-                }
+                return; // We proved monotonicity for this sequence
               }
             }
           }
-        },
-      ),
+        }
+      }),
       { numRuns: 100 },
     );
   });

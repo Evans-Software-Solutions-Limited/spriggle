@@ -100,10 +100,14 @@ describe("executeSwap", () => {
     const board = emptyBoard();
     board[1][1] = "watermelon";
     board[1][2] = "aubergine";
-    const result = executeSwap(stateOf(board, 10), {
-      row: 1,
-      col: 1,
-    }, { row: 1, col: 2 });
+    const result = executeSwap(
+      stateOf(board, 10),
+      {
+        row: 1,
+        col: 1,
+      },
+      { row: 1, col: 2 },
+    );
 
     expect(result.success).toBe(true);
     expect(result.newState.board[1][1]).toBe("aubergine");
@@ -114,10 +118,14 @@ describe("executeSwap", () => {
     const board = emptyBoard();
     board[0][0] = "tomato";
     board[0][1] = "pumpkin";
-    const result = executeSwap(stateOf(board, 0), {
-      row: 0,
-      col: 0,
-    }, { row: 0, col: 1 });
+    const result = executeSwap(
+      stateOf(board, 0),
+      {
+        row: 0,
+        col: 0,
+      },
+      { row: 0, col: 1 },
+    );
 
     expect(result.success).toBe(true);
     expect(result.newState.turns).toBe(1);
@@ -127,10 +135,14 @@ describe("executeSwap", () => {
     const board = emptyBoard();
     board[5][5] = "flower";
     board[5][6] = "tomato";
-    const result = executeSwap(stateOf(board, 999), {
-      row: 5,
-      col: 5,
-    }, { row: 5, col: 6 });
+    const result = executeSwap(
+      stateOf(board, 999),
+      {
+        row: 5,
+        col: 5,
+      },
+      { row: 5, col: 6 },
+    );
 
     expect(result.success).toBe(true);
     expect(result.newState.score).toBe(999);
@@ -161,10 +173,14 @@ describe("executeSwap", () => {
     const board = emptyBoard();
     board[4][4] = "pumpkin";
     board[4][5] = "aubergine";
-    const result = executeSwap(stateOf(board, 0), {
-      row: 4,
-      col: 4,
-    }, { row: 4, col: 5 });
+    const result = executeSwap(
+      stateOf(board, 0),
+      {
+        row: 4,
+        col: 4,
+      },
+      { row: 4, col: 5 },
+    );
 
     expect(result.success).toBe(true);
     expect(result.refillPositions).toHaveLength(6);

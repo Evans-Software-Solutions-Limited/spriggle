@@ -127,36 +127,39 @@ describe("Feature: spriggle-ipad-game, Property 7: Valid swap exchanges exactly 
    */
   it("exchanges exactly the two targeted cells and leaves all other occupied cells unchanged", () => {
     fc.assert(
-      fc.property(arbValidSwap, ({ board, pos1, pos2, type1, type2, score }) => {
-        const state = makeState(board, score);
-        const result = executeSwap(state, pos1, pos2);
+      fc.property(
+        arbValidSwap,
+        ({ board, pos1, pos2, type1, type2, score }) => {
+          const state = makeState(board, score);
+          const result = executeSwap(state, pos1, pos2);
 
-        expect(result.success).toBe(true);
+          expect(result.success).toBe(true);
 
-        // The two cells are exchanged
-        expect(result.newState.board[pos1.row][pos1.col]).toBe(type2);
-        expect(result.newState.board[pos2.row][pos2.col]).toBe(type1);
+          // The two cells are exchanged
+          expect(result.newState.board[pos1.row][pos1.col]).toBe(type2);
+          expect(result.newState.board[pos2.row][pos2.col]).toBe(type1);
 
-        const refilled = new Set(
-          result.refillPositions.map((p) => `${p.row},${p.col}`),
-        );
+          const refilled = new Set(
+            result.refillPositions.map((p) => `${p.row},${p.col}`),
+          );
 
-        // All other non-refilled cells unchanged
-        for (let row = 0; row < BOARD_SIZE; row++) {
-          for (let col = 0; col < BOARD_SIZE; col++) {
-            if (
-              (row === pos1.row && col === pos1.col) ||
-              (row === pos2.row && col === pos2.col)
-            ) {
-              continue;
-            }
-            const key = `${row},${col}`;
-            if (!refilled.has(key)) {
-              expect(result.newState.board[row][col]).toBe(board[row][col]);
+          // All other non-refilled cells unchanged
+          for (let row = 0; row < BOARD_SIZE; row++) {
+            for (let col = 0; col < BOARD_SIZE; col++) {
+              if (
+                (row === pos1.row && col === pos1.col) ||
+                (row === pos2.row && col === pos2.col)
+              ) {
+                continue;
+              }
+              const key = `${row},${col}`;
+              if (!refilled.has(key)) {
+                expect(result.newState.board[row][col]).toBe(board[row][col]);
+              }
             }
           }
-        }
-      }),
+        },
+      ),
       { numRuns: 100 },
     );
   });

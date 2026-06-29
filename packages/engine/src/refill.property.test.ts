@@ -166,22 +166,18 @@ describe("Feature: spriggle-ipad-game, Property 10: Refill only fills empty cell
       .map((b) => b as Board);
 
     fc.assert(
-      fc.property(
-        arbBoard,
-        fc.integer({ min: 1, max: 10 }),
-        (board, count) => {
-          const { board: refilled } = refillBoard(board, count);
+      fc.property(arbBoard, fc.integer({ min: 1, max: 10 }), (board, count) => {
+        const { board: refilled } = refillBoard(board, count);
 
-          // Every occupied cell before must remain the same after
-          for (let row = 0; row < BOARD_SIZE; row++) {
-            for (let col = 0; col < BOARD_SIZE; col++) {
-              if (board[row][col] !== null) {
-                expect(refilled[row][col]).toBe(board[row][col]);
-              }
+        // Every occupied cell before must remain the same after
+        for (let row = 0; row < BOARD_SIZE; row++) {
+          for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] !== null) {
+              expect(refilled[row][col]).toBe(board[row][col]);
             }
           }
-        },
-      ),
+        }
+      }),
       { numRuns: 100 },
     );
   });

@@ -38,22 +38,23 @@ export function getEmptyCells(board: Board): { row: number; col: number }[] {
 
 /**
  * Spawns a given number of random plants into empty cells on the board.
- * Mutates and returns the board. If fewer empty cells exist than count,
- * fills all available cells.
+ * Does NOT mutate the input board — returns a new board.
+ * If fewer empty cells exist than count, fills all available cells.
  */
 export function spawnPlants(board: Board, count: number): Board {
-  const emptyCells = getEmptyCells(board);
+  const newBoard = board.map((row) => [...row]);
+  const emptyCells = getEmptyCells(newBoard);
   const toSpawn = Math.min(count, emptyCells.length);
 
   for (let i = 0; i < toSpawn; i++) {
     const randomIndex = Math.floor(Math.random() * emptyCells.length);
     const cell = emptyCells[randomIndex];
-    board[cell.row][cell.col] = randomPlant();
+    newBoard[cell.row][cell.col] = randomPlant();
     // Remove used cell from available list
     emptyCells.splice(randomIndex, 1);
   }
 
-  return board;
+  return newBoard;
 }
 
 /**
@@ -61,8 +62,7 @@ export function spawnPlants(board: Board, count: number): Board {
  * Creates an empty 8×8 board and spawns 10 random plants into it.
  */
 export function initializeBoard(): GameState {
-  const board = createEmptyBoard();
-  spawnPlants(board, INITIAL_SPAWN_COUNT);
+  const board = spawnPlants(createEmptyBoard(), INITIAL_SPAWN_COUNT);
 
   return {
     board,

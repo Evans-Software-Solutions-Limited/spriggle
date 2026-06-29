@@ -1,4 +1,10 @@
-import { Board, GameState, Position, SwapResult, REFILL_AFTER_SWAP } from "./types";
+import {
+  Board,
+  GameState,
+  Position,
+  SwapResult,
+  REFILL_AFTER_SWAP,
+} from "./types";
 import { isInBounds, DIRECTIONS } from "./grid-utils";
 import { refillBoard } from "./refill";
 import { isGameOver } from "./game-over";

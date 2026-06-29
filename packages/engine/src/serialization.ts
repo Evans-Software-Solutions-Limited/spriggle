@@ -57,8 +57,18 @@ export function deserializeState(json: string): GameState | null {
   const obj = parsed as Record<string, unknown>;
 
   if (!isValidBoard(obj.board)) return null;
-  if (typeof obj.score !== "number" || obj.score < 0 || !Number.isInteger(obj.score)) return null;
-  if (typeof obj.turns !== "number" || obj.turns < 0 || !Number.isInteger(obj.turns)) return null;
+  if (
+    typeof obj.score !== "number" ||
+    obj.score < 0 ||
+    !Number.isSafeInteger(obj.score)
+  )
+    return null;
+  if (
+    typeof obj.turns !== "number" ||
+    obj.turns < 0 ||
+    !Number.isSafeInteger(obj.turns)
+  )
+    return null;
   if (typeof obj.isGameOver !== "boolean") return null;
 
   return {
