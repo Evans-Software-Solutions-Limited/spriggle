@@ -120,31 +120,31 @@ Incremental implementation starting with the pure game engine (fully testable wi
 - [x] 9. Checkpoint - Game engine complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. SVG plant components and accessibility
-  - [ ] 10.1 Create SVG plant components for all 5 plant types
+- [x] 10. SVG plant components and accessibility
+  - [x] 10.1 Create SVG plant components for all 5 plant types
     - Create `src/components/plants/` with Watermelon, Flower, Aubergine, Tomato, Pumpkin SVG components
     - Each plant uses unique silhouette, color, and pattern
     - Add `accessibilityLabel` to each SVG component
     - _Requirements: 8.1, 8.2, 8.3_
-  - [ ] 10.2 Write unit tests for plant component accessibility
+  - [x] 10.2 Write unit tests for plant component accessibility
     - Verify each component renders with correct accessibility label
     - **Property (example-based): Accessibility labels on plant SVGs**
     - **Validates: Requirements 8.3**
 
-- [ ] 11. Game board UI and touch interactions
-  - [ ] 11.1 Implement game board grid component
+- [x] 11. Game board UI and touch interactions
+  - [x] 11.1 Implement game board grid component
     - Create `src/components/GameBoard.tsx` rendering 8×8 grid with plant SVGs
     - Implement responsive layout for iPad screen sizes (Mini through Pro 12.9")
     - Handle touch/tap for cell selection
     - _Requirements: 7.2, 7.3_
-  - [ ] 11.2 Implement game action handling (dig and swap gestures)
+  - [x] 11.2 Implement game action handling (dig and swap gestures)
     - Map single-tap to select cell, second tap to confirm dig group or swap target
     - Connect touch handlers to game engine functions
     - Display visual feedback for invalid actions
     - _Requirements: 9.4_
 
-- [ ] 12. Game animations
-  - [ ] 12.1 Implement dig, swap, and refill animations
+- [x] 12. Game animations
+  - [x] 12.1 Implement dig, swap, and refill animations
     - Animate plant removal on dig (fade/shrink)
     - Animate plant exchange on swap (slide)
     - Animate new plants appearing on refill (grow/fade-in)

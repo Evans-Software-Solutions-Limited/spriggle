@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Spriggle Board — Preview (Task 11)</title>
+    <style>
+      /* Pull in the prototype's design tokens */
+      :root {
+        --font-d: "Fredoka", sans-serif;
+        --font-u: "Nunito", sans-serif;
+        --r-xl: 30px;
+        --r-lg: 22px;
+        --r-md: 16px;
+        --r-sm: 11px;
+        --grass: #6aa64b;
+        --grass-2: #5b8f3e;
+        --grass-deep: #4f8033;
+        --soil: #4e3623;
+        --soil-2: #5a4029;
+        --soil-hole: #33230f;
+        --soil-deep: #241708;
+        --gold: #d9a23c;
+        --gold-deep: #b9842a;
+        --ink: #3a2f23;
+        --e-card: 0 14px 30px -16px rgba(40, 30, 12, 0.45);
+      }
+      body {
+        margin: 0;
+        background: #2a1e14;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        font-family: var(--font-d);
+      }
+
+      /* Soil patch (outer grass frame) */
+      .patch {
+        position: relative;
+        border-radius: var(--r-xl);
+        padding: 18px;
+        background:
+          repeating-linear-gradient(
+            82deg,
+            rgba(255, 255, 255, 0.05) 0 2px,
+            transparent 2px 11px
+          ),
+          radial-gradient(
+            circle at 24% 22%,
+            rgba(255, 255, 255, 0.1) 0 40%,
+            transparent 60%
+          ),
+          linear-gradient(
+            155deg,
+            var(--grass) 0%,
+            var(--grass-2) 58%,
+            var(--grass-deep) 100%
+          );
+        box-shadow: var(--e-card);
+      }
+      .patch::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: var(--r-xl);
+        pointer-events: none;
+        background:
+          radial-gradient(
+            circle at 14% 70%,
+            rgba(0, 0, 0, 0.1) 0 2px,
+            transparent 3px
+          ),
+          radial-gradient(
+            circle at 86% 30%,
+            rgba(255, 255, 255, 0.12) 0 2px,
+            transparent 3px
+          ),
+          radial-gradient(
+            circle at 64% 84%,
+            rgba(0, 0, 0, 0.08) 0 2px,
+            transparent 3px
+          );
+      }
+
+      /* Soil area */
+      .soil {
+        position: relative;
+        border-radius: var(--r-lg);
+        padding: 14px;
+        overflow: visible;
+        background:
+          radial-gradient(
+            circle at 18% 24%,
+            rgba(255, 240, 210, 0.06) 0 2px,
+            transparent 3px
+          ),
+          radial-gradient(
+            circle at 72% 16%,
+            rgba(0, 0, 0, 0.2) 0 2px,
+            transparent 3px
+          ),
+          radial-gradient(
+            circle at 40% 64%,
+            rgba(255, 240, 210, 0.05) 0 2px,
+            transparent 3px
+          ),
+          radial-gradient(
+            circle at 84% 78%,
+            rgba(0, 0, 0, 0.22) 0 2px,
+            transparent 3px
+          ),
+          repeating-linear-gradient(
+            92deg,
+            var(--soil) 0 30px,
+            var(--soil-2) 30px 60px
+          ),
+          var(--soil);
+        box-shadow:
+          inset 0 7px 20px rgba(0, 0, 0, 0.5),
+          inset 0 -3px 6px rgba(255, 220, 170, 0.05),
+          inset 0 0 0 2px rgba(0, 0, 0, 0.18);
+      }
+
+      /* Grid */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 6px;
+      }
+
+      /* Cell */
+      .cell {
+        position: relative;
+        border-radius: 26%;
+        aspect-ratio: 1;
+        width: 64px;
+        background: radial-gradient(
+          circle at 50% 36%,
+          var(--soil-hole),
+          #46301c 72%
+        );
+        box-shadow:
+          inset 0 4px 9px rgba(0, 0, 0, 0.55),
+          inset 0 -2px 3px rgba(255, 220, 170, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .cell svg {
+        width: 108%;
+        height: 108%;
+        margin-top: -5%;
+        filter: drop-shadow(0 5px 4px rgba(0, 0, 0, 0.32));
+      }
+      .cell.empty {
+        background: radial-gradient(
+          circle at 50% 42%,
+          var(--soil-deep),
+          #3a2614 76%
+        );
+        box-shadow:
+          inset 0 6px 13px rgba(0, 0, 0, 0.72),
+          inset 0 1px 0 rgba(255, 220, 170, 0.04);
+      }
+
+      /* Highlighted (pre-dig preview) */
+      .cell.hl {
+        animation: cellBob 1.6s ease-in-out infinite;
+      }
+      .cell.hl::after {
+        content: "";
+        position: absolute;
+        inset: -3px;
+        border-radius: 30%;
+        box-shadow:
+          0 0 0 3px var(--gold),
+          0 0 16px 2px color-mix(in srgb, var(--gold) 70%, transparent);
+      }
+      @keyframes cellBob {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-3px);
+        }
+      }
+
+      /* Selected (swap) */
+      .cell.sel::after {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: 30%;
+        box-shadow:
+          0 0 0 3px #7a9a5b,
+          0 0 12px 2px rgba(122, 154, 91, 0.5);
+      }
+
+      /* Grass tufts */
+      .tuft {
+        position: absolute;
+        pointer-events: none;
+        z-index: 3;
+      }
+
+      /* Legend */
+      .legend {
+        color: #f6efe0;
+        font-size: 13px;
+        margin-top: 20px;
+        text-align: center;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      "
+    >
+      <h1 style="color: #f6efe0; margin: 0">Task 11 — Game Board Preview</h1>
+      <p class="legend">
+        8×8 grid with soil-patch aesthetic, grass tufts, highlighted cells (gold
+        bob), and swap selection (green ring)
+      </p>
+
+      <div class="patch">
+        <!-- Grass tufts -->
+        <div class="tuft" style="top: -14px; left: 6%">
+          <svg width="61" height="42" viewBox="0 0 64 44">
+            <g
+              fill="var(--grass)"
+              stroke="var(--grass-deep)"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            >
+              <path d="M18 44 C 10 30 8 18 12 6 C 18 16 20 30 24 44 Z" />
+              <path d="M32 44 C 28 26 28 12 33 2 C 38 14 38 30 38 44 Z" />
+              <path d="M46 44 C 54 30 56 20 52 9 C 46 18 44 30 40 44 Z" />
+              <path
+                d="M26 44 C 22 32 22 22 25 14 C 30 24 30 34 31 44 Z"
+                fill="var(--grass-2)"
+              />
+              <path
+                d="M40 44 C 44 33 44 24 42 16 C 37 25 36 34 35 44 Z"
+                fill="var(--grass-2)"
+              />
+            </g>
+          </svg>
+        </div>
+        <div class="tuft" style="top: -18px; left: 34%">
+          <svg width="74" height="51" viewBox="0 0 64 44">
+            <g
+              fill="var(--grass)"
+              stroke="var(--grass-deep)"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            >
+              <path d="M18 44 C 10 30 8 18 12 6 C 18 16 20 30 24 44 Z" />
+              <path d="M32 44 C 28 26 28 12 33 2 C 38 14 38 30 38 44 Z" />
+              <path d="M46 44 C 54 30 56 20 52 9 C 46 18 44 30 40 44 Z" />
+              <path
+                d="M26 44 C 22 32 22 22 25 14 C 30 24 30 34 31 44 Z"
+                fill="var(--grass-2)"
+              />
+              <path
+                d="M40 44 C 44 33 44 24 42 16 C 37 25 36 34 35 44 Z"
+                fill="var(--grass-2)"
+              />
+            </g>
+          </svg>
+        </div>
+        <div class="tuft" style="top: -13px; right: 10%; transform: scaleX(-1)">
+          <svg width="58" height="40" viewBox="0 0 64 44">
+            <g
+              fill="var(--grass)"
+              stroke="var(--grass-deep)"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            >
+              <path d="M18 44 C 10 30 8 18 12 6 C 18 16 20 30 24 44 Z" />
+              <path d="M32 44 C 28 26 28 12 33 2 C 38 14 38 30 38 44 Z" />
+              <path d="M46 44 C 54 30 56 20 52 9 C 46 18 44 30 40 44 Z" />
+              <path
+                d="M26 44 C 22 32 22 22 25 14 C 30 24 30 34 31 44 Z"
+                fill="var(--grass-2)"
+              />
+              <path
+                d="M40 44 C 44 33 44 24 42 16 C 37 25 36 34 35 44 Z"
+                fill="var(--grass-2)"
+              />
+            </g>
+          </svg>
+        </div>
+        <div
+          class="tuft"
+          style="bottom: -12px; left: 14%; transform: scaleX(-1)"
+        >
+          <svg width="52" height="36" viewBox="0 0 64 44">
+            <g
+              fill="var(--grass)"
+              stroke="var(--grass-deep)"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            >
+              <path d="M18 44 C 10 30 8 18 12 6 C 18 16 20 30 24 44 Z" />
+              <path d="M32 44 C 28 26 28 12 33 2 C 38 14 38 30 38 44 Z" />
+              <path d="M46 44 C 54 30 56 20 52 9 C 46 18 44 30 40 44 Z" />
+              <path
+                d="M26 44 C 22 32 22 22 25 14 C 30 24 30 34 31 44 Z"
+                fill="var(--grass-2)"
+              />
+              <path
+                d="M40 44 C 44 33 44 24 42 16 C 37 25 36 34 35 44 Z"
+                fill="var(--grass-2)"
+              />
+            </g>
+          </svg>
+        </div>
+        <div class="tuft" style="bottom: -15px; right: 20%">
+          <svg width="64" height="44" viewBox="0 0 64 44">
+            <g
+              fill="var(--grass)"
+              stroke="var(--grass-deep)"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            >
+              <path d="M18 44 C 10 30 8 18 12 6 C 18 16 20 30 24 44 Z" />
+              <path d="M32 44 C 28 26 28 12 33 2 C 38 14 38 30 38 44 Z" />
+              <path d="M46 44 C 54 30 56 20 52 9 C 46 18 44 30 40 44 Z" />
+              <path
+                d="M26 44 C 22 32 22 22 25 14 C 30 24 30 34 31 44 Z"
+                fill="var(--grass-2)"
+              />
+              <path
+                d="M40 44 C 44 33 44 24 42 16 C 37 25 36 34 35 44 Z"
+                fill="var(--grass-2)"
+              />
+            </g>
+          </svg>
+        </div>
+
+        <div class="soil">
+          <div class="grid" id="grid"></div>
+        </div>
+      </div>
+
+      <p class="legend">
+        Gold-ringed cells = pre-dig highlight (bobbing). Green-ringed cell =
+        swap selection.
+      </p>
+    </div>
+
+    <script>
+      // Reuse juicy() from prototype
+      const PLANTS = ["watermelon", "flower", "aubergine", "tomato", "pumpkin"];
+      function juicy(type) {
+        const gid = "jg" + type + Math.random().toString(36).slice(2, 6);
+        const shadow = `<ellipse cx="50" cy="88" rx="24" ry="5" fill="#000" opacity="0.28"/>`;
+        switch (type) {
+          case "watermelon":
+            return `<svg viewBox="0 0 100 100">${shadow}<defs><radialGradient id="${gid}" cx="38%" cy="30%" r="80%"><stop offset="0%" stop-color="#ff8a6b"/><stop offset="60%" stop-color="#f2483c"/><stop offset="100%" stop-color="#c92f28"/></radialGradient></defs><path d="M14,70 Q50,10 86,70 Z" fill="#1f7a44"/><path d="M22,69 Q50,22 78,69 Z" fill="#7ee08a"/><path d="M28,68 Q50,30 72,68 Z" fill="url(#${gid})"/><g fill="#3a2f23"><ellipse cx="44" cy="55" rx="2.4" ry="3.6"/><ellipse cx="56" cy="55" rx="2.4" ry="3.6"/><ellipse cx="50" cy="47" rx="2.4" ry="3.6"/><ellipse cx="38" cy="62" rx="2.4" ry="3.6"/><ellipse cx="62" cy="62" rx="2.4" ry="3.6"/></g><path d="M34,40 Q50,32 66,40" stroke="#fff" stroke-width="3" fill="none" opacity="0.4" stroke-linecap="round"/></svg>`;
+          case "flower":
+            return `<svg viewBox="0 0 100 100">${shadow}<defs><radialGradient id="${gid}" cx="40%" cy="32%" r="75%"><stop offset="0%" stop-color="#ffe08a"/><stop offset="70%" stop-color="#ffc23d"/><stop offset="100%" stop-color="#e89412"/></radialGradient></defs>${(() => {
+              let p = "";
+              for (let i = 0; i < 7; i++) {
+                const a = i * (360 / 7);
+                p += `<ellipse cx="50" cy="27" rx="9" ry="16" fill="url(#${gid})" transform="rotate(${a} 50 50)"/>`;
+              }
+              return p;
+            })()}<circle cx="50" cy="50" r="13" fill="#8a4a1e"/><circle cx="46" cy="46" r="5" fill="#a55f2a"/><ellipse cx="40" cy="34" rx="14" ry="9" fill="#ffffff" opacity="0.45" transform="rotate(-25 40 34)"/></svg>`;
+          case "aubergine":
+            return `<svg viewBox="0 0 100 100">${shadow}<defs><radialGradient id="${gid}" cx="38%" cy="30%" r="80%"><stop offset="0%" stop-color="#b07ee0"/><stop offset="55%" stop-color="#7a3fb8"/><stop offset="100%" stop-color="#4e2380"/></radialGradient></defs><path d="M64,34 C50,26 31,40 31,60 C31,79 47,88 60,83 C75,77 77,56 72,44 C70,38 68,37 64,34 Z" fill="url(#${gid})"/><path d="M66,30 C59,22 49,22 44,29 C51,31 54,36 54,41 C61,39 66,36 68,31 Z" fill="#46a04a"/><path d="M58,30 L63,20" stroke="#2f7a33" stroke-width="4" stroke-linecap="round"/><ellipse cx="44" cy="42" rx="8" ry="14" fill="#fff" opacity="0.35" transform="rotate(-20 44 42)"/></svg>`;
+          case "tomato":
+            return `<svg viewBox="0 0 100 100">${shadow}<defs><radialGradient id="${gid}" cx="38%" cy="30%" r="78%"><stop offset="0%" stop-color="#ff8a5c"/><stop offset="55%" stop-color="#f0392f"/><stop offset="100%" stop-color="#c4241c"/></radialGradient></defs><ellipse cx="50" cy="59" rx="31" ry="28" fill="url(#${gid})"/><path d="M50,35 l6,-7 l3,7 l8,-3 l-5,8 l8,2 l-8,4 q-6,-7 -12,-7 q-6,0 -12,7 l-8,-4 l8,-2 l-5,-8 l8,3 l3,-7 Z" fill="#3fa047"/><ellipse cx="40" cy="46" rx="9" ry="6" fill="#fff" opacity="0.5" transform="rotate(-22 40 46)"/></svg>`;
+          case "pumpkin":
+            return `<svg viewBox="0 0 100 100">${shadow}<defs><radialGradient id="${gid}" cx="40%" cy="32%" r="80%"><stop offset="0%" stop-color="#ffb35c"/><stop offset="60%" stop-color="#f2852a"/><stop offset="100%" stop-color="#cc5f18"/></radialGradient></defs><ellipse cx="32" cy="61" rx="18" ry="24" fill="url(#${gid})"/><ellipse cx="68" cy="61" rx="18" ry="24" fill="url(#${gid})"/><ellipse cx="50" cy="61" rx="27" ry="27" fill="url(#${gid})"/><path d="M40,42 C36,54 36,68 40,80 M60,42 C64,54 64,68 60,80" fill="none" stroke="#c25e16" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/><path d="M50,37 C49,28 54,24 58,23" fill="none" stroke="#4e7a2e" stroke-width="5" stroke-linecap="round"/><ellipse cx="42" cy="48" rx="7" ry="10" fill="#fff" opacity="0.35" transform="rotate(-15 42 48)"/></svg>`;
+        }
+      }
+
+      // Generate a sample board: mix of plants + empty cells, with a highlighted group
+      const grid = document.getElementById("grid");
+      const board = [];
+      for (let r = 0; r < 8; r++) {
+        board[r] = [];
+        for (let c = 0; c < 8; c++) {
+          board[r][c] =
+            Math.random() < 0.25 ? -1 : Math.floor(Math.random() * 5);
+        }
+      }
+      // Force a 5-cell watermelon group at row 2 for highlight demo
+      board[2][1] = 0;
+      board[2][2] = 0;
+      board[2][3] = 0;
+      board[3][2] = 0;
+      board[3][3] = 0;
+      // Force a swap-selected cell
+      const swapCell = "5-4";
+
+      const hlSet = new Set(["2-1", "2-2", "2-3", "3-2", "3-3"]);
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const v = board[r][c];
+          const key = r + "-" + c;
+          const isHl = hlSet.has(key);
+          const isSel = key === swapCell;
+          const cls =
+            "cell" +
+            (v < 0 ? " empty" : "") +
+            (isHl ? " hl" : "") +
+            (isSel ? " sel" : "");
+          const inner = v >= 0 ? juicy(PLANTS[v]) : "";
+          grid.innerHTML += `<div class="${cls}">${inner}</div>`;
+        }
+      }
+    </script>
+  </body>
+</html>
