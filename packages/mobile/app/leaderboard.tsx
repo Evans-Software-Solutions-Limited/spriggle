@@ -1,6 +1,6 @@
 import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { useTheme, fonts, radii, spacing } from "@/theme";
+import { useTheme, fonts, radii, spacing } from "../src/theme";
 
 const MOCK_ENTRIES = [
   { name: "Marigold", score: 48230 },

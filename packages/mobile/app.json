@@ -8,6 +8,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
+      "isTabletOnly": true,
       "requireFullScreen": true,
       "icon": "./assets/icons/ios.png",
       "bundleIdentifier": "com.bradleyevans96.spriggle",
