@@ -161,17 +161,17 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Resume interrupted game from serialized state
     - _Requirements: 16.1, 16.2_
 
-- [ ] 14. Local storage and leaderboard persistence
-  - [ ] 14.1 Implement local storage service with expo-sqlite
+- [x] 14. Local storage and leaderboard persistence
+  - [x] 14.1 Implement local storage service with expo-sqlite
     - Create SQLite schema (local_leaderboard, sync_queue, game_state tables)
     - Implement LocalStorageService interface methods
     - _Requirements: 11.1, 11.4, 13.5_
-  - [ ] 14.2 Write property tests for local persistence
+  - [x] 14.2 Write property tests for local persistence
     - **Property 18: Score persisted to local leaderboard**
     - **Property 19: Local leaderboard entries contain all required fields**
     - **Property 20: Sync queue persistence round-trip**
     - **Validates: Requirements 11.1, 11.2, 11.4, 13.5**
-  - [ ] 14.3 Implement leaderboard display screen
+  - [x] 14.3 Implement leaderboard display screen
     - Show local leaderboard with position, score, player name, date
     - Toggle between local and global view based on connectivity
     - _Requirements: 11.2, 11.3_

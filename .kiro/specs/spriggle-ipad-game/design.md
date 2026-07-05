@@ -145,12 +145,23 @@ interface SyncQueueEntry {
 interface LocalStorageService {
   saveScore(entry: LocalLeaderboardEntry): Promise<void>;
   getLeaderboard(): Promise<LocalLeaderboardEntry[]>;
-  saveGameState(state: GameState): Promise<void>;
-  loadGameState(): Promise<GameState | null>;
+  saveGameState(state: PersistedGameState): Promise<void>;
+  loadGameState(): Promise<PersistedGameState | null>;
   clearGameState(): Promise<void>;
   enqueueSyncEntry(entry: SyncQueueEntry): Promise<void>;
   getSyncQueue(): Promise<SyncQueueEntry[]>;
   removeSyncEntry(id: string): Promise<void>;
+}
+
+// The client persists a serializable snapshot of the in-progress game. Its
+// shape mirrors the engine's GameState; it is declared locally in the mobile
+// package (PersistedGameState) because the mobile app does not depend on the
+// engine package directly.
+interface PersistedGameState {
+  board: (PlantType | null)[][];
+  score: number;
+  turns: number;
+  isGameOver: boolean;
 }
 ```
 

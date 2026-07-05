@@ -123,6 +123,13 @@ jobs:
         with:
           bun-version: latest
 
+      # The mobile persistence tests run under Jest (Node) and use the built-in
+      # `node:sqlite` module, which requires Node >= 22.5.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Restore cache
         uses: actions/cache/restore@v4
         with:
