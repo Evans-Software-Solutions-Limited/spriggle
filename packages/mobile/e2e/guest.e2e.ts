@@ -8,7 +8,7 @@ import { by, device, element, expect, waitFor } from "detox";
  */
 describe("Guest mode → local-only", () => {
   beforeAll(async () => {
-    await device.launchApp({ newInstance: true });
+    await device.launchApp({ delete: true, newInstance: true });
   });
 
   it("continues as a guest from the sign-in screen", async () => {
@@ -26,12 +26,12 @@ describe("Guest mode → local-only", () => {
   it("records a guest score to the local leaderboard", async () => {
     await device.openURL({ url: "spriggle://gameover?score=777" });
     await element(by.label("Garden (home)")).tap();
-    await element(by.label("Leaderboard")).tap();
+    await element(by.label("Leaderboard")).atIndex(0).tap();
     await element(by.label("Local leaderboard")).tap();
     await waitFor(element(by.text("777")))
       .toBeVisible()
       .withTimeout(10000);
     // Player name is the guest fallback.
-    await expect(element(by.text("Guest"))).toBeVisible();
+    await expect(element(by.text("Guest")).atIndex(0)).toBeVisible();
   });
 });

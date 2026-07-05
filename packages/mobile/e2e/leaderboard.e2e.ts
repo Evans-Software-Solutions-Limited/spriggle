@@ -11,7 +11,7 @@ import { by, device, element, expect, waitFor } from "detox";
  */
 describe("Sign-in → global leaderboard", () => {
   beforeAll(async () => {
-    await device.launchApp({ newInstance: true });
+    await device.launchApp({ delete: true, newInstance: true });
   });
 
   it("offers the provider sign-in options", async () => {

@@ -12,6 +12,8 @@
     "test:unit": "jest --passWithNoTests --coverage",
     "e2e:build": "detox build --configuration ios.sim.debug",
     "e2e:test": "detox test --configuration ios.sim.debug --cleanup",
+    "e2e:build:release": "detox build --configuration ios.sim.release",
+    "e2e:test:release": "detox test --configuration ios.sim.release --cleanup",
     "build": "echo 'Mobile build handled by EAS'"
   },
   "dependencies": {

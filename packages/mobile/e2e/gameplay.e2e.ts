@@ -10,7 +10,7 @@ import { by, device, element, expect, waitFor } from "detox";
  */
 describe("Gameplay → game over → score", () => {
   beforeAll(async () => {
-    await device.launchApp({ newInstance: true });
+    await device.launchApp({ delete: true, newInstance: true });
   });
 
   it("opens the game from the home screen", async () => {
@@ -30,7 +30,7 @@ describe("Gameplay → game over → score", () => {
 
   it("persists the score to the local leaderboard", async () => {
     await element(by.label("Garden (home)")).tap();
-    await element(by.label("Leaderboard")).tap();
+    await element(by.label("Leaderboard")).atIndex(0).tap();
     await element(by.label("Local leaderboard")).tap();
     await waitFor(element(by.text("1,234")))
       .toBeVisible()

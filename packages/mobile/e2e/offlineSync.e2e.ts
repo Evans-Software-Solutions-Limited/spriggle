@@ -10,7 +10,7 @@ import { by, device, element, waitFor } from "detox";
  */
 describe("Offline → reconnect → sync", () => {
   beforeAll(async () => {
-    await device.launchApp({ newInstance: true });
+    await device.launchApp({ delete: true, newInstance: true });
   });
 
   it("records a score while offline (backend blocked)", async () => {
@@ -18,7 +18,7 @@ describe("Offline → reconnect → sync", () => {
     await device.openURL({ url: "spriggle://gameover?score=555" });
 
     await element(by.label("Garden (home)")).tap();
-    await element(by.label("Leaderboard")).tap();
+    await element(by.label("Leaderboard")).atIndex(0).tap();
     await element(by.label("Local leaderboard")).tap();
     await waitFor(element(by.text("555")))
       .toBeVisible()
