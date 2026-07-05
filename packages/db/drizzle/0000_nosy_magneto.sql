@@ -12,7 +12,8 @@ CREATE TABLE "users" (
 	"provider_id" text NOT NULL,
 	"display_name" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "users_provider_provider_id_unique" UNIQUE("provider","provider_id")
 );
 --> statement-breakpoint
 ALTER TABLE "scores" ADD CONSTRAINT "scores_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;

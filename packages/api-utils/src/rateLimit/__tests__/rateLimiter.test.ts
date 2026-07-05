@@ -57,4 +57,22 @@ describe("createRateLimiter", () => {
     limiter.reset();
     expect(limiter.check("u1").allowed).toBe(true);
   });
+
+  it("rejects invalid configuration", () => {
+    expect(() => createRateLimiter({ windowMs: 1000, max: 0 })).toThrow("max");
+    expect(() => createRateLimiter({ windowMs: 0, max: 1 })).toThrow(
+      "windowMs",
+    );
+  });
+
+  it("evicts stale buckets once a window has elapsed", () => {
+    let t = 0;
+    const limiter = createRateLimiter({ windowMs: 100, max: 5, now: () => t });
+    limiter.check("old"); // bucket created at t=0
+    // Advance well past the window and touch a different key to trigger a sweep.
+    t = 500;
+    limiter.check("new");
+    // "old" was evicted, so it starts a fresh window (full budget) when seen again.
+    expect(limiter.check("old")).toMatchObject({ allowed: true, remaining: 4 });
+  });
 });

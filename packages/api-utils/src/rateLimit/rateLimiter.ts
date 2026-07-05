@@ -38,12 +38,30 @@ interface Bucket {
 
 export function createRateLimiter(options: RateLimiterOptions): RateLimiter {
   const { windowMs, max } = options;
+  if (max < 1) {
+    throw new Error("RateLimiter `max` must be >= 1");
+  }
+  if (windowMs <= 0) {
+    throw new Error("RateLimiter `windowMs` must be > 0");
+  }
   const now = options.now ?? Date.now;
   const buckets = new Map<string, Bucket>();
+  let lastSweep = now();
+
+  // Drop expired buckets so the map can't grow unbounded over a warm
+  // container's lifetime. Amortized: runs at most once per window.
+  function sweep(t: number): void {
+    if (t - lastSweep < windowMs) return;
+    lastSweep = t;
+    for (const [key, bucket] of buckets) {
+      if (t - bucket.windowStart >= windowMs) buckets.delete(key);
+    }
+  }
 
   return {
     check(key: string): RateLimitResult {
       const t = now();
+      sweep(t);
       const bucket = buckets.get(key);
 
       if (!bucket || t - bucket.windowStart >= windowMs) {

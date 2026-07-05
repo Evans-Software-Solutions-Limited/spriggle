@@ -1,5 +1,5 @@
 {
-  "id": "d606d77b-ab69-4283-8153-c5c3d867aad6",
+  "id": "60ef9def-e0cf-470e-804a-fd4709271f56",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -110,7 +110,16 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "users_provider_provider_id_unique": {
+          "name": "users_provider_provider_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "provider",
+            "provider_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

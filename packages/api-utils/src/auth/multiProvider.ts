@@ -41,6 +41,8 @@ export interface ProviderVerifier {
   jwks: JWTVerifyGetKey;
   /** Expected audience (Apple: client id; Supabase: "authenticated"). */
   audience?: string;
+  /** Allowed signing algorithms (defense-in-depth against algorithm confusion). */
+  algorithms: string[];
   toUser: (payload: JWTPayload) => AuthenticatedUser;
 }
 
@@ -59,6 +61,7 @@ export function buildAppleVerifier(
     issuer: APPLE_ISSUER,
     jwks: createRemoteJWKSet(new URL(APPLE_JWKS_URL)),
     audience: clientId,
+    algorithms: ["RS256"],
     toUser: (payload) => ({
       provider: "apple",
       providerId: String(payload.sub),
@@ -80,6 +83,10 @@ export function buildSupabaseVerifier(
     issuer: `${base}/auth/v1`,
     jwks: createRemoteJWKSet(new URL(`${base}/auth/v1/.well-known/jwks.json`)),
     audience: "authenticated",
+    // Supabase asymmetric signing keys default to ES256; allow RS256 too. This
+    // requires the project to use JWKS (asymmetric) signing keys, not the
+    // legacy shared HS256 secret (which exposes no JWKS).
+    algorithms: ["ES256", "RS256"],
     toUser: (payload) => {
       const meta = (payload.user_metadata ?? {}) as Record<string, unknown>;
       const displayName =
@@ -105,13 +112,20 @@ let _verifiers: ProviderVerifier[] | null = null;
 /**
  * Build the default provider verifiers from the environment. A provider whose
  * required config is absent is simply omitted (so a Supabase-only deployment
- * doesn't fail for lack of APPLE_CLIENT_ID).
+ * doesn't fail for lack of APPLE_CLIENT_ID). Throws when NO provider is
+ * configured — that's a deployment misconfiguration and must fail loudly
+ * rather than silently rejecting every request as unauthorized.
  */
 export function defaultVerifiers(): ProviderVerifier[] {
   if (_verifiers) return _verifiers;
   const verifiers: ProviderVerifier[] = [];
   if (process.env.SUPABASE_URL) verifiers.push(buildSupabaseVerifier());
   if (process.env.APPLE_CLIENT_ID) verifiers.push(buildAppleVerifier());
+  if (verifiers.length === 0) {
+    throw new Error(
+      "No auth providers configured: set SUPABASE_URL and/or APPLE_CLIENT_ID",
+    );
+  }
   _verifiers = verifiers;
   return verifiers;
 }
@@ -144,6 +158,7 @@ export async function verifyToken(
     const { payload } = await jwtVerify(token, verifier.jwks, {
       issuer: verifier.issuer,
       audience: verifier.audience,
+      algorithms: verifier.algorithms,
     });
     if (!payload.sub) return null;
     return verifier.toUser(payload);

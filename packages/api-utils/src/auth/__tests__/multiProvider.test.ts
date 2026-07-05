@@ -11,9 +11,11 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   buildAppleVerifier,
   buildSupabaseVerifier,
+  defaultVerifiers,
   getAuthUser,
   getUser,
   requireAuth,
+  resetVerifiers,
   verifyToken,
   type ProviderVerifier,
 } from "../multiProvider";
@@ -157,6 +159,23 @@ describe("builders require configuration", () => {
 
   it("throws when SUPABASE_URL is absent", () => {
     expect(() => buildSupabaseVerifier(undefined)).toThrow("SUPABASE_URL");
+  });
+});
+
+describe("defaultVerifiers", () => {
+  it("throws when no provider is configured (loud misconfiguration)", () => {
+    const supabase = process.env.SUPABASE_URL;
+    const apple = process.env.APPLE_CLIENT_ID;
+    delete process.env.SUPABASE_URL;
+    delete process.env.APPLE_CLIENT_ID;
+    resetVerifiers();
+    try {
+      expect(() => defaultVerifiers()).toThrow("No auth providers configured");
+    } finally {
+      if (supabase !== undefined) process.env.SUPABASE_URL = supabase;
+      if (apple !== undefined) process.env.APPLE_CLIENT_ID = apple;
+      resetVerifiers();
+    }
   });
 });
 
