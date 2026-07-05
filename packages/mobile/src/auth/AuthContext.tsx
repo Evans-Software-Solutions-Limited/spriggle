@@ -8,8 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { authService as defaultAuthService } from "../services/auth";
-import { isGuest } from "../services/auth";
+import { authService as defaultAuthService, isGuest } from "../services/auth";
 import type { AuthService, AuthUser } from "../services/auth";
 
 /**
