@@ -76,6 +76,27 @@ describe("LocalStorageService", () => {
     expect(queue[0].id).toBe("b");
   });
 
+  it("increments the retry count for a queued entry", async () => {
+    await store.enqueueSyncEntry({
+      id: "a",
+      score: 10,
+      playerName: "One",
+      date: new Date().toISOString(),
+      authToken: "t1",
+      retryCount: 2,
+    });
+
+    await store.incrementSyncRetry("a");
+
+    const queue = await store.getSyncQueue();
+    expect(queue[0].retryCount).toBe(3);
+  });
+
+  it("incrementSyncRetry is a no-op for an unknown id", async () => {
+    await expect(store.incrementSyncRetry("missing")).resolves.toBeUndefined();
+    expect(await store.getSyncQueue()).toHaveLength(0);
+  });
+
   it("returns null when the saved game state is corrupted", async () => {
     const db = await SQLite.openDatabaseAsync(":memory:");
     const service = await createLocalStorageService(db);

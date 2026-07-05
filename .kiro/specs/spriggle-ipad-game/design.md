@@ -151,6 +151,9 @@ interface LocalStorageService {
   enqueueSyncEntry(entry: SyncQueueEntry): Promise<void>;
   getSyncQueue(): Promise<SyncQueueEntry[]>;
   removeSyncEntry(id: string): Promise<void>;
+  // Increments a queued entry's retry counter after a 5xx submission failure
+  // (Requirement 13.4). Added in Task 17.
+  incrementSyncRetry(id: string): Promise<void>;
 }
 
 // The client persists a serializable snapshot of the in-progress game. Its
@@ -228,9 +231,25 @@ function canViewGlobalLeaderboard(user: AuthUser | null): boolean; // non-guest 
 interface SyncService {
   processQueue(): Promise<void>;
   submitScore(entry: SyncQueueEntry): Promise<boolean>;
+  // Enqueue a score then best-effort drain (offline-first producer, 13.1).
+  queueScore(entry: SyncQueueEntry): Promise<void>;
   onConnectivityChange(isConnected: boolean): void;
 }
 ```
+
+**Behaviour (Task 17):** `queueScore` persists the entry to sync_queue and
+kicks a best-effort drain — it uploads immediately when online, otherwise the
+entry stays queued for the next reconnect (Requirement 13.1). The game-over
+screen calls it for authenticated players; guests are local-only.
+`submitScore` POSTs to `POST /api/scores` with the
+entry's `authToken` as a bearer token; it returns `true` on 2xx (persisted),
+`false` on 4xx (client error), and throws on 5xx / network failure.
+`processQueue` drains the sync_queue applying the design.md error policy per
+entry — remove on 2xx (Property 21) or 4xx (drop, won't succeed on retry), and
+retain + `incrementSyncRetry` on 5xx / network error (Property 22). Concurrent
+`processQueue` calls coalesce into one in-flight drain. `onConnectivityChange`
+triggers a drain when connectivity is regained; `startConnectivitySync` wires
+`@react-native-community/netinfo` to it.
 
 ### Backend API Endpoints
 

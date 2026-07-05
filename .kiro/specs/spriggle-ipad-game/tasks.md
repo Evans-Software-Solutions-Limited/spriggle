@@ -198,18 +198,22 @@ Incremental implementation starting with the pure game engine (fully testable wi
 - [ ] 16. Checkpoint - Client app functional
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 17. Offline-first sync queue
-  - [ ] 17.1 Implement sync queue and connectivity detection
+- [x] 17. Offline-first sync queue
+  - [x] 17.1 Implement sync queue and connectivity detection
     - Implement SyncService with queue processing logic
     - Wire @react-native-community/netinfo for connectivity changes
     - Auto-process queue when connectivity returns
     - Handle success (remove from queue) and failure (retain with retry count)
+    - Added `incrementSyncRetry(id)` to LocalStorageService (design.md updated);
+      submitScore returns true/false/throws for 2xx/4xx/5xx respectively.
+      queueScore (offline-first producer) enqueues + best-effort drains; wired
+      into gameover for authenticated players (Requirement 13.1)
     - _Requirements: 13.1, 13.2, 13.3, 13.4_
-  - [ ] 17.2 Write property tests for sync queue behavior
+  - [x] 17.2 Write property tests for sync queue behavior
     - **Property 21: Successful sync removes entry from queue**
     - **Property 22: Failed sync retains entry in queue**
     - **Validates: Requirements 13.3, 13.4**
-  - [ ] 17.3 Write unit tests for sync queue
+  - [x] 17.3 Write unit tests for sync queue
     - Test enqueue on offline, process on reconnect, retry on server error
     - _Requirements: 13.1, 13.2, 13.3, 13.4_
 

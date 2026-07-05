@@ -51,6 +51,12 @@ export interface LocalStorageService {
   enqueueSyncEntry(entry: SyncQueueEntry): Promise<void>;
   getSyncQueue(): Promise<SyncQueueEntry[]>;
   removeSyncEntry(id: string): Promise<void>;
+  /**
+   * Increment the retry counter for a queued entry after a server-error (5xx)
+   * submission failure, so backoff/telemetry can reason about repeated
+   * failures (Requirement 13.4). No-op if the id is absent.
+   */
+  incrementSyncRetry(id: string): Promise<void>;
 }
 
 const SCHEMA = `
@@ -186,6 +192,13 @@ export async function createLocalStorageService(
 
     async removeSyncEntry(id) {
       await db.runAsync("DELETE FROM sync_queue WHERE id = ?", [id]);
+    },
+
+    async incrementSyncRetry(id) {
+      await db.runAsync(
+        "UPDATE sync_queue SET retry_count = retry_count + 1 WHERE id = ?",
+        [id],
+      );
     },
   };
 }

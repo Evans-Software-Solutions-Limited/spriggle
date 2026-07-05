@@ -1,13 +1,18 @@
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "../src/theme";
 import { AuthProvider } from "../src/auth/AuthContext";
+import { startConnectivitySync } from "../src/services/sync";
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
+  // Auto-drain the offline score queue whenever connectivity returns.
+  useEffect(() => startConnectivitySync(), []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
