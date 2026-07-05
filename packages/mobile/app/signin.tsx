@@ -11,7 +11,7 @@ import { useRouter } from "expo-router";
 import { useTheme, fonts, radii, spacing } from "../src/theme";
 import { useAuth } from "../src/auth/AuthContext";
 
-type Provider = "apple" | "gamecenter" | "facebook" | "email" | "guest";
+type Provider = "apple" | "gamecenter" | "email" | "guest";
 
 /**
  * Sign-in screen — lets the player pick an identity provider (Requirements
@@ -97,11 +97,6 @@ export default function SignInScreen() {
           "gamecenter",
           "Continue with Game Center",
           auth.signInWithGameCenter,
-        )}
-        {providerButton(
-          "facebook",
-          "Continue with Facebook",
-          auth.signInWithFacebook,
         )}
 
         <View style={styles.divider}>

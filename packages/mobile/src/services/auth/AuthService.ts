@@ -6,7 +6,6 @@ import {
 } from "./secureStore";
 import { signInWithApple as appleProvider } from "./providers/apple";
 import { signInWithGameCenter as gameCenterProvider } from "./providers/gameCenter";
-import { signInWithFacebook as facebookProvider } from "./providers/facebook";
 import { signInWithEmail as emailProvider } from "./providers/email";
 import { isGuest } from "./guestPolicy";
 import type { AuthService, AuthUser } from "./types";
@@ -19,7 +18,6 @@ export interface AuthServiceDeps {
   providers: {
     apple: () => Promise<AuthUser>;
     gameCenter: () => Promise<AuthUser>;
-    facebook: () => Promise<AuthUser>;
     email: (email: string, password: string) => Promise<AuthUser>;
   };
   store: {
@@ -36,7 +34,6 @@ function defaultDeps(secureStore?: SecureStoreLike): AuthServiceDeps {
     providers: {
       apple: appleProvider,
       gameCenter: gameCenterProvider,
-      facebook: facebookProvider,
       email: emailProvider,
     },
     store: {
@@ -100,10 +97,6 @@ export class AuthServiceImpl implements AuthService {
 
   signInWithGameCenter(): Promise<AuthUser> {
     return this.deps.providers.gameCenter().then((u) => this.setSession(u));
-  }
-
-  signInWithFacebook(): Promise<AuthUser> {
-    return this.deps.providers.facebook().then((u) => this.setSession(u));
   }
 
   signInWithEmail(email: string, password: string): Promise<AuthUser> {

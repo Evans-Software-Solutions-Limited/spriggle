@@ -26,7 +26,6 @@ interface AuthContextValue {
   isRestoring: boolean;
   signInWithApple: () => Promise<AuthUser>;
   signInWithGameCenter: () => Promise<AuthUser>;
-  signInWithFacebook: () => Promise<AuthUser>;
   signInWithEmail: (email: string, password: string) => Promise<AuthUser>;
   playAsGuest: () => AuthUser;
   signOut: () => Promise<void>;
@@ -77,12 +76,6 @@ export function AuthProvider({
     return u;
   }, [service]);
 
-  const signInWithFacebook = useCallback(async () => {
-    const u = await service.signInWithFacebook();
-    setUser(u);
-    return u;
-  }, [service]);
-
   const signInWithEmail = useCallback(
     async (email: string, password: string) => {
       const u = await service.signInWithEmail(email, password);
@@ -110,7 +103,6 @@ export function AuthProvider({
       isRestoring,
       signInWithApple,
       signInWithGameCenter,
-      signInWithFacebook,
       signInWithEmail,
       playAsGuest,
       signOut,
@@ -120,7 +112,6 @@ export function AuthProvider({
       isRestoring,
       signInWithApple,
       signInWithGameCenter,
-      signInWithFacebook,
       signInWithEmail,
       playAsGuest,
       signOut,

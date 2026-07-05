@@ -43,12 +43,6 @@ function makeService(
         displayName: "GC Player",
         token: null,
       }),
-      facebook: async () => ({
-        id: "fb-1",
-        provider: "facebook",
-        displayName: "FB User",
-        token: "fb-token",
-      }),
       email: async (email: string) => ({
         id: "email-1",
         provider: "email",
@@ -171,7 +165,7 @@ describe("provider sign-in", () => {
 describe("sign out", () => {
   it("clears the current user and persisted session", async () => {
     const service = makeService();
-    await service.signInWithFacebook();
+    await service.signInWithApple();
     expect(service.isAuthenticated()).toBe(true);
 
     await service.signOut();
