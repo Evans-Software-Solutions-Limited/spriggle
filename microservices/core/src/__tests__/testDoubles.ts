@@ -57,8 +57,10 @@ export function createInMemoryRepo(): ScoreRepository {
           playerName: s.playerName,
           date: s.playedAt.toISOString(),
         })),
+        // Mirror DynamoDB: a query truncated by Limit returns a cursor even when
+        // it lands on the exact end (the next page is then empty).
         nextCursor:
-          next < sorted.length
+          slice.length === limit
             ? Buffer.from(String(next), "utf8").toString("base64")
             : undefined,
       };

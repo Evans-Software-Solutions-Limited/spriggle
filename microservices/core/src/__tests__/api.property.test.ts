@@ -23,7 +23,7 @@ const looseLimiter = () =>
   createRateLimiter({ windowMs: 60_000, max: 100_000 });
 
 const isoDateArb = fc
-  .integer({ min: 0, max: 4102444800000 })
+  .integer({ min: 0, max: Date.now() })
   .map((ms) => new Date(ms).toISOString());
 
 describe("Feature: spriggle-ipad-game, Property 17: Leaderboard entries sorted descending", () => {

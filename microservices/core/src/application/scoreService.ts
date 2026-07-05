@@ -25,9 +25,13 @@ export interface ScoreServiceDeps {
 
 const MAX_LEADERBOARD_LIMIT = 100;
 const DEFAULT_LEADERBOARD_LIMIT = 50;
-// Postgres int4 max — scores.score is an `integer` column, so larger values
-// would overflow on insert. Reject them at validation instead of 500ing.
+// Upper bound on score. Keeps the leaderboard GSI sort key a fixed width in the
+// DynamoDB repo (score is subtracted from a 10-digit constant), and guards
+// against absurd/abusive values. 2^31-1 is a comfortable ceiling for a match-3.
 const MAX_SCORE = 2147483647;
+// Allow up to a day of client clock skew; reject far-future / pre-epoch dates
+// so playedAt stays in range for the leaderboard tiebreak key.
+const MAX_CLOCK_SKEW_MS = 24 * 60 * 60 * 1000;
 
 function displayNameFor(user: AuthenticatedUser): string {
   return user.displayName ?? user.email ?? "Gardener";
@@ -58,7 +62,9 @@ function parseScorePayload(raw: unknown): ScorePayload | null {
   ) {
     return null;
   }
-  if (typeof date !== "string" || Number.isNaN(Date.parse(date))) {
+  if (typeof date !== "string") return null;
+  const ts = Date.parse(date);
+  if (Number.isNaN(ts) || ts < 0 || ts > Date.now() + MAX_CLOCK_SKEW_MS) {
     return null;
   }
   return { score, date };

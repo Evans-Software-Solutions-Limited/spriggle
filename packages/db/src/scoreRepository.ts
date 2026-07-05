@@ -79,8 +79,12 @@ function userPk(provider: string, providerId: string): string {
 
 /** Inverted sort key so an ascending GSI query yields score desc, then time desc. */
 function leaderboardSortKey(score: number, playedAtMs: number): string {
-  const invScore = String(MAX_SCORE - score).padStart(SCORE_DIGITS, "0");
-  const invTime = String(MAX_TIME - playedAtMs).padStart(TIME_DIGITS, "0");
+  // Clamp into range so the inverted values stay non-negative and fixed-width
+  // (the service already validates these bounds; this is defense-in-depth).
+  const s = Math.max(0, Math.min(score, MAX_SCORE));
+  const t = Math.max(0, Math.min(playedAtMs, MAX_TIME));
+  const invScore = String(MAX_SCORE - s).padStart(SCORE_DIGITS, "0");
+  const invTime = String(MAX_TIME - t).padStart(TIME_DIGITS, "0");
   return `${invScore}#${invTime}`;
 }
 
@@ -186,6 +190,8 @@ export function createDynamoScoreRepository(
       if (!profileRes.Item) return null;
 
       // Aggregate best score + total games from the user's score items.
+      // TODO: for very active users this fan-out grows with game count; consider
+      // maintaining bestScore/totalGames on the PROFILE item in recordScore.
       let bestScore = 0;
       let totalGames = 0;
       let startKey: Record<string, unknown> | undefined;

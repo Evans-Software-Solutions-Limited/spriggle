@@ -85,6 +85,8 @@ describe("POST /api/scores", () => {
       { score: 1.5, date: "2026-01-01T00:00:00Z" }, // non-integer
       { score: 2147483648, date: "2026-01-01T00:00:00Z" }, // exceeds int4 max
       { score: 10, date: "not-a-date" }, // bad date
+      { score: 10, date: "9999-01-01T00:00:00Z" }, // far-future date
+      { score: 10, date: "1960-01-01T00:00:00Z" }, // pre-epoch date
       { score: 10 }, // missing date
       [], // not an object with fields
       42, // primitive body (not an object)
@@ -156,6 +158,36 @@ describe("GET /api/leaderboard", () => {
     };
     expect(body2.entries.map((e) => e.score)).toEqual([300, 200]);
     expect(body2.entries.map((e) => e.position)).toEqual([1, 2]);
+  });
+
+  it("breaks score ties by most-recent playedAt first", async () => {
+    const { app } = makeApp();
+    // Same score, different play times.
+    await app.handle(
+      jsonRequest(
+        "/api/scores",
+        "POST",
+        { score: 500, date: "2026-01-01T00:00:00.000Z" },
+        auth,
+      ),
+    );
+    await app.handle(
+      jsonRequest(
+        "/api/scores",
+        "POST",
+        { score: 500, date: "2026-03-01T00:00:00.000Z" },
+        auth,
+      ),
+    );
+
+    const res = await app.handle(jsonRequest("/api/leaderboard", "GET"));
+    const { entries } = (await res.json()) as {
+      entries: { date: string }[];
+    };
+    expect(entries.map((e) => e.date)).toEqual([
+      "2026-03-01T00:00:00.000Z",
+      "2026-01-01T00:00:00.000Z",
+    ]);
   });
 
   it("applies default and clamped limits for invalid query params", async () => {

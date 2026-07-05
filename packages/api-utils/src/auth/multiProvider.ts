@@ -24,7 +24,7 @@ export type VerifiedProvider = "apple";
 
 export interface AuthenticatedUser {
   provider: VerifiedProvider;
-  /** Stable per-provider subject (token `sub`) — maps to users.provider_id. */
+  /** Stable per-provider subject (token `sub`) — the user's identity key. */
   providerId: string;
   email?: string;
   displayName?: string;
@@ -35,7 +35,7 @@ export interface ProviderVerifier {
   provider: VerifiedProvider;
   issuer: string;
   jwks: JWTVerifyGetKey;
-  /** Expected audience (Apple: client id; Supabase: "authenticated"). */
+  /** Expected audience (Apple: the app's client/bundle id). */
   audience?: string;
   /** Allowed signing algorithms (defense-in-depth against algorithm confusion). */
   algorithms: string[];
