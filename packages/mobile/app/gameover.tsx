@@ -3,9 +3,10 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTheme, fonts, radii, spacing } from "../src/theme";
 import { getLocalStorageService } from "../src/services/localStorage";
+import { useAuth } from "../src/auth/AuthContext";
 
-/** Guest player name used for local-only leaderboard entries. */
-const GUEST_PLAYER_NAME = "Guest";
+/** Fallback name for local-only leaderboard entries when no display name exists. */
+const FALLBACK_PLAYER_NAME = "Guest";
 
 /**
  * Game Over screen — container.
@@ -14,9 +15,12 @@ const GUEST_PLAYER_NAME = "Guest";
 export default function GameOverScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { user } = useAuth();
   const params = useLocalSearchParams<{ score?: string; isBest?: string }>();
   const score = parseInt(params.score ?? "0", 10);
   const isBest = params.isBest === "true";
+
+  const playerName = user?.displayName ?? FALLBACK_PLAYER_NAME;
 
   // Persist the final score to the local leaderboard exactly once on game end
   // (Requirement 11.1). Best-effort: local persistence failures shouldn't crash
@@ -28,7 +32,7 @@ export default function GameOverScreen() {
     const entry = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
       score,
-      playerName: GUEST_PLAYER_NAME,
+      playerName,
       date: new Date().toISOString(),
     };
     getLocalStorageService()
@@ -36,7 +40,7 @@ export default function GameOverScreen() {
       .catch(() => {
         /* best-effort local persistence */
       });
-  }, [score]);
+  }, [score, playerName]);
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.paper }]}>

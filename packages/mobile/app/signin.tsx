@@ -1,0 +1,228 @@
+import { useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  TextInput,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useTheme, fonts, radii, spacing } from "../src/theme";
+import { useAuth } from "../src/auth/AuthContext";
+
+type Provider = "apple" | "gamecenter" | "facebook" | "email" | "guest";
+
+/**
+ * Sign-in screen — lets the player pick an identity provider (Requirements
+ * 10.1–10.5) or continue as a guest (local-only, 10.6). Presented as a modal
+ * from the home identity chip; dismisses back on success.
+ */
+export default function SignInScreen() {
+  const router = useRouter();
+  const { colors } = useTheme();
+  const auth = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState<Provider | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const dismiss = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  };
+
+  const run = async (provider: Provider, action: () => Promise<unknown>) => {
+    setError(null);
+    setBusy(provider);
+    try {
+      await action();
+      dismiss();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Sign-in failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const providerButton = (
+    provider: Exclude<Provider, "email" | "guest">,
+    label: string,
+    action: () => Promise<unknown>,
+  ) => (
+    <Pressable
+      style={[
+        styles.providerBtn,
+        { backgroundColor: colors.surface, borderColor: colors.surfaceLine },
+      ]}
+      onPress={() => run(provider, action)}
+      disabled={busy !== null}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      {busy === provider ? (
+        <ActivityIndicator color={colors.ink} />
+      ) : (
+        <Text style={[styles.providerText, { color: colors.ink }]}>
+          {label}
+        </Text>
+      )}
+    </Pressable>
+  );
+
+  return (
+    <View style={[styles.screen, { backgroundColor: colors.paper }]}>
+      <View style={styles.leftPanel}>
+        <Text style={[styles.brand, { color: colors.primary }]}>Spriggle</Text>
+        <Text style={[styles.tagline, { color: colors.accent700 }]}>
+          Sign in to climb the global leaderboard
+        </Text>
+        <Pressable
+          style={styles.guestLink}
+          onPress={() => run("guest", async () => auth.playAsGuest())}
+          disabled={busy !== null}
+          accessibilityRole="button"
+          accessibilityLabel="Continue as guest"
+        >
+          <Text style={[styles.guestText, { color: colors.inkSoft }]}>
+            Continue as guest →
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.rightPanel}>
+        {providerButton("apple", "Continue with Apple", auth.signInWithApple)}
+        {providerButton(
+          "gamecenter",
+          "Continue with Game Center",
+          auth.signInWithGameCenter,
+        )}
+        {providerButton(
+          "facebook",
+          "Continue with Facebook",
+          auth.signInWithFacebook,
+        )}
+
+        <View style={styles.divider}>
+          <View
+            style={[styles.line, { backgroundColor: colors.surfaceLine }]}
+          />
+          <Text style={[styles.dividerText, { color: colors.inkFaint }]}>
+            or
+          </Text>
+          <View
+            style={[styles.line, { backgroundColor: colors.surfaceLine }]}
+          />
+        </View>
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.surfaceLine,
+              color: colors.ink,
+            },
+          ]}
+          placeholder="Email"
+          placeholderTextColor={colors.inkFaint}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          accessibilityLabel="Email"
+        />
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.surfaceLine,
+              color: colors.ink,
+            },
+          ]}
+          placeholder="Password"
+          placeholderTextColor={colors.inkFaint}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          accessibilityLabel="Password"
+        />
+        <Pressable
+          style={[styles.emailBtn, { backgroundColor: colors.primary }]}
+          onPress={() =>
+            run("email", () => auth.signInWithEmail(email, password))
+          }
+          disabled={busy !== null}
+          accessibilityRole="button"
+          accessibilityLabel="Sign in with email"
+        >
+          {busy === "email" ? (
+            <ActivityIndicator color={colors.onPrimary} />
+          ) : (
+            <Text style={[styles.emailBtnText, { color: colors.onPrimary }]}>
+              Sign in
+            </Text>
+          )}
+        </Pressable>
+
+        {error && (
+          <Text style={[styles.error, { color: colors.accent700 }]}>
+            {error}
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, flexDirection: "row", padding: 30, gap: 30 },
+  leftPanel: { flex: 0.42, justifyContent: "center", gap: 10 },
+  brand: {
+    fontFamily: fonts.display,
+    fontWeight: "700",
+    fontSize: 48,
+    letterSpacing: -0.5,
+  },
+  tagline: { fontFamily: fonts.ui, fontWeight: "700", fontSize: 15 },
+  guestLink: { marginTop: 18 },
+  guestText: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 14 },
+  rightPanel: { flex: 0.58, justifyContent: "center", gap: 12 },
+  providerBtn: {
+    borderRadius: radii.md,
+    borderWidth: 2,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  providerText: { fontFamily: fonts.display, fontWeight: "700", fontSize: 16 },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginVertical: 4,
+  },
+  line: { flex: 1, height: 2, borderRadius: 1 },
+  dividerText: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 12 },
+  input: {
+    borderRadius: radii.md,
+    borderWidth: 2,
+    paddingHorizontal: spacing.s4,
+    paddingVertical: 12,
+    fontFamily: fonts.ui,
+    fontSize: 15,
+  },
+  emailBtn: {
+    borderRadius: radii.md,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  emailBtnText: { fontFamily: fonts.display, fontWeight: "700", fontSize: 16 },
+  error: {
+    fontFamily: fonts.ui,
+    fontWeight: "700",
+    fontSize: 13,
+    textAlign: "center",
+  },
+});

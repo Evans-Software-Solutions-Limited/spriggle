@@ -176,13 +176,19 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Toggle between local and global view based on connectivity
     - _Requirements: 11.2, 11.3_
 
-- [ ] 15. Authentication module
-  - [ ] 15.1 Implement multi-provider authentication
+- [x] 15. Authentication module
+  - [x] 15.1 Implement multi-provider authentication
     - Implement AuthService with Apple Sign-In, Game Center, Facebook, Email/Password
     - Implement guest mode (no auth, local-only)
     - Store auth tokens securely with expo-secure-store
+    - Providers: Apple (expo-apple-authentication), Facebook (expo-auth-session,
+      env-configured), Email (Supabase Auth GoTrue REST → Supabase JWT verified
+      by existing api-utils JWKS verifier), Game Center (expo-game-center;
+      client-side only, null token — see design.md note and Task 18.2)
+    - AuthContext/useAuth hook; home identity chip + gameover name use the real
+      display name; sign-in screen (app/signin.tsx)
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
-  - [ ] 15.2 Write unit tests for auth module
+  - [x] 15.2 Write unit tests for auth module
     - Test guest mode restrictions
     - Test auth token storage/retrieval
     - **Property 25: Guest mode restricted to local leaderboard**
