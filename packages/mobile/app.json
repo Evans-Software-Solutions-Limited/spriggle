@@ -13,6 +13,9 @@
       "icon": "./assets/icons/ios.png",
       "bundleIdentifier": "com.bradleyevans96.spriggle",
       "usesAppleSignIn": true,
+      "entitlements": {
+        "com.apple.developer.game-center": true
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UISupportedInterfaceOrientations~ipad": [
@@ -43,8 +46,7 @@
       "expo-sqlite",
       "expo-font",
       "expo-apple-authentication",
-      "expo-secure-store",
-      "expo-game-center"
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
