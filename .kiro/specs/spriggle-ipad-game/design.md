@@ -231,11 +231,17 @@ function canViewGlobalLeaderboard(user: AuthUser | null): boolean; // non-guest 
 interface SyncService {
   processQueue(): Promise<void>;
   submitScore(entry: SyncQueueEntry): Promise<boolean>;
+  // Enqueue a score then best-effort drain (offline-first producer, 13.1).
+  queueScore(entry: SyncQueueEntry): Promise<void>;
   onConnectivityChange(isConnected: boolean): void;
 }
 ```
 
-**Behaviour (Task 17):** `submitScore` POSTs to `POST /api/scores` with the
+**Behaviour (Task 17):** `queueScore` persists the entry to sync_queue and
+kicks a best-effort drain — it uploads immediately when online, otherwise the
+entry stays queued for the next reconnect (Requirement 13.1). The game-over
+screen calls it for authenticated players; guests are local-only.
+`submitScore` POSTs to `POST /api/scores` with the
 entry's `authToken` as a bearer token; it returns `true` on 2xx (persisted),
 `false` on 4xx (client error), and throws on 5xx / network failure.
 `processQueue` drains the sync_queue applying the design.md error policy per

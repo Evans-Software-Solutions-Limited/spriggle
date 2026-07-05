@@ -113,18 +113,68 @@ describe("processQueue", () => {
     expect(await store.getSyncQueue()).toHaveLength(0);
   });
 
-  it("shares a single in-flight run across concurrent calls", async () => {
+  it("does not submit the same entry twice under concurrent calls", async () => {
     await store.enqueueSyncEntry(entry({ id: "e1" }));
-    const getStore = jest.fn(async () => store);
+    const fetchFn = fakeFetch(true, 200);
     const service = new SyncServiceImpl({
-      getStore,
+      getStore: async () => store,
+      apiBaseUrl: "https://api.test",
+      fetchFn,
+    });
+
+    await Promise.all([service.processQueue(), service.processQueue()]);
+    // Concurrent calls coalesce: the entry is uploaded exactly once.
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect(await store.getSyncQueue()).toHaveLength(0);
+  });
+
+  it("retains and increments on a network error (fetch rejects)", async () => {
+    await store.enqueueSyncEntry(entry({ id: "e1", retryCount: 0 }));
+    const fetchFn = jest.fn(async () => {
+      throw new Error("network down");
+    }) as unknown as typeof fetch;
+    const service = new SyncServiceImpl({
+      getStore: async () => store,
+      apiBaseUrl: "https://api.test",
+      fetchFn,
+    });
+
+    await service.processQueue();
+    const queue = await store.getSyncQueue();
+    expect(queue).toHaveLength(1);
+    expect(queue[0].retryCount).toBe(1);
+  });
+});
+
+describe("queueScore", () => {
+  it("enqueues a score and uploads it immediately when online", async () => {
+    const service = new SyncServiceImpl({
+      getStore: async () => store,
       apiBaseUrl: "https://api.test",
       fetchFn: fakeFetch(true, 200),
     });
 
-    await Promise.all([service.processQueue(), service.processQueue()]);
-    // Both calls coalesced into one drain → store resolved once.
-    expect(getStore).toHaveBeenCalledTimes(1);
+    await service.queueScore(entry({ id: "q1" }));
+    // Await the in-flight (fire-and-forget) drain kicked off by queueScore.
+    await service.processQueue();
+
+    expect(await store.getSyncQueue()).toHaveLength(0);
+  });
+
+  it("keeps the score queued when the upload fails (offline / 5xx)", async () => {
+    const service = new SyncServiceImpl({
+      getStore: async () => store,
+      apiBaseUrl: "https://api.test",
+      fetchFn: fakeFetch(false, 500),
+    });
+
+    await service.queueScore(entry({ id: "q2", retryCount: 0 }));
+    await service.processQueue();
+
+    const queue = await store.getSyncQueue();
+    expect(queue).toHaveLength(1);
+    expect(queue[0].id).toBe("q2");
+    expect(queue[0].retryCount).toBeGreaterThanOrEqual(1);
   });
 });
 

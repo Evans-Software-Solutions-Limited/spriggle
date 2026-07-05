@@ -205,7 +205,9 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Auto-process queue when connectivity returns
     - Handle success (remove from queue) and failure (retain with retry count)
     - Added `incrementSyncRetry(id)` to LocalStorageService (design.md updated);
-      submitScore returns true/false/throws for 2xx/4xx/5xx respectively
+      submitScore returns true/false/throws for 2xx/4xx/5xx respectively.
+      queueScore (offline-first producer) enqueues + best-effort drains; wired
+      into gameover for authenticated players (Requirement 13.1)
     - _Requirements: 13.1, 13.2, 13.3, 13.4_
   - [x] 17.2 Write property tests for sync queue behavior
     - **Property 21: Successful sync removes entry from queue**

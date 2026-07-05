@@ -19,7 +19,7 @@ import {
 /** The store methods the sync service depends on. */
 export type SyncStore = Pick<
   LocalStorageService,
-  "getSyncQueue" | "removeSyncEntry" | "incrementSyncRetry"
+  "enqueueSyncEntry" | "getSyncQueue" | "removeSyncEntry" | "incrementSyncRetry"
 >;
 
 export interface SyncServiceDeps {
@@ -34,6 +34,12 @@ export interface SyncServiceDeps {
 export interface SyncService {
   processQueue(): Promise<void>;
   submitScore(entry: SyncQueueEntry): Promise<boolean>;
+  /**
+   * Enqueue a score for the Global_Leaderboard and best-effort drain now:
+   * uploads immediately when online, otherwise the entry stays queued for the
+   * next reconnect (Requirement 13.1, offline-first).
+   */
+  queueScore(entry: SyncQueueEntry): Promise<void>;
   onConnectivityChange(isConnected: boolean): void;
 }
 
@@ -49,6 +55,8 @@ export class SyncServiceImpl implements SyncService {
   private readonly deps: SyncServiceDeps;
   /** Guards against overlapping drains (e.g. reconnect firing mid-flush). */
   private processing: Promise<void> | null = null;
+  /** Set when a drain is requested while one is already running. */
+  private rerunRequested = false;
 
   constructor(deps?: Partial<SyncServiceDeps>) {
     this.deps = { ...defaultDeps(), ...deps };
@@ -79,14 +87,35 @@ export class SyncServiceImpl implements SyncService {
 
   /**
    * Drain the sync queue. Concurrent calls share the same in-flight run so the
-   * queue is never processed twice at once.
+   * queue is never processed twice at once; a drain requested while one is
+   * running triggers exactly one more pass afterwards (so entries enqueued
+   * mid-drain are still processed — Requirement 13.2).
    */
   processQueue(): Promise<void> {
-    if (this.processing) return this.processing;
-    this.processing = this.drain().finally(() => {
+    if (this.processing) {
+      this.rerunRequested = true;
+      return this.processing;
+    }
+    this.processing = this.runDrains().finally(() => {
       this.processing = null;
     });
     return this.processing;
+  }
+
+  private async runDrains(): Promise<void> {
+    do {
+      this.rerunRequested = false;
+      await this.drain();
+    } while (this.rerunRequested);
+  }
+
+  async queueScore(entry: SyncQueueEntry): Promise<void> {
+    const store = await this.deps.getStore();
+    await store.enqueueSyncEntry(entry);
+    // Best-effort immediate drain; failures are handled per-entry inside drain,
+    // and a rejected run (e.g. store failure) must not become an unhandled
+    // rejection.
+    void this.processQueue().catch(() => {});
   }
 
   private async drain(): Promise<void> {
@@ -107,7 +136,7 @@ export class SyncServiceImpl implements SyncService {
 
   /** Trigger a drain when connectivity is (re)gained. No-op when offline. */
   onConnectivityChange(isConnected: boolean): void {
-    if (isConnected) void this.processQueue();
+    if (isConnected) void this.processQueue().catch(() => {});
   }
 }
 

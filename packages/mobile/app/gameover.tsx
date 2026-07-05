@@ -4,6 +4,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTheme, fonts, radii, spacing } from "../src/theme";
 import { getLocalStorageService } from "../src/services/localStorage";
 import { useAuth } from "../src/auth/AuthContext";
+import { canSubmitGlobalScore } from "../src/services/auth";
+import { getSyncService } from "../src/services/sync";
 
 /** Fallback name for local-only leaderboard entries when no display name exists. */
 const FALLBACK_PLAYER_NAME = "Guest";
@@ -40,7 +42,25 @@ export default function GameOverScreen() {
       .catch(() => {
         /* best-effort local persistence */
       });
-  }, [score, playerName]);
+
+    // Authenticated players also queue the score for the Global_Leaderboard;
+    // it uploads now if online, or on the next reconnect (Requirements 13.1,
+    // 12.1). Guests are local-only (Requirement 10.6).
+    if (canSubmitGlobalScore(user)) {
+      getSyncService()
+        .queueScore({
+          id: entry.id,
+          score,
+          playerName,
+          date: entry.date,
+          authToken: user!.token!,
+          retryCount: 0,
+        })
+        .catch(() => {
+          /* best-effort; entry remains queued for retry */
+        });
+    }
+  }, [score, playerName, user]);
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.paper }]}>
