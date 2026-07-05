@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-import type { AuthUser } from "./types";
+import type { AuthProvider, AuthUser } from "./types";
 
 /**
  * Persists the current auth session to the device keychain/keystore via
@@ -22,10 +22,18 @@ export interface SecureStoreLike {
 }
 
 const defaultStore: SecureStoreLike = {
-  getItemAsync: SecureStore.getItemAsync,
+  getItemAsync: (key) => SecureStore.getItemAsync(key),
   setItemAsync: (key, value) => SecureStore.setItemAsync(key, value),
   deleteItemAsync: (key) => SecureStore.deleteItemAsync(key),
 };
+
+const VALID_PROVIDERS: readonly AuthProvider[] = [
+  "apple",
+  "gamecenter",
+  "facebook",
+  "email",
+  "guest",
+];
 
 /** Reads and validates the persisted session. Corrupt data is treated as none. */
 export async function loadSession(
@@ -38,8 +46,11 @@ export async function loadSession(
     if (
       parsed &&
       typeof parsed.id === "string" &&
-      typeof parsed.provider === "string" &&
-      typeof parsed.displayName === "string"
+      typeof parsed.displayName === "string" &&
+      VALID_PROVIDERS.includes(parsed.provider) &&
+      (parsed.token === null ||
+        parsed.token === undefined ||
+        typeof parsed.token === "string")
     ) {
       return { ...parsed, token: parsed.token ?? null };
     }

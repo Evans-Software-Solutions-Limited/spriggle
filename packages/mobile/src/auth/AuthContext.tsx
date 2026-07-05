@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { authService as defaultAuthService } from "../services/auth";
+import { isGuest } from "../services/auth";
 import type { AuthService, AuthUser } from "../services/auth";
 
 /**
@@ -105,7 +106,7 @@ export function AuthProvider({
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      isAuthenticated: user !== null && user.provider !== "guest",
+      isAuthenticated: !isGuest(user),
       isRestoring,
       signInWithApple,
       signInWithGameCenter,

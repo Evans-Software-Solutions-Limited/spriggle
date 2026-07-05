@@ -193,11 +193,14 @@ interface AuthService {
 
 // Guest-mode access policy (Requirement 10.6), shared by screens and the sync
 // service so there is a single source of truth (validated by Property 25).
+// Global access (view + submit) requires a non-guest identity AND a
+// backend-verifiable token, so token-less providers (Game Center, until Task
+// 18.2) are local-only.
 type LeaderboardScope = "local" | "global";
 function isGuest(user: AuthUser | null): boolean;
 function availableLeaderboards(user: AuthUser | null): LeaderboardScope[];
-function canSubmitGlobalScore(user: AuthUser | null): boolean; // needs non-guest + token
-function canViewGlobalLeaderboard(user: AuthUser | null): boolean;
+function canSubmitGlobalScore(user: AuthUser | null): boolean; // non-guest + token
+function canViewGlobalLeaderboard(user: AuthUser | null): boolean; // non-guest + token
 ```
 
 **Provider implementation notes (Task 15):**

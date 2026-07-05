@@ -15,24 +15,31 @@ export function isGuest(user: AuthUser | null): boolean {
 }
 
 /**
- * Leaderboard scopes available to a user. Guests: local only. Authenticated
- * users: local + global.
+ * Whether the user has access to the Global_Leaderboard at all. Requires a
+ * non-guest identity AND a backend-verifiable bearer token. Game Center users
+ * currently carry a null token (no identity-verification signature — see
+ * design.md / Task 18.2), so they are local-only until that is resolved.
+ */
+function hasGlobalAccess(user: AuthUser | null): boolean {
+  return !isGuest(user) && !!user?.token;
+}
+
+/**
+ * Leaderboard scopes available to a user. Local is always available; global is
+ * added only for users with verifiable global access.
  */
 export function availableLeaderboards(
   user: AuthUser | null,
 ): LeaderboardScope[] {
-  return isGuest(user) ? ["local"] : ["local", "global"];
+  return hasGlobalAccess(user) ? ["local", "global"] : ["local"];
 }
 
-/**
- * Whether the user may submit a score to the Global_Leaderboard. Requires a
- * non-guest identity AND a bearer token (the backend rejects tokenless calls).
- */
+/** Whether the user may submit a score to the Global_Leaderboard. */
 export function canSubmitGlobalScore(user: AuthUser | null): boolean {
-  return !isGuest(user) && !!user?.token;
+  return hasGlobalAccess(user);
 }
 
 /** Whether the user may fetch/view the Global_Leaderboard. */
 export function canViewGlobalLeaderboard(user: AuthUser | null): boolean {
-  return !isGuest(user);
+  return hasGlobalAccess(user);
 }

@@ -8,6 +8,7 @@ import { signInWithApple as appleProvider } from "./providers/apple";
 import { signInWithGameCenter as gameCenterProvider } from "./providers/gameCenter";
 import { signInWithFacebook as facebookProvider } from "./providers/facebook";
 import { signInWithEmail as emailProvider } from "./providers/email";
+import { isGuest } from "./guestPolicy";
 import type { AuthService, AuthUser } from "./types";
 
 /**
@@ -58,6 +59,12 @@ function defaultDeps(secureStore?: SecureStoreLike): AuthServiceDeps {
 export class AuthServiceImpl implements AuthService {
   private currentUser: AuthUser | null = null;
   private readonly deps: AuthServiceDeps;
+  /**
+   * Serializes all persistence writes so they always apply in call order.
+   * Without this, the fire-and-forget guest save could resolve after a later
+   * awaited sign-in/sign-out and silently downgrade the persisted session.
+   */
+  private writeChain: Promise<unknown> = Promise.resolve();
 
   constructor(
     deps?: Partial<AuthServiceDeps> & { secureStore?: SecureStoreLike },
@@ -70,9 +77,20 @@ export class AuthServiceImpl implements AuthService {
     };
   }
 
+  /** Enqueue a persistence write onto the ordered chain. */
+  private enqueueWrite<T>(op: () => Promise<T>): Promise<T> {
+    const run = this.writeChain.then(op, op);
+    // Keep the chain alive regardless of individual write failures.
+    this.writeChain = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
   private async setSession(user: AuthUser): Promise<AuthUser> {
     this.currentUser = user;
-    await this.deps.store.save(user);
+    await this.enqueueWrite(() => this.deps.store.save(user));
     return user;
   }
 
@@ -103,14 +121,16 @@ export class AuthServiceImpl implements AuthService {
     };
     this.currentUser = guest;
     // Fire-and-forget persistence: guest continuity is best-effort and must
-    // not block the (synchronous) return the design interface promises.
-    void this.deps.store.save(guest);
+    // not block the (synchronous) return the design interface promises. The
+    // write is ordered on the same chain as sign-in/out so it can't clobber a
+    // later session.
+    void this.enqueueWrite(() => this.deps.store.save(guest));
     return guest;
   }
 
   async signOut(): Promise<void> {
     this.currentUser = null;
-    await this.deps.store.clear();
+    await this.enqueueWrite(() => this.deps.store.clear());
   }
 
   getCurrentUser(): AuthUser | null {
@@ -118,7 +138,7 @@ export class AuthServiceImpl implements AuthService {
   }
 
   isAuthenticated(): boolean {
-    return this.currentUser !== null && this.currentUser.provider !== "guest";
+    return !isGuest(this.currentUser);
   }
 
   async restore(): Promise<AuthUser | null> {

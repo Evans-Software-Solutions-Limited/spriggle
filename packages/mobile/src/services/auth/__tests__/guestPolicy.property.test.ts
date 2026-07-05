@@ -13,10 +13,11 @@ import type { AuthProvider, AuthUser } from "../types";
  *
  * For any user in guest mode (the "guest" provider, or no user at all),
  * global-leaderboard submission and viewing SHALL be restricted and only the
- * local leaderboard SHALL be available. Authenticated users additionally get
- * the global leaderboard.
+ * local leaderboard SHALL be available. Global access additionally requires a
+ * backend-verifiable token, so token-less authenticated users (e.g. Game
+ * Center) are also local-only.
  *
- * Validates: Requirements 10.5, 10.6
+ * Validates: Requirements 10.6
  */
 
 const AUTHED_PROVIDERS: AuthProvider[] = [
@@ -58,14 +59,17 @@ describe("Feature: spriggle-ipad-game, Property 25: Guest mode restricted to loc
     );
   });
 
-  it("grants authenticated users the global leaderboard (submission gated on a token)", () => {
+  it("grants global access only to authenticated users with a token", () => {
     fc.assert(
       fc.property(authedUserArb, (user) => {
         expect(isGuest(user)).toBe(false);
-        expect(availableLeaderboards(user)).toEqual(["local", "global"]);
-        expect(canViewGlobalLeaderboard(user)).toBe(true);
-        // Submission additionally requires a bearer token.
-        expect(canSubmitGlobalScore(user)).toBe(user.token !== null);
+        // Global access (view + submit) requires a verifiable bearer token.
+        const hasToken = user.token !== null;
+        expect(availableLeaderboards(user)).toEqual(
+          hasToken ? ["local", "global"] : ["local"],
+        );
+        expect(canViewGlobalLeaderboard(user)).toBe(hasToken);
+        expect(canSubmitGlobalScore(user)).toBe(hasToken);
       }),
       { numRuns: 100 },
     );

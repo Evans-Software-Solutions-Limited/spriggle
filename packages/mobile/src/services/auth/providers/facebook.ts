@@ -44,10 +44,11 @@ export async function signInWithFacebook(): Promise<AuthUser> {
   }
 
   const accessToken = result.authentication.accessToken;
+  // Send the token as a header, not a query param, so it can't leak into
+  // proxy/CDN/crash logs. Graph version pinned to match the discovery doc.
   const profileRes = await fetch(
-    `https://graph.facebook.com/me?fields=id,name&access_token=${encodeURIComponent(
-      accessToken,
-    )}`,
+    "https://graph.facebook.com/v18.0/me?fields=id,name",
+    { headers: { Authorization: `Bearer ${accessToken}` } },
   );
   if (!profileRes.ok) {
     throw new Error("Failed to fetch Facebook profile");

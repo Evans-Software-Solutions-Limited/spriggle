@@ -192,7 +192,7 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Test guest mode restrictions
     - Test auth token storage/retrieval
     - **Property 25: Guest mode restricted to local leaderboard**
-    - **Validates: Requirements 10.5, 10.6**
+    - **Validates: Requirements 10.6**
 
 - [ ] 16. Checkpoint - Client app functional
   - Ensure all tests pass, ask the user if questions arise.
