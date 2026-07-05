@@ -4,7 +4,8 @@
   "type": "module",
   "exports": {
     "./auth": "./src/auth/index.ts",
-    "./jwt": "./src/jwt/index.ts"
+    "./jwt": "./src/jwt/index.ts",
+    "./rate-limit": "./src/rateLimit/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

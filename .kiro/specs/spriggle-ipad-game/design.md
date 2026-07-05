@@ -279,6 +279,22 @@ interface ProfileResponse {
 }
 ```
 
+**Backend auth middleware (Task 18.2, `packages/api-utils/auth`):** a
+multi-issuer JWT verifier (`verifyToken` / `getAuthUser`) checks each bearer
+token's signature, issuer, audience, and expiry against the matching provider's
+JWKS, returning a normalized `AuthenticatedUser { provider, providerId, email?,
+displayName? }`. MVP verifies **Apple** (issuer `https://appleid.apple.com`,
+audience = `APPLE_CLIENT_ID`) and **email/Supabase** (issuer
+`${SUPABASE_URL}/auth/v1`, audience `authenticated`). Game Center (no
+server-verifiable token) and Facebook (out of MVP) are not verified. Score
+submission is additionally protected by a fixed-window rate limiter
+(`packages/api-utils/rate-limit`, in-memory/per-container — a shared store is
+needed for a global limit). Verification pins allowed algorithms per provider
+(Apple RS256; Supabase ES256/RS256) and requires the Supabase project to use
+**asymmetric JWT signing keys** (JWKS) — the legacy shared HS256 secret exposes
+no JWKS and would fail verification. Users are upserted by the unique
+`(provider, provider_id)` key.
+
 ### Screen Navigation
 
 ```mermaid
@@ -332,14 +348,20 @@ CREATE TABLE game_state (
 // schema.ts
 import { pgTable, text, integer, timestamp, uuid } from "drizzle-orm/pg-core";
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  provider: text("provider").notNull(), // apple | gamecenter | facebook | email
-  providerId: text("provider_id").notNull(),
-  displayName: text("display_name").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    provider: text("provider").notNull(), // apple | gamecenter | facebook | email
+    providerId: text("provider_id").notNull(),
+    displayName: text("display_name").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    unique("users_provider_provider_id_unique").on(t.provider, t.providerId),
+  ],
+);
 
 export const scores = pgTable("scores", {
   id: uuid("id").primaryKey().defaultRandom(),

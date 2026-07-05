@@ -26,3 +26,7 @@ expo-env.d.ts
 # to what gets applied — don't reflow.
 supabase/migrations/**
 supabase/config.toml
+
+# Drizzle Kit output — generated migrations + snapshots must stay byte-equivalent
+# to what gets applied to the database; never reflow.
+**/drizzle/**

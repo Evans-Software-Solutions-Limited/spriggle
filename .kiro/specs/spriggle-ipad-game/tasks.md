@@ -217,17 +217,24 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Test enqueue on offline, process on reconnect, retry on server error
     - _Requirements: 13.1, 13.2, 13.3, 13.4_
 
-- [ ] 18. Backend API - Project setup and database
-  - [ ] 18.1 Initialize standalone SST v4 backend project (based on persistence-backend-sst template)
+- [x] 18. Backend API - Project setup and database
+  - [x] 18.1 Initialize standalone SST v4 backend project (based on persistence-backend-sst template)
     - Scaffold from persistence-backend-sst SST v4 patterns (infra/, microservices/, packages/db structure)
     - Set up Elysia server framework matching persistence repo's microservice pattern
     - Configure Drizzle ORM with PostgreSQL schema (users, scores tables) following persistence repo's packages/db conventions
     - Create database migrations using Drizzle Kit (same workflow as persistence repo)
+    - Added `drizzle.config.ts` + generated initial migration (`drizzle/0000_*.sql`);
+      `db:generate`/`db:migrate` scripts already present; drizzle output prettier-ignored
     - Reuse persistence repo's api-utils patterns for shared auth/JWT utilities
     - _Requirements: 14.1_
-  - [ ] 18.2 Implement auth middleware (following persistence-backend-sst auth patterns)
-    - JWT verification supporting Apple, Game Center, Facebook, Email tokens (extend persistence repo's JWT/jose pattern)
-    - Rate limiting middleware on score submission endpoint
+  - [x] 18.2 Implement auth middleware (following persistence-backend-sst auth patterns)
+    - JWT verification supporting Apple + Email (Supabase) tokens for MVP
+      (multi-issuer verifier extending the jose/JWKS pattern). Game Center is
+      deferred (no server-verifiable token) and Facebook is out of MVP, so
+      neither is verified server-side.
+    - Rate limiting middleware on score submission endpoint (in-memory fixed
+      window; per-container caveat documented — needs a shared store for a
+      global limit)
     - _Requirements: 14.3, 14.4_
 
 - [ ] 19. Backend API - Endpoints
