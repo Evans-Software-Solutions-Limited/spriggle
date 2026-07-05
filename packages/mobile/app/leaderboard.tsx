@@ -185,7 +185,7 @@ export default function LeaderboardScreen() {
           style={styles.list}
           contentContainerStyle={styles.listContent}
         >
-          {rows.map((entry, i) => (
+          {rows.map((entry) => (
             <View
               key={entry.key}
               style={[
@@ -194,7 +194,7 @@ export default function LeaderboardScreen() {
                   backgroundColor: colors.surface,
                   borderColor: colors.surfaceLine,
                 },
-                i === 0 && styles.topRow,
+                entry.rank === 1 && styles.topRow,
               ]}
             >
               <Text style={[styles.rank, { color: colors.inkSoft }]}>

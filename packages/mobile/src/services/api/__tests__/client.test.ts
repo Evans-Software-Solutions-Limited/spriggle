@@ -33,6 +33,19 @@ describe("fetchGlobalLeaderboard", () => {
     expect(page.nextCursor).toBe("c1");
   });
 
+  it("preserves the server's descending order in the returned entries", async () => {
+    const fetchFn = okJson({
+      entries: [
+        { position: 1, score: 900, playerName: "A", date: "d1" },
+        { position: 2, score: 500, playerName: "B", date: "d2" },
+        { position: 3, score: 200, playerName: "C", date: "d3" },
+      ],
+    });
+    const page = await fetchGlobalLeaderboard({ apiBaseUrl: BASE, fetchFn });
+    expect(page.entries.map((e) => e.score)).toEqual([900, 500, 200]);
+    expect(page.entries.map((e) => e.position)).toEqual([1, 2, 3]);
+  });
+
   it("omits the query string when no params are given", async () => {
     const fetchFn = okJson({ entries: [] });
     await fetchGlobalLeaderboard({ apiBaseUrl: BASE, fetchFn });

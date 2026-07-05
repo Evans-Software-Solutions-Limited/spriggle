@@ -10,6 +10,11 @@ import {
  * when the device is online — offline, the screen shows the local leaderboard
  * (Requirement 11.3). Data is considered fresh for a short window to avoid
  * refetch storms when toggling tabs.
+ *
+ * MVP shows the top page only (default 50); cursor pagination
+ * (`GlobalLeaderboardPage.nextCursor`) is wired in the API client but not yet
+ * consumed by the UI. `position` is server-assigned, so the top-N ranks are
+ * accurate.
  */
 export function useGlobalLeaderboard(enabled: boolean, limit = 50) {
   return useQuery<GlobalLeaderboardPage>({

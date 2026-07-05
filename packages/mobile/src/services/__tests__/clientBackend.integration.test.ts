@@ -41,6 +41,12 @@ describe("score submission (online)", () => {
         }),
       }),
     );
+    // Body carries the score payload the backend expects (Requirement 12.1).
+    const call = (fetchFn as unknown as jest.Mock).mock.calls[0];
+    expect(JSON.parse(call[1].body)).toEqual({
+      score: 100,
+      date: "2026-01-01T00:00:00.000Z",
+    });
     expect(await store.getSyncQueue()).toHaveLength(0);
   });
 });
