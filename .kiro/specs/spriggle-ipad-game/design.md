@@ -279,6 +279,18 @@ interface ProfileResponse {
 }
 ```
 
+**Backend auth middleware (Task 18.2, `packages/api-utils/auth`):** a
+multi-issuer JWT verifier (`verifyToken` / `getAuthUser`) checks each bearer
+token's signature, issuer, audience, and expiry against the matching provider's
+JWKS, returning a normalized `AuthenticatedUser { provider, providerId, email?,
+displayName? }`. MVP verifies **Apple** (issuer `https://appleid.apple.com`,
+audience = `APPLE_CLIENT_ID`) and **email/Supabase** (issuer
+`${SUPABASE_URL}/auth/v1`, audience `authenticated`). Game Center (no
+server-verifiable token) and Facebook (out of MVP) are not verified. Score
+submission is additionally protected by a fixed-window rate limiter
+(`packages/api-utils/rate-limit`, in-memory/per-container — a shared store is
+needed for a global limit).
+
 ### Screen Navigation
 
 ```mermaid
