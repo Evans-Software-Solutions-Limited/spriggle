@@ -43,6 +43,9 @@ export default function LeaderboardScreen() {
   const [isConnected, setIsConnected] = useState(false);
   const [scope, setScope] = useState<Scope>("local");
 
+  // Requirement 11.3: when offline, the local leaderboard is the primary view.
+  const effectiveScope: Scope = isConnected ? scope : "local";
+
   // Load the local leaderboard once.
   useEffect(() => {
     let mounted = true;
@@ -71,7 +74,8 @@ export default function LeaderboardScreen() {
   }, []);
 
   const renderSegButton = (value: Scope, label: string) => {
-    const active = scope === value;
+    const active = effectiveScope === value;
+    const disabled = value === "global" && !isConnected;
     return (
       <Pressable
         style={[
@@ -79,11 +83,13 @@ export default function LeaderboardScreen() {
           {
             backgroundColor: active ? colors.primary : colors.surface,
             borderColor: colors.surfaceLine,
+            opacity: disabled ? 0.5 : 1,
           },
         ]}
         onPress={() => setScope(value)}
+        disabled={disabled}
         accessibilityRole="button"
-        accessibilityState={{ selected: active }}
+        accessibilityState={{ selected: active, disabled }}
         accessibilityLabel={`${label} leaderboard`}
       >
         <Text
@@ -123,7 +129,7 @@ export default function LeaderboardScreen() {
       </View>
 
       {/* Body */}
-      {scope === "global" ? (
+      {effectiveScope === "global" ? (
         <View style={styles.emptyState}>
           <Text style={[styles.emptyTitle, { color: colors.ink }]}>
             {isConnected ? "Global leaderboard coming soon" : "You're offline"}

@@ -118,7 +118,7 @@ export async function createLocalStorageService(
 
     async getLeaderboard() {
       const rows = await db.getAllAsync<LeaderboardRow>(
-        "SELECT id, score, player_name AS playerName, date FROM local_leaderboard ORDER BY score DESC, created_at ASC",
+        "SELECT id, score, player_name AS playerName, date FROM local_leaderboard ORDER BY score DESC, created_at ASC, rowid ASC",
       );
       return rows.map((r) => ({
         id: r.id,
@@ -200,9 +200,13 @@ let servicePromise: Promise<LocalStorageService> | null = null;
  */
 export function getLocalStorageService(): Promise<LocalStorageService> {
   if (!servicePromise) {
-    servicePromise = SQLite.openDatabaseAsync(DB_NAME).then(
-      createLocalStorageService,
-    );
+    servicePromise = SQLite.openDatabaseAsync(DB_NAME)
+      .then(createLocalStorageService)
+      .catch((err) => {
+        // Don't cache a rejected promise — allow a later call to retry.
+        servicePromise = null;
+        throw err;
+      });
   }
   return servicePromise;
 }
