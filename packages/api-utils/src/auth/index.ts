@@ -1,8 +1,7 @@
 // Auth utilities for Spriggle.
 //
-// Multi-provider JWT verification (Apple + Supabase/email for MVP) is the
-// app-facing API. The Supabase-specific helpers remain available for reference
-// under their own names via ./supabaseAuth.
+// Multi-issuer JWT verification (Apple for MVP) is the app-facing API. The
+// multi-issuer shape allows adding providers later without changing callers.
 export {
   verifyToken,
   getAuthUser,
@@ -11,10 +10,7 @@ export {
   defaultVerifiers,
   resetVerifiers,
   buildAppleVerifier,
-  buildSupabaseVerifier,
   type AuthenticatedUser,
   type VerifiedProvider,
   type ProviderVerifier,
 } from "./multiProvider";
-
-export { type SupabaseUser } from "./supabaseAuth";

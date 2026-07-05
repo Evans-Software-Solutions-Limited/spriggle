@@ -20,7 +20,7 @@ import type { AuthProvider, AuthUser } from "../types";
  * Validates: Requirements 10.6
  */
 
-const AUTHED_PROVIDERS: AuthProvider[] = ["apple", "gamecenter", "email"];
+const AUTHED_PROVIDERS: AuthProvider[] = ["apple", "gamecenter"];
 
 const guestUserArb: fc.Arbitrary<AuthUser | null> = fc.oneof(
   fc.constant(null),

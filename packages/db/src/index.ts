@@ -1,11 +1,10 @@
-export * from "./schema";
-export { createDb, getDb } from "./client";
-export type { Db } from "./client";
+export { getDocClient, getTableName } from "./dynamo";
 export {
-  createDrizzleScoreRepository,
+  createDynamoScoreRepository,
   type ScoreRepository,
-  type UserIdentity,
-  type NewScore,
+  type RecordScoreInput,
   type LeaderboardEntry,
+  type LeaderboardPage,
   type ProfileData,
+  type DynamoScoreRepositoryDeps,
 } from "./scoreRepository";

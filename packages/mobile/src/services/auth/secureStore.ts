@@ -30,8 +30,6 @@ const defaultStore: SecureStoreLike = {
 const VALID_PROVIDERS: readonly AuthProvider[] = [
   "apple",
   "gamecenter",
-  "facebook",
-  "email",
   "guest",
 ];
 

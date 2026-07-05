@@ -25,9 +25,13 @@ export interface ScoreServiceDeps {
 
 const MAX_LEADERBOARD_LIMIT = 100;
 const DEFAULT_LEADERBOARD_LIMIT = 50;
-// Postgres int4 max — scores.score is an `integer` column, so larger values
-// would overflow on insert. Reject them at validation instead of 500ing.
+// Upper bound on score. Keeps the leaderboard GSI sort key a fixed width in the
+// DynamoDB repo (score is subtracted from a 10-digit constant), and guards
+// against absurd/abusive values. 2^31-1 is a comfortable ceiling for a match-3.
 const MAX_SCORE = 2147483647;
+// Allow up to a day of client clock skew; reject far-future / pre-epoch dates
+// so playedAt stays in range for the leaderboard tiebreak key.
+const MAX_CLOCK_SKEW_MS = 24 * 60 * 60 * 1000;
 
 function displayNameFor(user: AuthenticatedUser): string {
   return user.displayName ?? user.email ?? "Gardener";
@@ -58,7 +62,9 @@ function parseScorePayload(raw: unknown): ScorePayload | null {
   ) {
     return null;
   }
-  if (typeof date !== "string" || Number.isNaN(Date.parse(date))) {
+  if (typeof date !== "string") return null;
+  const ts = Date.parse(date);
+  if (Number.isNaN(ts) || ts < 0 || ts > Date.now() + MAX_CLOCK_SKEW_MS) {
     return null;
   }
   return { score, date };
@@ -90,13 +96,10 @@ export async function submitScore(
   }
 
   try {
-    const userId = await deps.repo.upsertUser({
+    await deps.repo.recordScore({
       provider: user.provider,
       providerId: user.providerId,
       displayName: displayNameFor(user),
-    });
-    await deps.repo.insertScore({
-      userId,
       score: payload.score,
       playedAt: new Date(payload.date),
     });
@@ -112,29 +115,30 @@ function parsePositiveInt(value: unknown, fallback: number): number {
   return Number.isFinite(n) && n >= 0 ? n : fallback;
 }
 
-/** GET /api/leaderboard — top scores sorted descending, paginated (Requirement 14.2). */
+/** GET /api/leaderboard — top scores sorted descending, cursor-paginated (Requirement 14.2). */
 export async function getLeaderboard(
   deps: ScoreServiceDeps,
   query: Record<string, string | undefined>,
 ): Promise<HandlerResult> {
   const rawLimit = parsePositiveInt(query.limit, DEFAULT_LEADERBOARD_LIMIT);
   const limit = Math.min(Math.max(rawLimit, 1), MAX_LEADERBOARD_LIMIT);
-  const offset = parsePositiveInt(query.offset, 0);
 
-  let rows;
+  let page;
   try {
-    rows = await deps.repo.getLeaderboard({ limit, offset });
+    page = await deps.repo.getLeaderboard({ limit, cursor: query.cursor });
   } catch {
     return serviceUnavailable();
   }
-  const entries = rows.map((row, index) => ({
-    position: offset + index + 1,
+  // Positions are page-relative (1..N). For the common top-N view (no cursor)
+  // this is the true global rank; deeper pages are relative to the page.
+  const entries = page.entries.map((row, index) => ({
+    position: index + 1,
     score: row.score,
     playerName: row.playerName,
     date: row.date,
   }));
 
-  return { status: 200, body: { entries } };
+  return { status: 200, body: { entries, nextCursor: page.nextCursor } };
 }
 
 /** GET /api/profile — best score + total games for the authed user (Requirement 14.5). */

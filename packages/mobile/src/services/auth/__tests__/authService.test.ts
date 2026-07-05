@@ -43,12 +43,6 @@ function makeService(
         displayName: "GC Player",
         token: null,
       }),
-      email: async (email: string) => ({
-        id: "email-1",
-        provider: "email",
-        displayName: email,
-        token: "email-token",
-      }),
       ...overrides.providers,
     },
     store: overrides.store ?? {
@@ -69,7 +63,7 @@ describe("secure token storage round-trip", () => {
   it("saves, loads, and clears a session via secure store", async () => {
     const user: AuthUser = {
       id: "u1",
-      provider: "email",
+      provider: "apple",
       displayName: "Ada",
       token: "secret-token",
     };
@@ -132,13 +126,6 @@ describe("provider sign-in", () => {
     expect(service.isAuthenticated()).toBe(true);
     expect(service.getCurrentUser()).toEqual(user);
     expect(await service.restore()).toEqual(user);
-  });
-
-  it("signs in with email using the provided address as display name", async () => {
-    const service = makeService();
-    const user = await service.signInWithEmail("player@example.com", "pw");
-    expect(user.displayName).toBe("player@example.com");
-    expect(canSubmitGlobalScore(user)).toBe(true);
   });
 
   it("treats a Game Center sign-in as authenticated but tokenless", async () => {

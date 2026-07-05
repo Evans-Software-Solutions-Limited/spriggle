@@ -6,7 +6,6 @@ import {
 } from "./secureStore";
 import { signInWithApple as appleProvider } from "./providers/apple";
 import { signInWithGameCenter as gameCenterProvider } from "./providers/gameCenter";
-import { signInWithEmail as emailProvider } from "./providers/email";
 import { isGuest } from "./guestPolicy";
 import type { AuthService, AuthUser } from "./types";
 
@@ -18,7 +17,6 @@ export interface AuthServiceDeps {
   providers: {
     apple: () => Promise<AuthUser>;
     gameCenter: () => Promise<AuthUser>;
-    email: (email: string, password: string) => Promise<AuthUser>;
   };
   store: {
     load: () => Promise<AuthUser | null>;
@@ -34,7 +32,6 @@ function defaultDeps(secureStore?: SecureStoreLike): AuthServiceDeps {
     providers: {
       apple: appleProvider,
       gameCenter: gameCenterProvider,
-      email: emailProvider,
     },
     store: {
       load: () => loadSession(secureStore),
@@ -97,12 +94,6 @@ export class AuthServiceImpl implements AuthService {
 
   signInWithGameCenter(): Promise<AuthUser> {
     return this.deps.providers.gameCenter().then((u) => this.setSession(u));
-  }
-
-  signInWithEmail(email: string, password: string): Promise<AuthUser> {
-    return this.deps.providers
-      .email(email, password)
-      .then((u) => this.setSession(u));
   }
 
   playAsGuest(): AuthUser {

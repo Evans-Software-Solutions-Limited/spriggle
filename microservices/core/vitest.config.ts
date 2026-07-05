@@ -1,20 +1,6 @@
-import path from "path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      "@persistence/db": path.resolve(__dirname, "../../packages/db/src"),
-      "@persistence/api-utils": path.resolve(
-        __dirname,
-        "../../packages/api-utils/src",
-      ),
-      "drizzle-orm": path.resolve(
-        __dirname,
-        "../../packages/db/node_modules/drizzle-orm",
-      ),
-    },
-  },
   test: {
     globals: true,
     coverage: {

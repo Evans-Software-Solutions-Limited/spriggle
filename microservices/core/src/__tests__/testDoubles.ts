@@ -1,70 +1,80 @@
 import type { AuthenticatedUser } from "@spriggle/api-utils/auth";
 import type {
-  LeaderboardEntry,
-  NewScore,
+  LeaderboardPage,
   ProfileData,
   ScoreRepository,
-  UserIdentity,
 } from "@spriggle/db";
 
+interface StoredScore {
+  key: string;
+  playerName: string;
+  score: number;
+  playedAt: Date;
+}
+
 /**
- * In-memory ScoreRepository for endpoint tests — mirrors the Drizzle repo's
- * contract (upsert by provider+providerId, sort by score desc) without a DB.
+ * In-memory ScoreRepository for endpoint tests — mirrors the DynamoDB repo's
+ * contract: upsert profile by provider+providerId, record scores, leaderboard
+ * sorted by score desc then playedAt desc, with cursor pagination (the cursor
+ * is a base64 offset here — opaque, like the real LastEvaluatedKey).
  */
 export function createInMemoryRepo(): ScoreRepository {
-  const users = new Map<string, { id: string } & UserIdentity>();
-  const scores: NewScore[] = [];
-  let seq = 0;
+  const profiles = new Map<string, { id: string; displayName: string }>();
+  const scores: StoredScore[] = [];
 
   return {
-    async upsertUser(user) {
-      const key = `${user.provider}:${user.providerId}`;
-      const existing = users.get(key);
-      if (existing) {
-        existing.displayName = user.displayName;
-        return existing.id;
-      }
-      const id = `user-${++seq}`;
-      users.set(key, { id, ...user });
-      return id;
+    async recordScore(input) {
+      const key = `${input.provider}:${input.providerId}`;
+      const existing = profiles.get(key);
+      if (existing) existing.displayName = input.displayName;
+      else
+        profiles.set(key, {
+          id: `user-${profiles.size + 1}`,
+          displayName: input.displayName,
+        });
+      scores.push({
+        key,
+        playerName: input.displayName,
+        score: input.score,
+        playedAt: input.playedAt,
+      });
     },
 
-    async insertScore(score) {
-      scores.push({ ...score });
-    },
-
-    async getLeaderboard({ limit, offset }): Promise<LeaderboardEntry[]> {
-      const byId = new Map([...users.values()].map((u) => [u.id, u]));
-      return (
-        scores
-          .map((s) => ({
-            score: s.score,
-            playerName: byId.get(s.userId)?.displayName ?? "?",
-            playedAt: s.playedAt,
-          }))
-          // Mirror the Drizzle repo: score desc, then playedAt desc as tiebreak.
-          .sort((a, b) =>
-            b.score !== a.score
-              ? b.score - a.score
-              : b.playedAt.getTime() - a.playedAt.getTime(),
-          )
-          .slice(offset, offset + limit)
-          .map((r) => ({
-            score: r.score,
-            playerName: r.playerName,
-            date: r.playedAt.toISOString(),
-          }))
+    async getLeaderboard({ limit, cursor }): Promise<LeaderboardPage> {
+      const sorted = [...scores].sort((a, b) =>
+        b.score !== a.score
+          ? b.score - a.score
+          : b.playedAt.getTime() - a.playedAt.getTime(),
       );
+      const start = cursor
+        ? Number.parseInt(Buffer.from(cursor, "base64").toString("utf8"), 10)
+        : 0;
+      const slice = sorted.slice(start, start + limit);
+      const next = start + limit;
+      return {
+        entries: slice.map((s) => ({
+          score: s.score,
+          playerName: s.playerName,
+          date: s.playedAt.toISOString(),
+        })),
+        // Mirror DynamoDB: a query truncated by Limit returns a cursor even when
+        // it lands on the exact end (the next page is then empty).
+        nextCursor:
+          slice.length === limit
+            ? Buffer.from(String(next), "utf8").toString("base64")
+            : undefined,
+      };
     },
 
     async getProfile(provider, providerId): Promise<ProfileData | null> {
-      const user = users.get(`${provider}:${providerId}`);
-      if (!user) return null;
-      const own = scores.filter((s) => s.userId === user.id);
+      const key = `${provider}:${providerId}`;
+      const profile = profiles.get(key);
+      if (!profile) return null;
+      const own = scores.filter((s) => s.key === key);
       const bestScore = own.reduce((m, s) => Math.max(m, s.score), 0);
       return {
-        id: user.id,
-        displayName: user.displayName,
+        id: profile.id,
+        displayName: profile.displayName,
         bestScore,
         totalGames: own.length,
       };
@@ -78,8 +88,7 @@ export function createThrowingRepo(): ScoreRepository {
     throw new Error("db down");
   };
   return {
-    upsertUser: fail,
-    insertScore: fail,
+    recordScore: fail,
     getLeaderboard: fail,
     getProfile: fail,
   };
