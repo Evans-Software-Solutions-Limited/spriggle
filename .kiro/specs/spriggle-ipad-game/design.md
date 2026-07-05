@@ -186,8 +186,42 @@ interface AuthService {
   signOut(): Promise<void>;
   getCurrentUser(): AuthUser | null;
   isAuthenticated(): boolean;
+  // Rehydrates a persisted session on app start (secure store). Returns the
+  // restored user or null. Added in Task 15 for relaunch continuity.
+  restore(): Promise<AuthUser | null>;
 }
+
+// Guest-mode access policy (Requirement 10.6), shared by screens and the sync
+// service so there is a single source of truth (validated by Property 25).
+// Global access (view + submit) requires a non-guest identity AND a
+// backend-verifiable token, so token-less providers (Game Center, until Task
+// 18.2) are local-only.
+type LeaderboardScope = "local" | "global";
+function isGuest(user: AuthUser | null): boolean;
+function availableLeaderboards(user: AuthUser | null): LeaderboardScope[];
+function canSubmitGlobalScore(user: AuthUser | null): boolean; // non-guest + token
+function canViewGlobalLeaderboard(user: AuthUser | null): boolean; // non-guest + token
 ```
+
+**Provider implementation notes (Task 15):**
+
+- **Apple** — `expo-apple-authentication`; the `identityToken` (a JWT) is the
+  backend-verifiable token.
+- **Facebook** — `expo-auth-session` imperative OAuth flow (no extra native
+  module; survives prebuild). Requires `EXPO_PUBLIC_FACEBOOK_APP_ID`; fails with
+  a clear "not configured" error when unset.
+- **Email/Password** — authenticates against Supabase Auth (GoTrue REST
+  `/auth/v1/token`) via fetch. The returned Supabase JWT is verified by the
+  existing `supabaseAuth.ts` JWKS verifier in `packages/api-utils`, which is why
+  email uses Supabase rather than a bespoke endpoint.
+- **Game Center** — `expo-game-center` (community; config-plugin adds the
+  `com.apple.developer.game-center` entitlement at prebuild). Provides real
+  client-side sign-in (`playerID`, `displayName`) but **not** GameKit's
+  identity-verification signature, so it carries a `null` token. Game Center
+  users are therefore local-only until Task 18.2 decides server-side
+  verification (extend the native module to surface
+  `fetchItems(forIdentityVerificationSignature:)`, or bind the GC identity to an
+  Apple/Supabase token). Tokens are persisted with `expo-secure-store`.
 
 ### Sync Service
 

@@ -42,7 +42,10 @@
       ],
       "expo-sqlite",
       "expo-font",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-game-center"
     ],
     "experiments": {
       "typedRoutes": true

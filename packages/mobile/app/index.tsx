@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme, fonts, radii } from "../src/theme";
+import { useAuth } from "../src/auth/AuthContext";
 
 /**
  * Home / Hub screen — container.
@@ -11,6 +12,11 @@ import { useTheme, fonts, radii } from "../src/theme";
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { user, isAuthenticated } = useAuth();
+
+  const displayName = user?.displayName ?? "Guest gardener";
+  const avatarInitial = (displayName.trim()[0] ?? "G").toUpperCase();
+  const identitySub = isAuthenticated ? "Signed in" : "Tap to sign in";
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.paper }]}>
@@ -34,7 +40,7 @@ export default function HomeScreen() {
 
         {/* Identity + coins */}
         <View style={styles.identityRow}>
-          <View
+          <Pressable
             style={[
               styles.idChip,
               {
@@ -42,23 +48,30 @@ export default function HomeScreen() {
                 borderColor: colors.surfaceLine,
               },
             ]}
+            onPress={() => router.push("/signin")}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isAuthenticated
+                ? `Signed in as ${displayName}`
+                : "Sign in or continue as guest"
+            }
           >
             <View
               style={[styles.avatar, { backgroundColor: colors.primary300 }]}
             >
               <Text style={[styles.avatarText, { color: colors.onPrimary }]}>
-                G
+                {avatarInitial}
               </Text>
             </View>
             <View>
               <Text style={[styles.idName, { color: colors.ink }]}>
-                Guest gardener
+                {displayName}
               </Text>
               <Text style={[styles.idSub, { color: colors.inkSoft }]}>
-                Tap to sign in
+                {identitySub}
               </Text>
             </View>
-          </View>
+          </Pressable>
           <View
             style={[
               styles.coinChip,
