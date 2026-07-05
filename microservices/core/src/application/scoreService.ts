@@ -90,13 +90,10 @@ export async function submitScore(
   }
 
   try {
-    const userId = await deps.repo.upsertUser({
+    await deps.repo.recordScore({
       provider: user.provider,
       providerId: user.providerId,
       displayName: displayNameFor(user),
-    });
-    await deps.repo.insertScore({
-      userId,
       score: payload.score,
       playedAt: new Date(payload.date),
     });
@@ -112,29 +109,30 @@ function parsePositiveInt(value: unknown, fallback: number): number {
   return Number.isFinite(n) && n >= 0 ? n : fallback;
 }
 
-/** GET /api/leaderboard — top scores sorted descending, paginated (Requirement 14.2). */
+/** GET /api/leaderboard — top scores sorted descending, cursor-paginated (Requirement 14.2). */
 export async function getLeaderboard(
   deps: ScoreServiceDeps,
   query: Record<string, string | undefined>,
 ): Promise<HandlerResult> {
   const rawLimit = parsePositiveInt(query.limit, DEFAULT_LEADERBOARD_LIMIT);
   const limit = Math.min(Math.max(rawLimit, 1), MAX_LEADERBOARD_LIMIT);
-  const offset = parsePositiveInt(query.offset, 0);
 
-  let rows;
+  let page;
   try {
-    rows = await deps.repo.getLeaderboard({ limit, offset });
+    page = await deps.repo.getLeaderboard({ limit, cursor: query.cursor });
   } catch {
     return serviceUnavailable();
   }
-  const entries = rows.map((row, index) => ({
-    position: offset + index + 1,
+  // Positions are page-relative (1..N). For the common top-N view (no cursor)
+  // this is the true global rank; deeper pages are relative to the page.
+  const entries = page.entries.map((row, index) => ({
+    position: index + 1,
     score: row.score,
     playerName: row.playerName,
     date: row.date,
   }));
 
-  return { status: 200, body: { entries } };
+  return { status: 200, body: { entries, nextCursor: page.nextCursor } };
 }
 
 /** GET /api/profile — best score + total games for the authed user (Requirement 14.5). */

@@ -6,15 +6,10 @@
  * local-only (Requirements 10.5, 10.6).
  */
 
-export type AuthProvider =
-  | "apple"
-  | "gamecenter"
-  | "facebook"
-  | "email"
-  | "guest";
-// Note: "facebook" remains in the union (backend user.provider column + future
-// support) but has no client sign-in path for MVP — deferred per product
-// decision. Users who would use Facebook can play as a guest instead.
+export type AuthProvider = "apple" | "gamecenter" | "guest";
+// MVP providers: Apple Sign-In (server-verifiable), Game Center (client-side
+// only, no server token — deferred verification), and guest (local-only).
+// Email/password (Supabase) and Facebook were dropped for MVP.
 
 /** The authenticated (or guest) player as the app sees them. */
 export interface AuthUser {
@@ -38,7 +33,6 @@ export interface AuthUser {
 export interface AuthService {
   signInWithApple(): Promise<AuthUser>;
   signInWithGameCenter(): Promise<AuthUser>;
-  signInWithEmail(email: string, password: string): Promise<AuthUser>;
   playAsGuest(): AuthUser;
   signOut(): Promise<void>;
   getCurrentUser(): AuthUser | null;

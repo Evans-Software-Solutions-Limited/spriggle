@@ -120,7 +120,7 @@ describe("POST /api/scores", () => {
 });
 
 describe("GET /api/leaderboard", () => {
-  it("returns entries sorted desc with pagination", async () => {
+  it("returns entries sorted desc with cursor pagination", async () => {
     const { app } = makeApp();
     const scoresToPost = [100, 500, 300, 900, 200];
     for (const score of scoresToPost) {
@@ -135,22 +135,27 @@ describe("GET /api/leaderboard", () => {
     }
 
     const page1 = await app.handle(
-      jsonRequest("/api/leaderboard?limit=2&offset=0", "GET"),
+      jsonRequest("/api/leaderboard?limit=2", "GET"),
     );
-    const { entries: e1 } = (await page1.json()) as {
+    const body1 = (await page1.json()) as {
       entries: { position: number; score: number }[];
+      nextCursor?: string;
     };
-    expect(e1.map((e) => e.score)).toEqual([900, 500]);
-    expect(e1.map((e) => e.position)).toEqual([1, 2]);
+    expect(body1.entries.map((e) => e.score)).toEqual([900, 500]);
+    expect(body1.entries.map((e) => e.position)).toEqual([1, 2]);
+    expect(body1.nextCursor).toBeTruthy();
 
     const page2 = await app.handle(
-      jsonRequest("/api/leaderboard?limit=2&offset=2", "GET"),
+      jsonRequest(
+        `/api/leaderboard?limit=2&cursor=${encodeURIComponent(body1.nextCursor!)}`,
+        "GET",
+      ),
     );
-    const { entries: e2 } = (await page2.json()) as {
+    const body2 = (await page2.json()) as {
       entries: { position: number; score: number }[];
     };
-    expect(e2.map((e) => e.score)).toEqual([300, 200]);
-    expect(e2.map((e) => e.position)).toEqual([3, 4]);
+    expect(body2.entries.map((e) => e.score)).toEqual([300, 200]);
+    expect(body2.entries.map((e) => e.position)).toEqual([1, 2]);
   });
 
   it("applies default and clamped limits for invalid query params", async () => {
@@ -234,7 +239,7 @@ describe("GET /api/profile", () => {
     const emailOnly = createApp({
       repo: createInMemoryRepo(),
       getAuthUser: authFor({
-        provider: "email",
+        provider: "apple",
         providerId: "e1",
         email: "player@example.com",
       }),

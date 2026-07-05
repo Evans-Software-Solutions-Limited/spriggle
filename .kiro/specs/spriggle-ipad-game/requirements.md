@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Spriggle is a landscape-only iPad match-3 gardening game built with React Native (Expo). Players interact with an 8×8 grid of SVG-rendered plants, using dig and swap mechanics to score points. The game supports offline play with local leaderboards and syncs to a global leaderboard when online. The standalone backend uses SST, Elysia, Drizzle ORM, and PostgreSQL. The architecture cleanly separates game logic from UI for testability and future extensibility (IAP, social features).
+Spriggle is a landscape-only iPad match-3 gardening game built with React Native (Expo). Players interact with an 8×8 grid of SVG-rendered plants, using dig and swap mechanics to score points. The game supports offline play with local leaderboards and syncs to a global leaderboard when online. The standalone backend uses SST, Elysia, and DynamoDB. The architecture cleanly separates game logic from UI for testability and future extensibility (IAP, social features).
 
 ## Glossary
 
@@ -133,7 +133,7 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 1. WHEN a player chooses Apple Sign-In, THE Application SHALL authenticate via Apple's identity provider and create or retrieve the player profile
 2. WHEN a player chooses Game Center, THE Application SHALL authenticate via Game Center and create or retrieve the player profile
 3. WHEN a player chooses Facebook login, THE Application SHALL authenticate via Facebook's identity provider and create or retrieve the player profile _(Deferred — not in MVP. Facebook is not offered as a client sign-in option; guest mode covers these users. The "facebook" provider value is retained in the backend user model for future support.)_
-4. WHEN a player chooses Email/Password, THE Application SHALL authenticate via email and password credentials and create or retrieve the player profile
+4. WHEN a player chooses Email/Password, THE Application SHALL authenticate via email and password credentials and create or retrieve the player profile _(Removed — not in MVP. Email/password relied on Supabase, which was dropped when the backend moved to DynamoDB. Apple Sign-In and Guest are the MVP paths.)_
 5. WHEN a player chooses Guest_Mode, THE Application SHALL allow full gameplay without authentication
 6. WHILE in Guest_Mode, THE Application SHALL restrict leaderboard functionality to the Local_Leaderboard only
 
@@ -176,7 +176,7 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 
 #### Acceptance Criteria
 
-1. WHEN a score submission request is received with a valid auth token, THE Backend_API SHALL persist the score to the PostgreSQL database
+1. WHEN a score submission request is received with a valid auth token, THE Backend_API SHALL persist the score to the DynamoDB database
 2. WHEN a leaderboard request is received, THE Backend_API SHALL return the top scores sorted by score descending
 3. WHEN a request is received with an invalid or expired auth token, THE Backend_API SHALL reject the request with an appropriate error
 4. THE Backend_API SHALL enforce rate limiting on score submission endpoints to prevent abuse

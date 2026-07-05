@@ -7,8 +7,7 @@ import {
   type RateLimiter,
 } from "@spriggle/api-utils/rate-limit";
 import {
-  createDrizzleScoreRepository,
-  getDb,
+  createDynamoScoreRepository,
   type ScoreRepository,
 } from "@spriggle/db";
 
@@ -43,24 +42,23 @@ function respond(ctx: any, result: HandlerResult): unknown {
 }
 
 /**
- * A repository that defers `getDb()` until the first query, so constructing the
- * app (e.g. at Lambda module load, or when importing this module in tests that
- * inject their own repo) never requires DATABASE_URL to be set.
+ * A repository that defers the DynamoDB client + table lookup until the first
+ * query, so constructing the app (Lambda module load, or importing this module
+ * in tests that inject their own repo) never requires SCORES_TABLE to be set.
  */
-function lazyDrizzleRepo(): ScoreRepository {
+function lazyDynamoRepo(): ScoreRepository {
   let real: ScoreRepository | null = null;
-  const get = () => (real ??= createDrizzleScoreRepository(getDb()));
+  const get = () => (real ??= createDynamoScoreRepository());
   return {
-    upsertUser: (u) => get().upsertUser(u),
-    insertScore: (s) => get().insertScore(s),
-    getLeaderboard: (o) => get().getLeaderboard(o),
+    recordScore: (input) => get().recordScore(input),
+    getLeaderboard: (opts) => get().getLeaderboard(opts),
     getProfile: (p, i) => get().getProfile(p, i),
   };
 }
 
 export function createApp(deps: AppDeps = {}) {
   const service: ScoreServiceDeps = {
-    repo: deps.repo ?? lazyDrizzleRepo(),
+    repo: deps.repo ?? lazyDynamoRepo(),
     getAuthUser: deps.getAuthUser ?? ((header) => getAuthUser(header)),
     rateLimiter: deps.rateLimiter ?? createRateLimiter(SCORE_RATE_LIMIT),
   };

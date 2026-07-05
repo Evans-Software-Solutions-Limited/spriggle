@@ -16,7 +16,6 @@
   "dependencies": {
     "@spriggle/api-utils": "workspace:*",
     "@spriggle/db": "workspace:*",
-    "drizzle-orm": "^0.44.2",
     "elysia": "^1.4.23",
     "hono": "^4.11.9",
     "sst": "*"

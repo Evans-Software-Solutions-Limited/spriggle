@@ -3,7 +3,6 @@ import ExpoGameCenter from "expo-game-center";
 
 import { signInWithApple } from "../providers/apple";
 import { signInWithGameCenter } from "../providers/gameCenter";
-import { signInWithEmail } from "../providers/email";
 
 const appleSignIn = AppleAuthentication.signInAsync as jest.Mock;
 
@@ -62,58 +61,5 @@ describe("game center provider", () => {
       false,
     );
     await expect(signInWithGameCenter()).rejects.toThrow("declined");
-  });
-});
-
-describe("email provider", () => {
-  const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-  beforeEach(() => {
-    process.env.EXPO_PUBLIC_SUPABASE_URL = "https://project.supabase.co";
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
-  });
-  afterEach(() => {
-    process.env.EXPO_PUBLIC_SUPABASE_URL = url;
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = key;
-  });
-
-  it("throws when Supabase config is missing", async () => {
-    delete process.env.EXPO_PUBLIC_SUPABASE_URL;
-    await expect(signInWithEmail("a@b.com", "pw")).rejects.toThrow(
-      "not configured",
-    );
-  });
-
-  it("returns an AuthUser using metadata full name when present", async () => {
-    jest.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        access_token: "supa-token",
-        user: {
-          id: "u-1",
-          email: "a@b.com",
-          user_metadata: { full_name: "Ada Lovelace" },
-        },
-      }),
-    } as Response);
-
-    const user = await signInWithEmail("a@b.com", "pw");
-    expect(user).toEqual({
-      id: "u-1",
-      provider: "email",
-      displayName: "Ada Lovelace",
-      token: "supa-token",
-    });
-  });
-
-  it("rejects invalid credentials with the server message", async () => {
-    jest.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ error_description: "Invalid login credentials" }),
-    } as Response);
-
-    await expect(signInWithEmail("a@b.com", "wrong")).rejects.toThrow(
-      "Invalid login credentials",
-    );
   });
 });

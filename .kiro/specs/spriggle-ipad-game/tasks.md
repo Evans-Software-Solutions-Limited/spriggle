@@ -181,11 +181,10 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Implement AuthService with Apple Sign-In, Game Center, Facebook, Email/Password
     - Implement guest mode (no auth, local-only)
     - Store auth tokens securely with expo-secure-store
-    - Providers: Apple (expo-apple-authentication), Email (Supabase Auth GoTrue
-      REST → Supabase JWT verified by existing api-utils JWKS verifier), Game
-      Center (expo-game-center; client-side only, null token — see design.md
-      note and Task 18.2). Facebook deferred (not in MVP) — guest covers those
-      users; "facebook" retained in the AuthProvider union for the backend model.
+    - Providers: Apple (expo-apple-authentication) and Game Center
+      (expo-game-center; client-side only, null token). Email/Supabase and
+      Facebook were dropped for MVP (the backend moved to DynamoDB); guest mode
+      covers users who don't sign in.
     - AuthContext/useAuth hook; home identity chip + gameover name use the real
       display name; sign-in screen (app/signin.tsx)
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
@@ -218,23 +217,20 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - _Requirements: 13.1, 13.2, 13.3, 13.4_
 
 - [x] 18. Backend API - Project setup and database
-  - [x] 18.1 Initialize standalone SST v4 backend project (based on persistence-backend-sst template)
-    - Scaffold from persistence-backend-sst SST v4 patterns (infra/, microservices/, packages/db structure)
-    - Set up Elysia server framework matching persistence repo's microservice pattern
-    - Configure Drizzle ORM with PostgreSQL schema (users, scores tables) following persistence repo's packages/db conventions
-    - Create database migrations using Drizzle Kit (same workflow as persistence repo)
-    - Added `drizzle.config.ts` + generated initial migration (`drizzle/0000_*.sql`);
-      `db:generate`/`db:migrate` scripts already present; drizzle output prettier-ignored
-    - Reuse persistence repo's api-utils patterns for shared auth/JWT utilities
+  - [x] 18.1 Initialize standalone SST v4 backend project
+    - SST v4 wiring (infra/, microservices/, packages/db structure)
+    - Elysia server framework (microservice pattern)
+    - **DynamoDB** single table + leaderboard GSI (packages/db); the data store
+      moved from Postgres/Supabase to DynamoDB — no Drizzle/migrations, no
+      connection pooling to manage from Lambda
+    - Reuse api-utils patterns for shared auth/JWT utilities
     - _Requirements: 14.1_
-  - [x] 18.2 Implement auth middleware (following persistence-backend-sst auth patterns)
-    - JWT verification supporting Apple + Email (Supabase) tokens for MVP
-      (multi-issuer verifier extending the jose/JWKS pattern). Game Center is
-      deferred (no server-verifiable token) and Facebook is out of MVP, so
-      neither is verified server-side.
-    - Rate limiting middleware on score submission endpoint (in-memory fixed
-      window; per-container caveat documented — needs a shared store for a
-      global limit)
+  - [x] 18.2 Implement auth middleware
+    - JWT verification for **Apple** tokens (multi-issuer verifier extending the
+      jose/JWKS pattern; RS256 pinned). Game Center is client-side only and
+      email/Facebook are out of MVP, so none are verified server-side.
+    - Rate limiting middleware on score submission (in-memory fixed window;
+      per-container caveat documented — needs a shared store for a global limit)
     - _Requirements: 14.3, 14.4_
 
 - [x] 19. Backend API - Endpoints
@@ -260,8 +256,8 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Test rate limiting behavior
     - Test leaderboard retrieval with various data sets
     - Handlers live in `src/application/scoreService.ts` (≥90% branch coverage);
-      the Drizzle `ScoreRepository` lives in `packages/db`; Elysia/Lambda wiring
-      in `src/api.ts`
+      the DynamoDB `ScoreRepository` lives in `packages/db`; Elysia/Lambda wiring
+      in `src/api.ts`. Leaderboard uses cursor pagination (`nextCursor`).
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
 - [ ] 20. Checkpoint - Backend API complete
@@ -295,6 +291,6 @@ Incremental implementation starting with the pure game engine (fully testable wi
 - Game engine (tasks 1-8) is pure TypeScript with no UI dependencies — fully testable in isolation
 - Property tests use fast-check with minimum 100 iterations per property
 - Each property test references its design document property number
-- Backend scaffolds from persistence-backend-sst SST v4 patterns (Elysia microservices, Drizzle ORM, packages/db, infra/ structure)
+- Backend uses SST v4 (Elysia microservices, DynamoDB single table + GSI, infra/ structure)
 - Client uses Expo Router for file-based navigation (matching persistence repo's mobile package conventions)
 - Auth patterns (JWT/jose, token verification) reuse persistence repo's api-utils approach

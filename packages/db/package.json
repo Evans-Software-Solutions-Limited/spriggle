@@ -3,26 +3,19 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema.ts",
-    "./client": "./src/client.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "build": "tsc --noEmit"
   },
   "dependencies": {
-    "drizzle-orm": "^0.44.2",
-    "postgres": "^3.4.9",
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0",
     "sst": "*"
   },
   "devDependencies": {
     "@types/node": "^22",
-    "drizzle-kit": "^0.31.0",
     "typescript": "^5"
   }
 }

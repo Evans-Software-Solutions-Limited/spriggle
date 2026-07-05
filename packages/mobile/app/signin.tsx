@@ -3,28 +3,25 @@ import {
   View,
   Text,
   Pressable,
-  TextInput,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useTheme, fonts, radii, spacing } from "../src/theme";
+import { useTheme, fonts, radii } from "../src/theme";
 import { useAuth } from "../src/auth/AuthContext";
 
-type Provider = "apple" | "gamecenter" | "email" | "guest";
+type Provider = "apple" | "gamecenter" | "guest";
 
 /**
- * Sign-in screen — lets the player pick an identity provider (Requirements
- * 10.1–10.5) or continue as a guest (local-only, 10.6). Presented as a modal
- * from the home identity chip; dismisses back on success.
+ * Sign-in screen — pick an identity provider (Apple 10.1, Game Center 10.2) or
+ * continue as a guest (local-only, 10.5/10.6). Presented as a modal from the
+ * home identity chip; dismisses back on success.
  */
 export default function SignInScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const auth = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +44,7 @@ export default function SignInScreen() {
   };
 
   const providerButton = (
-    provider: Exclude<Provider, "email" | "guest">,
+    provider: Exclude<Provider, "guest">,
     label: string,
     action: () => Promise<unknown>,
   ) => (
@@ -99,69 +96,6 @@ export default function SignInScreen() {
           auth.signInWithGameCenter,
         )}
 
-        <View style={styles.divider}>
-          <View
-            style={[styles.line, { backgroundColor: colors.surfaceLine }]}
-          />
-          <Text style={[styles.dividerText, { color: colors.inkFaint }]}>
-            or
-          </Text>
-          <View
-            style={[styles.line, { backgroundColor: colors.surfaceLine }]}
-          />
-        </View>
-
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.surfaceLine,
-              color: colors.ink,
-            },
-          ]}
-          placeholder="Email"
-          placeholderTextColor={colors.inkFaint}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          accessibilityLabel="Email"
-        />
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.surfaceLine,
-              color: colors.ink,
-            },
-          ]}
-          placeholder="Password"
-          placeholderTextColor={colors.inkFaint}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          accessibilityLabel="Password"
-        />
-        <Pressable
-          style={[styles.emailBtn, { backgroundColor: colors.primary }]}
-          onPress={() =>
-            run("email", () => auth.signInWithEmail(email, password))
-          }
-          disabled={busy !== null}
-          accessibilityRole="button"
-          accessibilityLabel="Sign in with email"
-        >
-          {busy === "email" ? (
-            <ActivityIndicator color={colors.onPrimary} />
-          ) : (
-            <Text style={[styles.emailBtnText, { color: colors.onPrimary }]}>
-              Sign in
-            </Text>
-          )}
-        </Pressable>
-
         {error && (
           <Text style={[styles.error, { color: colors.accent700 }]}>
             {error}
@@ -192,28 +126,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   providerText: { fontFamily: fonts.display, fontWeight: "700", fontSize: 16 },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginVertical: 4,
-  },
-  line: { flex: 1, height: 2, borderRadius: 1 },
-  dividerText: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 12 },
-  input: {
-    borderRadius: radii.md,
-    borderWidth: 2,
-    paddingHorizontal: spacing.s4,
-    paddingVertical: 12,
-    fontFamily: fonts.ui,
-    fontSize: 15,
-  },
-  emailBtn: {
-    borderRadius: radii.md,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  emailBtnText: { fontFamily: fonts.display, fontWeight: "700", fontSize: 16 },
   error: {
     fontFamily: fonts.ui,
     fontWeight: "700",

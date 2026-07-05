@@ -6,7 +6,7 @@ Spriggle is an iPad-only landscape match-3 gardening game built with React Nativ
 
 1. **Game Engine** — Pure TypeScript logic (board state, move validation, scoring, game-over detection) with no framework dependencies, enabling isolated testing
 2. **Client Application** — Expo + React Native UI layer with Tamagui components, SVG plant rendering, offline-first data persistence, and multi-provider authentication
-3. **Backend API** — Standalone SST-deployed service with Elysia handlers, Drizzle ORM, and PostgreSQL for global leaderboard and user profiles
+3. **Backend API** — Standalone SST-deployed service with Elysia handlers and DynamoDB for global leaderboard and user profiles
 
 The game engine is intentionally decoupled from the UI layer so that all game logic can be unit-tested and property-tested without rendering components.
 
@@ -26,7 +26,7 @@ graph TB
     subgraph "Backend (SST)"
         API[Elysia API Gateway]
         MW[Auth Middleware]
-        DB[(PostgreSQL)]
+        DB[(DynamoDB)]
     end
 
     UI --> GE
@@ -70,7 +70,7 @@ graph TB
 - Global leaderboard retrieval
 - User profile management
 - JWT verification for multiple auth providers
-- Database schema and migrations (Drizzle ORM)
+- Database schema (DynamoDB single table + leaderboard GSI)
 
 ## Components and Interfaces
 
@@ -171,7 +171,7 @@ interface PersistedGameState {
 ### Auth Module
 
 ```typescript
-type AuthProvider = "apple" | "gamecenter" | "facebook" | "email" | "guest";
+type AuthProvider = "apple" | "gamecenter" | "guest";
 
 interface AuthUser {
   id: string;
@@ -183,7 +183,6 @@ interface AuthUser {
 interface AuthService {
   signInWithApple(): Promise<AuthUser>;
   signInWithGameCenter(): Promise<AuthUser>;
-  signInWithEmail(email: string, password: string): Promise<AuthUser>;
   playAsGuest(): AuthUser;
   signOut(): Promise<void>;
   getCurrentUser(): AuthUser | null;
@@ -212,18 +211,15 @@ function canViewGlobalLeaderboard(user: AuthUser | null): boolean; // non-guest 
 - **Facebook** — **deferred (not in MVP).** `"facebook"` remains a valid
   `AuthProvider` value for the backend user model and future support, but there
   is no client sign-in path; users who would use Facebook play as a guest.
-- **Email/Password** — authenticates against Supabase Auth (GoTrue REST
-  `/auth/v1/token`) via fetch. The returned Supabase JWT is verified by the
-  existing `supabaseAuth.ts` JWKS verifier in `packages/api-utils`, which is why
-  email uses Supabase rather than a bespoke endpoint.
+- **Email/Password** — **removed (not in MVP).** It relied on Supabase Auth,
+  which was dropped when the backend moved to DynamoDB. Apple Sign-In + Guest
+  are the MVP auth paths.
 - **Game Center** — `expo-game-center` (community; config-plugin adds the
   `com.apple.developer.game-center` entitlement at prebuild). Provides real
-  client-side sign-in (`playerID`, `displayName`) but **not** GameKit's
-  identity-verification signature, so it carries a `null` token. Game Center
-  users are therefore local-only until Task 18.2 decides server-side
-  verification (extend the native module to surface
-  `fetchItems(forIdentityVerificationSignature:)`, or bind the GC identity to an
-  Apple/Supabase token). Tokens are persisted with `expo-secure-store`.
+  client-side sign-in (`playerID`, `displayName`) but **not** a
+  server-verifiable token, so Game Center users are local-only until a future
+  task surfaces GameKit's identity-verification signature (or binds the GC
+  identity to an Apple token). Tokens are persisted with `expo-secure-store`.
 
 ### Sync Service
 
@@ -260,14 +256,15 @@ interface SubmitScoreRequest {
   date: string;
 }
 
-// GET /api/leaderboard - Get global leaderboard
+// GET /api/leaderboard - Get global leaderboard (cursor-paginated)
 interface LeaderboardResponse {
   entries: {
-    position: number;
+    position: number; // page-relative rank (1..N)
     score: number;
     playerName: string;
     date: string;
   }[];
+  nextCursor?: string; // opaque cursor for the next page; absent when exhausted
 }
 
 // GET /api/profile - Get player profile
@@ -283,17 +280,13 @@ interface ProfileResponse {
 multi-issuer JWT verifier (`verifyToken` / `getAuthUser`) checks each bearer
 token's signature, issuer, audience, and expiry against the matching provider's
 JWKS, returning a normalized `AuthenticatedUser { provider, providerId, email?,
-displayName? }`. MVP verifies **Apple** (issuer `https://appleid.apple.com`,
-audience = `APPLE_CLIENT_ID`) and **email/Supabase** (issuer
-`${SUPABASE_URL}/auth/v1`, audience `authenticated`). Game Center (no
-server-verifiable token) and Facebook (out of MVP) are not verified. Score
-submission is additionally protected by a fixed-window rate limiter
+displayName? }`. MVP verifies **Apple** only (issuer `https://appleid.apple.com`,
+audience = `APPLE_CLIENT_ID`, algorithm RS256). Game Center (no server-verifiable
+token) and email/Facebook (dropped for MVP) are not verified. Score submission
+is additionally protected by a fixed-window rate limiter
 (`packages/api-utils/rate-limit`, in-memory/per-container — a shared store is
-needed for a global limit). Verification pins allowed algorithms per provider
-(Apple RS256; Supabase ES256/RS256) and requires the Supabase project to use
-**asymmetric JWT signing keys** (JWKS) — the legacy shared HS256 secret exposes
-no JWKS and would fail verification. Users are upserted by the unique
-`(provider, provider_id)` key.
+needed for a global limit). Users are upserted by their `(provider, providerId)`
+key.
 
 ### Screen Navigation
 
@@ -342,36 +335,25 @@ CREATE TABLE game_state (
 );
 ```
 
-### Server-Side (PostgreSQL via Drizzle)
+### Server-Side (DynamoDB single table)
 
-```typescript
-// schema.ts
-import { pgTable, text, integer, timestamp, uuid } from "drizzle-orm/pg-core";
+```
+Table: SpriggleScores  (PK, SK)
 
-export const users = pgTable(
-  "users",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    provider: text("provider").notNull(), // apple | gamecenter | facebook | email
-    providerId: text("provider_id").notNull(),
-    displayName: text("display_name").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (t) => [
-    unique("users_provider_provider_id_unique").on(t.provider, t.providerId),
-  ],
-);
+  Profile item   PK = USER#<provider>#<providerId>   SK = PROFILE
+                 { id, displayName, createdAt, updatedAt }
 
-export const scores = pgTable("scores", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .references(() => users.id)
-    .notNull(),
-  score: integer("score").notNull(),
-  playedAt: timestamp("played_at").notNull(),
-  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
-});
+  Score item     PK = USER#<provider>#<providerId>   SK = SCORE#<ts>#<uuid>
+                 { score, playerName, playedAt, submittedAt, GSI1PK, GSI1SK }
+
+GSI1 (leaderboard):  GSI1PK = "LEADERBOARD"
+                     GSI1SK = "<invScore>#<invTime>"   (inverted score+time)
+
+  An ascending query over GSI1SK returns highest score first, then most recent
+  first (deterministic tiebreak). Pagination is cursor-based (encoded
+  LastEvaluatedKey). Profile best-score / total-games are aggregated from the
+  user's score items. Users are keyed by (provider, providerId). No connection
+  pooling to manage — DynamoDB is a natural fit for the Lambda backend.
 ```
 
 ## Correctness Properties
