@@ -3,6 +3,7 @@ import { createRateLimiter } from "@spriggle/api-utils/rate-limit";
 import {
   authFor,
   createInMemoryRepo,
+  createThrowingRepo,
   jsonRequest,
   TEST_USER,
 } from "./testDoubles";
@@ -82,9 +83,12 @@ describe("POST /api/scores", () => {
       { date: "2026-01-01T00:00:00Z" }, // missing score
       { score: -5, date: "2026-01-01T00:00:00Z" }, // negative
       { score: 1.5, date: "2026-01-01T00:00:00Z" }, // non-integer
+      { score: 2147483648, date: "2026-01-01T00:00:00Z" }, // exceeds int4 max
       { score: 10, date: "not-a-date" }, // bad date
       { score: 10 }, // missing date
       [], // not an object with fields
+      42, // primitive body (not an object)
+      null, // null body
     ];
     for (const body of cases) {
       const res = await app.handle(
@@ -160,6 +164,47 @@ describe("GET /api/leaderboard", () => {
       jsonRequest("/api/leaderboard?limit=9999", "GET"),
     );
     expect(overMax.status).toBe(200);
+    // limit=0 is clamped up to 1 (valid request).
+    const zero = await app.handle(
+      jsonRequest("/api/leaderboard?limit=0", "GET"),
+    );
+    expect(zero.status).toBe(200);
+  });
+});
+
+describe("database failures map to 503", () => {
+  function throwingApp() {
+    return createApp({
+      repo: createThrowingRepo(),
+      getAuthUser: authFor(TEST_USER),
+      rateLimiter: createRateLimiter({ windowMs: 60_000, max: 1000 }),
+    });
+  }
+
+  it("returns 503 when persisting a score fails", async () => {
+    const res = await throwingApp().handle(
+      jsonRequest(
+        "/api/scores",
+        "POST",
+        { score: 10, date: "2026-01-01T00:00:00.000Z" },
+        auth,
+      ),
+    );
+    expect(res.status).toBe(503);
+  });
+
+  it("returns 503 when the leaderboard query fails", async () => {
+    const res = await throwingApp().handle(
+      jsonRequest("/api/leaderboard", "GET"),
+    );
+    expect(res.status).toBe(503);
+  });
+
+  it("returns 503 when the profile query fails", async () => {
+    const res = await throwingApp().handle(
+      jsonRequest("/api/profile", "GET", undefined, auth),
+    );
+    expect(res.status).toBe(503);
   });
 });
 

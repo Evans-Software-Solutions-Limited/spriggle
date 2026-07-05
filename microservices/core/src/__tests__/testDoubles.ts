@@ -35,14 +35,26 @@ export function createInMemoryRepo(): ScoreRepository {
 
     async getLeaderboard({ limit, offset }): Promise<LeaderboardEntry[]> {
       const byId = new Map([...users.values()].map((u) => [u.id, u]));
-      return scores
-        .map((s) => ({
-          score: s.score,
-          playerName: byId.get(s.userId)?.displayName ?? "?",
-          date: s.playedAt.toISOString(),
-        }))
-        .sort((a, b) => b.score - a.score)
-        .slice(offset, offset + limit);
+      return (
+        scores
+          .map((s) => ({
+            score: s.score,
+            playerName: byId.get(s.userId)?.displayName ?? "?",
+            playedAt: s.playedAt,
+          }))
+          // Mirror the Drizzle repo: score desc, then playedAt desc as tiebreak.
+          .sort((a, b) =>
+            b.score !== a.score
+              ? b.score - a.score
+              : b.playedAt.getTime() - a.playedAt.getTime(),
+          )
+          .slice(offset, offset + limit)
+          .map((r) => ({
+            score: r.score,
+            playerName: r.playerName,
+            date: r.playedAt.toISOString(),
+          }))
+      );
     },
 
     async getProfile(provider, providerId): Promise<ProfileData | null> {
@@ -57,6 +69,19 @@ export function createInMemoryRepo(): ScoreRepository {
         totalGames: own.length,
       };
     },
+  };
+}
+
+/** A repository whose every method rejects — for exercising the 503 path. */
+export function createThrowingRepo(): ScoreRepository {
+  const fail = async (): Promise<never> => {
+    throw new Error("db down");
+  };
+  return {
+    upsertUser: fail,
+    insertScore: fail,
+    getLeaderboard: fail,
+    getProfile: fail,
   };
 }
 

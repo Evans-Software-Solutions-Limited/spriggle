@@ -25,6 +25,9 @@ export interface ScoreServiceDeps {
 
 const MAX_LEADERBOARD_LIMIT = 100;
 const DEFAULT_LEADERBOARD_LIMIT = 50;
+// Postgres int4 max — scores.score is an `integer` column, so larger values
+// would overflow on insert. Reject them at validation instead of 500ing.
+const MAX_SCORE = 2147483647;
 
 function displayNameFor(user: AuthenticatedUser): string {
   return user.displayName ?? user.email ?? "Gardener";
@@ -32,6 +35,10 @@ function displayNameFor(user: AuthenticatedUser): string {
 
 function unauthorized(): HandlerResult {
   return { status: 401, body: { message: "Unauthorized" } };
+}
+
+function serviceUnavailable(): HandlerResult {
+  return { status: 503, body: { message: "Service Unavailable" } };
 }
 
 interface ScorePayload {
@@ -43,7 +50,12 @@ interface ScorePayload {
 function parseScorePayload(raw: unknown): ScorePayload | null {
   if (typeof raw !== "object" || raw === null) return null;
   const { score, date } = raw as Record<string, unknown>;
-  if (typeof score !== "number" || !Number.isInteger(score) || score < 0) {
+  if (
+    typeof score !== "number" ||
+    !Number.isInteger(score) ||
+    score < 0 ||
+    score > MAX_SCORE
+  ) {
     return null;
   }
   if (typeof date !== "string" || Number.isNaN(Date.parse(date))) {
@@ -77,16 +89,20 @@ export async function submitScore(
     return { status: 400, body: { message: "Invalid score payload" } };
   }
 
-  const userId = await deps.repo.upsertUser({
-    provider: user.provider,
-    providerId: user.providerId,
-    displayName: displayNameFor(user),
-  });
-  await deps.repo.insertScore({
-    userId,
-    score: payload.score,
-    playedAt: new Date(payload.date),
-  });
+  try {
+    const userId = await deps.repo.upsertUser({
+      provider: user.provider,
+      providerId: user.providerId,
+      displayName: displayNameFor(user),
+    });
+    await deps.repo.insertScore({
+      userId,
+      score: payload.score,
+      playedAt: new Date(payload.date),
+    });
+  } catch {
+    return serviceUnavailable();
+  }
 
   return { status: 201, body: { success: true } };
 }
@@ -105,7 +121,12 @@ export async function getLeaderboard(
   const limit = Math.min(Math.max(rawLimit, 1), MAX_LEADERBOARD_LIMIT);
   const offset = parsePositiveInt(query.offset, 0);
 
-  const rows = await deps.repo.getLeaderboard({ limit, offset });
+  let rows;
+  try {
+    rows = await deps.repo.getLeaderboard({ limit, offset });
+  } catch {
+    return serviceUnavailable();
+  }
   const entries = rows.map((row, index) => ({
     position: offset + index + 1,
     score: row.score,
@@ -124,7 +145,12 @@ export async function getProfile(
   const user = await deps.getAuthUser(authHeader);
   if (!user) return unauthorized();
 
-  const profile = await deps.repo.getProfile(user.provider, user.providerId);
+  let profile;
+  try {
+    profile = await deps.repo.getProfile(user.provider, user.providerId);
+  } catch {
+    return serviceUnavailable();
+  }
   if (!profile) {
     // No scores submitted yet — return an empty profile from the token identity.
     return {
