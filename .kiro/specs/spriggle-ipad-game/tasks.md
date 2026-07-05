@@ -237,27 +237,31 @@ Incremental implementation starting with the pure game engine (fully testable wi
       global limit)
     - _Requirements: 14.3, 14.4_
 
-- [ ] 19. Backend API - Endpoints
-  - [ ] 19.1 Implement score submission endpoint
+- [x] 19. Backend API - Endpoints
+  - [x] 19.1 Implement score submission endpoint
     - POST /api/scores — validates auth, persists score to database
     - Input validation for score payload
     - _Requirements: 14.1_
-  - [ ] 19.2 Implement leaderboard endpoint
+  - [x] 19.2 Implement leaderboard endpoint
     - GET /api/leaderboard — returns top scores sorted descending
     - Pagination support
     - _Requirements: 14.2_
-  - [ ] 19.3 Implement profile endpoint
+  - [x] 19.3 Implement profile endpoint
     - GET /api/profile — returns player profile with best score and total games
     - _Requirements: 14.5_
-  - [ ] 19.4 Write property tests for backend API
+  - [x] 19.4 Write property tests for backend API
     - **Property 17: Leaderboard entries sorted descending**
     - **Property 23: Invalid auth tokens rejected**
     - **Property 24: Valid score submissions persisted**
+    - Driven through Elysia via `app.handle(new Request(...))`
     - **Validates: Requirements 14.1, 14.2, 14.3**
-  - [ ] 19.5 Write integration tests for backend API
+  - [x] 19.5 Write integration tests for backend API
     - Test full auth flow with mock providers
     - Test rate limiting behavior
     - Test leaderboard retrieval with various data sets
+    - Handlers live in `src/application/scoreService.ts` (≥90% branch coverage);
+      the Drizzle `ScoreRepository` lives in `packages/db`; Elysia/Lambda wiring
+      in `src/api.ts`
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
 - [ ] 20. Checkpoint - Backend API complete
