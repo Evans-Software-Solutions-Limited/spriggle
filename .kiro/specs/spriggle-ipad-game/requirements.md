@@ -132,7 +132,7 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 
 1. WHEN a player chooses Apple Sign-In, THE Application SHALL authenticate via Apple's identity provider and create or retrieve the player profile
 2. WHEN a player chooses Game Center, THE Application SHALL authenticate via Game Center and create or retrieve the player profile
-3. WHEN a player chooses Facebook login, THE Application SHALL authenticate via Facebook's identity provider and create or retrieve the player profile
+3. WHEN a player chooses Facebook login, THE Application SHALL authenticate via Facebook's identity provider and create or retrieve the player profile _(Deferred — not in MVP. Facebook is not offered as a client sign-in option; guest mode covers these users. The "facebook" provider value is retained in the backend user model for future support.)_
 4. WHEN a player chooses Email/Password, THE Application SHALL authenticate via email and password credentials and create or retrieve the player profile
 5. WHEN a player chooses Guest_Mode, THE Application SHALL allow full gameplay without authentication
 6. WHILE in Guest_Mode, THE Application SHALL restrict leaderboard functionality to the Local_Leaderboard only

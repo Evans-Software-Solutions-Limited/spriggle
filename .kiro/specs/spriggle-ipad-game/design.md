@@ -180,7 +180,6 @@ interface AuthUser {
 interface AuthService {
   signInWithApple(): Promise<AuthUser>;
   signInWithGameCenter(): Promise<AuthUser>;
-  signInWithFacebook(): Promise<AuthUser>;
   signInWithEmail(email: string, password: string): Promise<AuthUser>;
   playAsGuest(): AuthUser;
   signOut(): Promise<void>;
@@ -207,9 +206,9 @@ function canViewGlobalLeaderboard(user: AuthUser | null): boolean; // non-guest 
 
 - **Apple** — `expo-apple-authentication`; the `identityToken` (a JWT) is the
   backend-verifiable token.
-- **Facebook** — `expo-auth-session` imperative OAuth flow (no extra native
-  module; survives prebuild). Requires `EXPO_PUBLIC_FACEBOOK_APP_ID`; fails with
-  a clear "not configured" error when unset.
+- **Facebook** — **deferred (not in MVP).** `"facebook"` remains a valid
+  `AuthProvider` value for the backend user model and future support, but there
+  is no client sign-in path; users who would use Facebook play as a guest.
 - **Email/Password** — authenticates against Supabase Auth (GoTrue REST
   `/auth/v1/token`) via fetch. The returned Supabase JWT is verified by the
   existing `supabaseAuth.ts` JWKS verifier in `packages/api-utils`, which is why

@@ -1,10 +1,8 @@
 import * as AppleAuthentication from "expo-apple-authentication";
-import * as AuthSession from "expo-auth-session";
 import ExpoGameCenter from "expo-game-center";
 
 import { signInWithApple } from "../providers/apple";
 import { signInWithGameCenter } from "../providers/gameCenter";
-import { signInWithFacebook } from "../providers/facebook";
 import { signInWithEmail } from "../providers/email";
 
 const appleSignIn = AppleAuthentication.signInAsync as jest.Mock;
@@ -64,47 +62,6 @@ describe("game center provider", () => {
       false,
     );
     await expect(signInWithGameCenter()).rejects.toThrow("declined");
-  });
-});
-
-describe("facebook provider", () => {
-  const original = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
-  afterEach(() => {
-    process.env.EXPO_PUBLIC_FACEBOOK_APP_ID = original;
-  });
-
-  it("throws a clear error when not configured", async () => {
-    delete process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
-    await expect(signInWithFacebook()).rejects.toThrow("not configured");
-  });
-
-  it("throws when the OAuth prompt is cancelled", async () => {
-    process.env.EXPO_PUBLIC_FACEBOOK_APP_ID = "fb-app-id";
-    // Default mocked promptAsync resolves to { type: "cancel" }.
-    await expect(signInWithFacebook()).rejects.toThrow("cancelled or failed");
-  });
-
-  it("maps a successful token grant to an AuthUser", async () => {
-    process.env.EXPO_PUBLIC_FACEBOOK_APP_ID = "fb-app-id";
-    jest
-      .spyOn(AuthSession.AuthRequest.prototype, "promptAsync")
-      .mockResolvedValueOnce({
-        type: "success",
-        authentication: { accessToken: "fb-access-token" },
-      } as unknown as AuthSession.AuthSessionResult);
-    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ id: "fb-1", name: "Facebook User" }),
-    } as Response);
-
-    const user = await signInWithFacebook();
-    expect(user).toEqual({
-      id: "fb-1",
-      provider: "facebook",
-      displayName: "Facebook User",
-      token: "fb-access-token",
-    });
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 });
 

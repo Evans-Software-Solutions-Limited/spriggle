@@ -12,6 +12,9 @@ export type AuthProvider =
   | "facebook"
   | "email"
   | "guest";
+// Note: "facebook" remains in the union (backend user.provider column + future
+// support) but has no client sign-in path for MVP — deferred per product
+// decision. Users who would use Facebook can play as a guest instead.
 
 /** The authenticated (or guest) player as the app sees them. */
 export interface AuthUser {
@@ -35,7 +38,6 @@ export interface AuthUser {
 export interface AuthService {
   signInWithApple(): Promise<AuthUser>;
   signInWithGameCenter(): Promise<AuthUser>;
-  signInWithFacebook(): Promise<AuthUser>;
   signInWithEmail(email: string, password: string): Promise<AuthUser>;
   playAsGuest(): AuthUser;
   signOut(): Promise<void>;

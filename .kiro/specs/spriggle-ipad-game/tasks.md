@@ -181,10 +181,11 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Implement AuthService with Apple Sign-In, Game Center, Facebook, Email/Password
     - Implement guest mode (no auth, local-only)
     - Store auth tokens securely with expo-secure-store
-    - Providers: Apple (expo-apple-authentication), Facebook (expo-auth-session,
-      env-configured), Email (Supabase Auth GoTrue REST → Supabase JWT verified
-      by existing api-utils JWKS verifier), Game Center (expo-game-center;
-      client-side only, null token — see design.md note and Task 18.2)
+    - Providers: Apple (expo-apple-authentication), Email (Supabase Auth GoTrue
+      REST → Supabase JWT verified by existing api-utils JWKS verifier), Game
+      Center (expo-game-center; client-side only, null token — see design.md
+      note and Task 18.2). Facebook deferred (not in MVP) — guest covers those
+      users; "facebook" retained in the AuthProvider union for the backend model.
     - AuthContext/useAuth hook; home identity chip + gameover name use the real
       display name; sign-in screen (app/signin.tsx)
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
