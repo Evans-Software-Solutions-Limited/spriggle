@@ -1,0 +1,54 @@
+name: E2E (Detox)
+
+# Heavy iOS-simulator E2E — runs only on merge to main (not on PRs) to keep the
+# per-PR feedback loop fast, per project decision. First real run may need
+# tuning (installed simulator name, CocoaPods, Xcode scheme).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  detox-ios:
+    name: Detox iPad
+    runs-on: macos-14
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: packages/mobile
+    env:
+      # The deterministic client flows don't need a live backend; a placeholder
+      # keeps the app booting. Point at a dev stage for full backend flows.
+      EXPO_PUBLIC_API_URL: https://example.invalid
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Install applesimutils
+        run: |
+          brew tap wix/brew
+          brew install applesimutils
+
+      - name: Install CocoaPods
+        run: pod install
+        working-directory: packages/mobile/ios
+
+      - name: Detox build (Debug)
+        run: bun run e2e:build
+
+      - name: Detox test
+        run: bun run e2e:test

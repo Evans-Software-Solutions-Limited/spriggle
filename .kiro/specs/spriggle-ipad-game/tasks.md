@@ -277,12 +277,16 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - Leaderboard fetch/display (API client + React Query hook)
     - _Requirements: 12.1, 12.2, 13.1, 13.2_
 
-- [ ] 22. E2E tests for critical flows
-  - [ ] 22.1 Write E2E tests with Detox
-    - Test full game flow: start → play → game over → score displayed
-    - Test auth flow: sign in → play → score on global leaderboard
-    - Test offline flow: play offline → reconnect → scores sync
-    - Test guest mode: play → local leaderboard only
+- [x] 22. E2E tests for critical flows
+  - [x] 22.1 Write E2E tests with Detox
+    - Detox configured for iPad simulator (`.detoxrc.js`, `e2e/jest.config.js`);
+      specs isolated from the unit-test run (`*.e2e.ts` + testPathIgnorePatterns)
+    - Flows: full game → game over → score; sign-in options → global tab;
+      offline (URL blacklist) → reconnect; guest → local-only. Deterministic
+      client paths use expo-router deep links; backend/Apple-dialog-dependent
+      assertions are verified against a dev stage at Task 23.
+    - Runs on merge to `main` only (`.github/workflows/e2e.yml`), not per-PR,
+      given iOS-simulator cost.
     - _Requirements: All_
 
 - [ ] 23. Final checkpoint - Full integration
