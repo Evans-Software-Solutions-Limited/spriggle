@@ -260,18 +260,21 @@ Incremental implementation starting with the pure game engine (fully testable wi
       in `src/api.ts`. Leaderboard uses cursor pagination (`nextCursor`).
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
-- [ ] 20. Checkpoint - Backend API complete
-  - Ensure all tests pass, ask the user if questions arise.
+- [x] 20. Checkpoint - Backend API complete
+  - All gates green. Live `sst deploy --stage dev` + endpoint smoke test and
+    Supabase-pooler confirmation are superseded (DynamoDB has no pooler);
+    real-environment verification is folded into the Task 23 final checkpoint.
 
-- [ ] 21. Client-backend integration
-  - [ ] 21.1 Wire client to backend API
-    - Configure TanStack React Query for API calls
-    - Connect sync queue to real backend endpoints
-    - Connect leaderboard screen to fetch global leaderboard
+- [x] 21. Client-backend integration
+  - [x] 21.1 Wire client to backend API
+    - TanStack React Query for API calls (`useGlobalLeaderboard`)
+    - Sync queue already targets the real `POST /api/scores` (Task 17)
+    - Leaderboard Global tab fetches the real global board (cursor-based),
+      replacing the placeholder; offline falls back to Local (11.3)
     - _Requirements: 12.1, 12.2, 13.2_
-  - [ ] 21.2 Write integration tests for client-backend communication
-    - Test score submission flow (online and offline paths)
-    - Test leaderboard data fetching and display
+  - [x] 21.2 Write integration tests for client-backend communication
+    - Score submission online + offline paths (SyncService against a mock fetch)
+    - Leaderboard fetch/display (API client + React Query hook)
     - _Requirements: 12.1, 12.2, 13.1, 13.2_
 
 - [ ] 22. E2E tests for critical flows

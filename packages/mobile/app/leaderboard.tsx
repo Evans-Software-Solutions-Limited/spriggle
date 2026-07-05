@@ -14,6 +14,7 @@ import {
   getLocalStorageService,
   type LocalLeaderboardEntry,
 } from "../src/services/localStorage";
+import { useGlobalLeaderboard } from "../src/hooks/useGlobalLeaderboard";
 
 type Scope = "local" | "global";
 
@@ -45,6 +46,32 @@ export default function LeaderboardScreen() {
 
   // Requirement 11.3: when offline, the local leaderboard is the primary view.
   const effectiveScope: Scope = isConnected ? scope : "local";
+
+  // Global leaderboard from the backend (Requirement 12.2); only fetched when
+  // the Global tab is active and online.
+  const globalQuery = useGlobalLeaderboard(effectiveScope === "global");
+
+  // Unified rows for rendering, regardless of scope.
+  const rows =
+    effectiveScope === "global"
+      ? (globalQuery.data?.entries ?? []).map((e) => ({
+          key: `global-${e.position}`,
+          rank: e.position,
+          playerName: e.playerName,
+          score: e.score,
+          date: e.date,
+        }))
+      : entries.map((e, i) => ({
+          key: e.id,
+          rank: i + 1,
+          playerName: e.playerName,
+          score: e.score,
+          date: e.date,
+        }));
+
+  const isLoadingBody =
+    effectiveScope === "global" ? globalQuery.isLoading : loading;
+  const isErrorBody = effectiveScope === "global" && globalQuery.isError;
 
   // Load the local leaderboard once.
   useEffect(() => {
@@ -129,28 +156,28 @@ export default function LeaderboardScreen() {
       </View>
 
       {/* Body */}
-      {effectiveScope === "global" ? (
+      {isErrorBody ? (
         <View style={styles.emptyState}>
           <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-            {isConnected ? "Global leaderboard coming soon" : "You're offline"}
+            Couldn&apos;t load the global leaderboard
           </Text>
           <Text style={[styles.emptySub, { color: colors.inkSoft }]}>
-            {isConnected
-              ? "Worldwide rankings arrive with the next update."
-              : "Connect to the internet to see global rankings."}
+            Check your connection and try again.
           </Text>
         </View>
-      ) : loading ? (
+      ) : isLoadingBody ? (
         <View style={styles.emptyState}>
           <ActivityIndicator color={colors.primary} />
         </View>
-      ) : entries.length === 0 ? (
+      ) : rows.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={[styles.emptyTitle, { color: colors.ink }]}>
             No scores yet
           </Text>
           <Text style={[styles.emptySub, { color: colors.inkSoft }]}>
-            Play a game to plant your first score here.
+            {effectiveScope === "global"
+              ? "Be the first to land on the global board."
+              : "Play a game to plant your first score here."}
           </Text>
         </View>
       ) : (
@@ -158,9 +185,9 @@ export default function LeaderboardScreen() {
           style={styles.list}
           contentContainerStyle={styles.listContent}
         >
-          {entries.map((entry, i) => (
+          {rows.map((entry, i) => (
             <View
-              key={entry.id}
+              key={entry.key}
               style={[
                 styles.row,
                 {
@@ -171,7 +198,7 @@ export default function LeaderboardScreen() {
               ]}
             >
               <Text style={[styles.rank, { color: colors.inkSoft }]}>
-                {i === 0 ? "🏆" : `${i + 1}`}
+                {entry.rank === 1 ? "🏆" : `${entry.rank}`}
               </Text>
               <View
                 style={[styles.avatar, { backgroundColor: colors.primary300 }]}
