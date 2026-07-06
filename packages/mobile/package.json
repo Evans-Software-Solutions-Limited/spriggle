@@ -10,6 +10,10 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
     "test:unit": "jest --passWithNoTests --coverage",
+    "e2e:build": "detox build --configuration ios.sim.debug",
+    "e2e:test": "detox test --configuration ios.sim.debug --cleanup",
+    "e2e:build:release": "detox build --configuration ios.sim.release",
+    "e2e:test:release": "detox test --configuration ios.sim.release --cleanup",
     "build": "echo 'Mobile build handled by EAS'"
   },
   "dependencies": {
@@ -39,7 +43,8 @@
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.23.0",
-    "react-native-svg": "^15.15.4"
+    "react-native-svg": "^15.15.4",
+    "react-native-worklets": "0.7.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -49,6 +54,7 @@
     "@types/react": "~19.2.10",
     "babel-plugin-module-resolver": "^5.0.3",
     "babel-preset-expo": "~55.0.8",
+    "detox": "^20.51.4",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~55.0.0",
     "fast-check": "^3.22.0",
@@ -62,8 +68,12 @@
       "**/__tests__/**/*.test.{ts,tsx}",
       "**/*.test.{ts,tsx}"
     ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/e2e/"
+    ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(.bun/[^/]+/node_modules/)?(react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|native-base|react-native-svg|react-native-reanimated|react-native-gesture-handler|react-native-screens|react-native-safe-area-context|expo-modules-core)/)"
+      "node_modules/(?!(.bun/[^/]+/node_modules/)?(react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|native-base|react-native-svg|react-native-reanimated|react-native-worklets|react-native-gesture-handler|react-native-screens|react-native-safe-area-context|expo-modules-core)/)"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"

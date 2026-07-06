@@ -214,9 +214,12 @@ function canViewGlobalLeaderboard(user: AuthUser | null): boolean; // non-guest 
 - **Email/Password** — **removed (not in MVP).** It relied on Supabase Auth,
   which was dropped when the backend moved to DynamoDB. Apple Sign-In + Guest
   are the MVP auth paths.
-- **Game Center** — `expo-game-center` (community; config-plugin adds the
-  `com.apple.developer.game-center` entitlement at prebuild). Provides real
-  client-side sign-in (`playerID`, `displayName`) but **not** a
+- **Game Center** — `expo-game-center` (community). Its Expo config plugin is
+  broken on SDK 55 (throws during prebuild), so it is NOT listed in `app.json`
+  plugins; the `com.apple.developer.game-center` entitlement is set directly
+  (app.json `ios.entitlements` + the committed iOS project), and the native
+  module autolinks via CocoaPods. Provides real client-side sign-in
+  (`playerID`, `displayName`) but **not** a
   server-verifiable token, so Game Center users are local-only until a future
   task surfaces GameKit's identity-verification signature (or binds the GC
   identity to an Apple token). Tokens are persisted with `expo-secure-store`.

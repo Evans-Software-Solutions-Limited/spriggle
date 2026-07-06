@@ -6,6 +6,7 @@
     "orientation": "landscape",
     "scheme": "spriggle",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/icons/ios.png",
     "ios": {
       "supportsTablet": true,
       "isTabletOnly": true,
@@ -13,6 +14,9 @@
       "icon": "./assets/icons/ios.png",
       "bundleIdentifier": "com.bradleyevans96.spriggle",
       "usesAppleSignIn": true,
+      "entitlements": {
+        "com.apple.developer.game-center": true
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UISupportedInterfaceOrientations~ipad": [
@@ -33,18 +37,17 @@
           "image": "./assets/icons/splash-icon-light.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ECEDEE",
+          "backgroundColor": "#f6efe0",
           "dark": {
             "image": "./assets/icons/splash-icon-dark.png",
-            "backgroundColor": "#0A0A0F"
+            "backgroundColor": "#1d2236"
           }
         }
       ],
       "expo-sqlite",
       "expo-font",
       "expo-apple-authentication",
-      "expo-secure-store",
-      "expo-game-center"
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
