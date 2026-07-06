@@ -6,6 +6,7 @@
     "orientation": "landscape",
     "scheme": "spriggle",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/icons/ios.png",
     "ios": {
       "supportsTablet": true,
       "isTabletOnly": true,
@@ -36,10 +37,10 @@
           "image": "./assets/icons/splash-icon-light.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ECEDEE",
+          "backgroundColor": "#f6efe0",
           "dark": {
             "image": "./assets/icons/splash-icon-dark.png",
-            "backgroundColor": "#0A0A0F"
+            "backgroundColor": "#1d2236"
           }
         }
       ],
