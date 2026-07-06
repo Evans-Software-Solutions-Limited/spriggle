@@ -289,8 +289,89 @@ Incremental implementation starting with the pure game engine (fully testable wi
       given iOS-simulator cost.
     - _Requirements: All_
 
-- [ ] 23. Final checkpoint - Full integration
-  - Ensure all tests pass, ask the user if questions arise.
+- [ ] 23. Final checkpoint — App Store submission readiness
+
+  The bar for this task: everything required to build, verify, and ship Spriggle
+  to the App Store as an iPad-only game. Owner tags: **[agent]** = code/config I
+  can do; **[manual]** = needs your Apple/AWS accounts or a device/simulator.
+  - [ ] 23.1 Native project hygiene — shed the persistence-template drift
+    - **[manual]** Regenerate the native project from `app.json`:
+      `rm -rf packages/mobile/ios && bunx expo prebuild -p ios --clean` (produces
+      a `Spriggle`-branded project: correct scheme, `spriggle` URL scheme,
+      landscape lock, Game Center entitlement, new icon/splash).
+    - **[agent]** After prebuild, confirm the generated `ios/*.xcworkspace` name
+      matches `.detoxrc.js` (`Spriggle`); fix if Expo sanitised it differently.
+    - **[agent]** Ensure no unused capabilities/usage strings survive
+      (persistence leftovers): HealthKit, in-app-payments (merchant), camera /
+      microphone / photo-library usage strings, and `aps-environment` (no push).
+      These aren't in `app.json`, so `--clean` should drop them — verify the
+      regenerated `Info.plist` / entitlements are clean (declaring unused
+      sensitive capabilities triggers review friction).
+    - **[agent]** Confirm bundle id `com.bradleyevans96.spriggle`, display name
+      "Spriggle", and set `ios.buildNumber` / `version` for the release.
+
+  - [ ] 23.2 Assets & presentation
+    - **[manual]** Build to a simulator and visually confirm: landscape-only,
+      Spriggle app icon (no baked text, spelling "Spriggle"), Spriggle splash
+      (light/dark), and that `spriggle://` deep links open the app.
+    - **[agent]** 1024×1024 opaque marketing icon (done); verify no alpha.
+
+  - [ ] 23.3 Backend — production stage
+    - **[manual]** `bunx sst deploy --stage production` (provisions the DynamoDB
+      table + API Gateway + Lambda). Note the API URL.
+    - **[agent]** Set `APPLE_CLIENT_ID` (= the app bundle id / Services ID) in
+      the production infra env so Apple token verification works; point the
+      client's production `EXPO_PUBLIC_API_URL` (eas.json) at the deployed API.
+    - **[manual]** Smoke-test the deployed endpoints (health, leaderboard, and an
+      authed score submit + profile with a real Apple identity token).
+    - Note: the rate limiter is per-container/in-memory — acceptable for launch;
+      a shared store (DynamoDB/Redis) is a post-launch hardening item.
+
+  - [ ] 23.4 Privacy & compliance (App Store requirements)
+    - **[manual]** Host a Privacy Policy + Support URL (required in App Store
+      Connect).
+    - **[agent]** Update `PrivacyInfo.xcprivacy` to reflect real data use +
+      required-reason APIs (UserDefaults, file timestamp, etc.); remove
+      persistence-era entries.
+    - **[manual]** App Store Connect "App Privacy": declare collected data —
+      identifiers (Apple/Game Center id), coarse profile (display name), and
+      gameplay/score data; linkage + purpose. No tracking/ATT (none used).
+    - **[agent]** Confirm `ITSAppUsesNonExemptEncryption: false` (set) so no
+      export-compliance docs are needed.
+    - **[manual]** Sign in with Apple is offered alongside Game Center (satisfies
+      guideline 4.8); guest mode is local-only.
+
+  - [ ] 23.5 Apple Developer / capabilities
+    - **[manual]** In the Apple Developer portal, enable Sign in with Apple and
+      Game Center on the App ID; regenerate the provisioning profile.
+    - **[manual]** Create the App Store Connect app record (bundle id, name,
+      Games category, age rating questionnaire).
+
+  - [ ] 23.6 Quality gates — all green before build
+    - **[agent]** `bun run prettier:check`, `lint`, `typecheck`, `test:unit`
+      (engine + core + api-utils + mobile).
+    - **[manual]** Detox E2E green on the iPad simulator (first real run needs
+      tuning: installed simulator name in `.detoxrc.js`, `pod install`, Release
+      config); confirm the four flows.
+    - **[manual]** Manual full-loop smoke test on an iPad simulator/device:
+      onboarding → play → dig/swap → game over → local + global leaderboard →
+      sign in (Apple) → guest → settings.
+    - **[agent]** Accessibility spot-check: plant SVGs + interactive controls
+      expose labels (Requirement 8.3).
+
+  - [ ] 23.7 Build & submit
+    - **[agent]** Confirm `eas.json` has a `production` iOS profile with the
+      production `EXPO_PUBLIC_API_URL`.
+    - **[manual]** `eas build -p ios --profile production` (distribution cert +
+      provisioning via EAS) → `.ipa`.
+    - **[manual]** `eas submit -p ios` → App Store Connect.
+    - **[manual]** Upload screenshots for the required iPad display sizes (12.9"
+      / 13"), description, keywords, promotional text; attach privacy policy +
+      support URLs; submit for review.
+
+  - [ ] 23.8 Spec sign-off
+    - **[agent]** Reconcile requirements/design/tasks with any last decisions;
+      confirm all prior tasks (1–22) checked and their requirements met.
 
 ## Notes
 
