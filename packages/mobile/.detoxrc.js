@@ -9,7 +9,8 @@
  *   bun run e2e:test    # boot the simulator + run the specs
  *
  * The iOS scheme/workspace/app names come from the prebuilt ios/ project
- * (persistencemobile).
+ * (Spriggle — regenerate with `expo prebuild -p ios --clean` so the native
+ * project matches app.json rather than the old persistence template).
  */
 module.exports = {
   testRunner: {
@@ -24,17 +25,16 @@ module.exports = {
   apps: {
     "ios.debug": {
       type: "ios.app",
-      binaryPath:
-        "ios/build/Build/Products/Debug-iphonesimulator/persistencemobile.app",
+      binaryPath: "ios/build/Build/Products/Debug-iphonesimulator/Spriggle.app",
       build:
-        "xcodebuild -workspace ios/persistencemobile.xcworkspace -scheme persistencemobile -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build -quiet",
+        "xcodebuild -workspace ios/Spriggle.xcworkspace -scheme Spriggle -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build -quiet",
     },
     "ios.release": {
       type: "ios.app",
       binaryPath:
-        "ios/build/Build/Products/Release-iphonesimulator/persistencemobile.app",
+        "ios/build/Build/Products/Release-iphonesimulator/Spriggle.app",
       build:
-        "xcodebuild -workspace ios/persistencemobile.xcworkspace -scheme persistencemobile -configuration Release -sdk iphonesimulator -derivedDataPath ios/build -quiet",
+        "xcodebuild -workspace ios/Spriggle.xcworkspace -scheme Spriggle -configuration Release -sdk iphonesimulator -derivedDataPath ios/build -quiet",
     },
   },
   devices: {
