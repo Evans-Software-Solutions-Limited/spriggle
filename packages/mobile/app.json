@@ -53,7 +53,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "b2f1f45e-d015-443b-90c6-3d0b834daa0a"
+      }
     },
     "owner": "bradleyevans96"
   }
