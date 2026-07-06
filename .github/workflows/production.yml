@@ -1,0 +1,115 @@
+name: Production Deploy + App Store Build
+
+# Manual trigger only — production deploys shouldn't happen automatically.
+on:
+  workflow_dispatch:
+    inputs:
+      skip_submit:
+        description: "Skip App Store submit (build only)"
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend (SST)
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      api_url: ${{ steps.deploy.outputs.api_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PRODUCTION }}
+          aws-region: us-east-1
+
+      - name: Deploy to production
+        id: deploy
+        run: |
+          OUTPUT=$(bunx sst deploy --stage production 2>&1)
+          echo "$OUTPUT"
+          API_URL=$(echo "$OUTPUT" | grep -oP 'api:\s*\K(https://[^\s]+)' || echo "$OUTPUT" | grep -o 'https://[a-z0-9]*\.execute-api\.[a-z0-9-]*\.amazonaws\.com[^ ]*')
+          echo "api_url=$API_URL" >> "$GITHUB_OUTPUT"
+          echo "✅ Backend deployed: $API_URL"
+
+  build-ios:
+    name: Build + Submit iOS
+    runs-on: ubuntu-latest
+    environment: production
+    needs: deploy-backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Inject production API URL into eas.json
+        working-directory: packages/mobile
+        run: |
+          API_URL="${{ needs.deploy-backend.outputs.api_url }}"
+          echo "Setting EXPO_PUBLIC_API_URL=$API_URL"
+          # Replace the placeholder with the real deployed URL
+          jq --arg url "$API_URL" \
+            '.build.production.env.EXPO_PUBLIC_API_URL = $url' \
+            eas.json > eas.tmp && mv eas.tmp eas.json
+          cat eas.json | jq '.build.production.env'
+
+      - name: EAS Build (iOS production)
+        working-directory: packages/mobile
+        run: |
+          bunx eas-cli build \
+            --platform ios \
+            --profile production \
+            --non-interactive \
+            --wait
+
+      - name: EAS Submit to App Store
+        if: ${{ !inputs.skip_submit }}
+        working-directory: packages/mobile
+        env:
+          # App Store Connect API Key for automated submission.
+          # Set these secrets from the .p8 key generated in ASC.
+          EXPO_ASC_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          EXPO_ASC_API_KEY_PATH: /tmp/asc-key.p8
+        run: |
+          echo "${{ secrets.ASC_KEY }}" | base64 -d > /tmp/asc-key.p8
+          bunx eas-cli submit \
+            --platform ios \
+            --profile production \
+            --non-interactive \
+            --latest
