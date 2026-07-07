@@ -127,12 +127,14 @@ jobs:
              | .submit.production.ios.ascApiKeyId = $id
              | .submit.production.ios.ascApiKeyIssuerId = $issuer' \
             eas.json > eas.tmp && mv eas.tmp eas.json
+          # No --wait: once EAS accepts the submission it processes on Apple's
+          # side asynchronously. Waiting here just risks the job timeout
+          # ("operation was canceled") long after the upload already succeeded.
           eas submit \
             --platform ios \
             --profile production \
             --latest \
-            --non-interactive \
-            --wait
+            --non-interactive
 
       - name: Clean up ASC key
         if: always()
