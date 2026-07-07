@@ -1,6 +1,5 @@
 name: Production Deploy + App Store Build
 
-# Manual trigger only — production deploys shouldn't happen automatically.
 on:
   workflow_dispatch:
     inputs:
@@ -12,9 +11,6 @@ on:
 permissions:
   id-token: write
   contents: read
-
-env:
-  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
 jobs:
   deploy-backend:
@@ -60,6 +56,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     needs: deploy-backend
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: packages/mobile
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,37 +76,39 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Install Expo + EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Inject production API URL into eas.json
-        working-directory: packages/mobile
         run: |
           API_URL="${{ needs.deploy-backend.outputs.api_url }}"
           echo "Setting EXPO_PUBLIC_API_URL=$API_URL"
-          # Replace the placeholder with the real deployed URL
           jq --arg url "$API_URL" \
             '.build.production.env.EXPO_PUBLIC_API_URL = $url' \
             eas.json > eas.tmp && mv eas.tmp eas.json
           cat eas.json | jq '.build.production.env'
 
       - name: EAS Build (iOS production)
-        working-directory: packages/mobile
         run: |
-          bunx eas-cli build \
+          eas build \
             --platform ios \
             --profile production \
             --non-interactive \
-            --wait
+            --no-wait
 
+      # Auth: EAS uses the App Store Connect API key registered globally via
+      # `eas credentials` (one-time local setup) — no per-run secrets needed.
       - name: EAS Submit to App Store
         if: ${{ !inputs.skip_submit }}
-        working-directory: packages/mobile
         run: |
-          echo "${{ secrets.ASC_KEY }}" | base64 -d > /tmp/asc-key.p8
-          bunx eas-cli submit \
+          eas submit \
             --platform ios \
             --profile production \
-            --non-interactive \
             --latest \
-            --asc-api-key-path /tmp/asc-key.p8 \
-            --asc-api-key-id "${{ secrets.ASC_KEY_ID }}" \
-            --asc-api-key-issuer-id "${{ secrets.ASC_ISSUER_ID }}"
+            --non-interactive \
+            --wait
