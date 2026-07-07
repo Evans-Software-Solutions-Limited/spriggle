@@ -108,8 +108,16 @@ jobs:
       # ("API Keys cannot be set up in --non-interactive mode").
       - name: EAS Submit to App Store
         if: ${{ !inputs.skip_submit }}
+        env:
+          ASC_KEY: ${{ secrets.ASC_KEY }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
-          echo "${{ secrets.ASC_KEY }}" | base64 -d > /tmp/asc-key.p8
+          # Fail fast and legibly if a secret is missing, rather than deep
+          # inside submission with an opaque ASC-auth error.
+          [ -n "$ASC_KEY" ] || { echo "::error::ASC_KEY secret is empty"; exit 1; }
+          (umask 077; echo "$ASC_KEY" | base64 -d > /tmp/asc-key.p8)
+          [ -s /tmp/asc-key.p8 ] || { echo "::error::decoded ASC key is empty"; exit 1; }
           eas submit \
             --platform ios \
             --profile production \
@@ -117,5 +125,9 @@ jobs:
             --non-interactive \
             --wait \
             --asc-api-key-path /tmp/asc-key.p8 \
-            --asc-api-key-id "${{ secrets.ASC_KEY_ID }}" \
-            --asc-api-key-issuer-id "${{ secrets.ASC_ISSUER_ID }}"
+            --asc-api-key-id "$ASC_KEY_ID" \
+            --asc-api-key-issuer-id "$ASC_ISSUER_ID"
+
+      - name: Clean up ASC key
+        if: always()
+        run: rm -f /tmp/asc-key.p8
