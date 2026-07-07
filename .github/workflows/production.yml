@@ -100,16 +100,13 @@ jobs:
       - name: EAS Submit to App Store
         if: ${{ !inputs.skip_submit }}
         working-directory: packages/mobile
-        env:
-          # App Store Connect API Key for automated submission.
-          # Set these secrets from the .p8 key generated in ASC.
-          EXPO_ASC_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          EXPO_ASC_API_KEY_PATH: /tmp/asc-key.p8
         run: |
           echo "${{ secrets.ASC_KEY }}" | base64 -d > /tmp/asc-key.p8
           bunx eas-cli submit \
             --platform ios \
             --profile production \
             --non-interactive \
-            --latest
+            --latest \
+            --asc-api-key-path /tmp/asc-key.p8 \
+            --asc-api-key-id "${{ secrets.ASC_KEY_ID }}" \
+            --asc-api-key-issuer-id "${{ secrets.ASC_ISSUER_ID }}"
