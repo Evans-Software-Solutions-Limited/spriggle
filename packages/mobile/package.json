@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
+    "@spriggle/engine": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
     "@tamagui/animations-react-native": "^2.0.0-rc.40",
@@ -76,7 +77,8 @@
       "node_modules/(?!(.bun/[^/]+/node_modules/)?(react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|native-base|react-native-svg|react-native-reanimated|react-native-worklets|react-native-gesture-handler|react-native-screens|react-native-safe-area-context|expo-modules-core)/)"
     ],
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1"
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^@babel/runtime/(.*)$": "<rootDir>/node_modules/@babel/runtime/$1"
     }
   }
 }

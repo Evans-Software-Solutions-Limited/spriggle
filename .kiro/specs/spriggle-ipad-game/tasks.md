@@ -131,34 +131,54 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - **Property (example-based): Accessibility labels on plant SVGs**
     - **Validates: Requirements 8.3**
 
-- [x] 11. Game board UI and touch interactions
-  - [x] 11.1 Implement game board grid component
+- [ ] 11. Game board UI and touch interactions
+      _AUDIT 2026-07-09: was marked [x] but incomplete — see remediation.md._
+  - [ ] 11.1 Implement game board grid component
     - Create `src/components/GameBoard.tsx` rendering 8×8 grid with plant SVGs
     - Implement responsive layout for iPad screen sizes (Mini through Pro 12.9")
     - Handle touch/tap for cell selection
+    - _AUDIT: grid renders, but sizing uses window height in a 60%-width
+      column — board overflows/clips on 10.2"/11"/12.9" iPads; no safe-area
+      handling. Layout requirement NOT met (remediation M2)._
     - _Requirements: 7.2, 7.3_
-  - [x] 11.2 Implement game action handling (dig and swap gestures)
+  - [ ] 11.2 Implement game action handling (dig and swap gestures)
     - Map single-tap to select cell, second tap to confirm dig group or swap target
     - Connect touch handlers to game engine functions
     - Display visual feedback for invalid actions
+    - _AUDIT: selection state machine exists, but `onDig`/`onSwap` in
+      app/game.tsx are no-op stubs; the engine is never called anywhere in
+      the app; board is a static mock. NOT done (remediation M1)._
     - _Requirements: 9.4_
 
-- [x] 12. Game animations
-  - [x] 12.1 Implement dig, swap, and refill animations
+- [ ] 12. Game animations
+      _AUDIT 2026-07-09: was marked [x] but animations never run — see remediation.md._
+  - [ ] 12.1 Implement dig, swap, and refill animations
     - Animate plant removal on dig (fade/shrink)
     - Animate plant exchange on swap (slide)
     - Animate new plants appearing on refill (grow/fade-in)
     - Use React Native Reanimated for smooth 60fps animations
+    - _AUDIT: AnimatedCell/SwapAnimation/ScorePopup/useGameAnimations are
+      built and exported but GameBoard renders plain BoardCell and game.tsx
+      imports none of them — no animation is reachable in the live app
+      except the highlight bob (remediation M3)._
     - _Requirements: 9.1, 9.2, 9.3_
 
-- [x] 13. Screen navigation and game flow
-  - [x] 13.1 Implement screen navigation with Expo Router
+- [ ] 13. Screen navigation and game flow
+      _AUDIT 2026-07-09: was marked [x] but flow is broken — see remediation.md._
+  - [ ] 13.1 Implement screen navigation with Expo Router
     - Create screens: Main Menu, Game, Game Over, Leaderboard, Settings, Onboarding
     - Wire navigation between screens per design state diagram
+    - _AUDIT: screens exist as files, but Onboarding is unreachable (no
+      first-run routing), Settings is a literal placeholder Text, and
+      /gameover is never navigated to from gameplay. Partially done
+      (remediation M1/M4)._
     - _Requirements: 7.1_
-  - [x] 13.2 Implement game session lifecycle
+  - [ ] 13.2 Implement game session lifecycle
     - New game start → play loop → game over → score display
     - Resume interrupted game from serialized state
+    - _AUDIT: useGameSession is dead code (zero imports); no play loop, no
+      game-over transition, saveGameState/loadGameState never called — no
+      resume. NOT done (remediation M1)._
     - _Requirements: 16.1, 16.2_
 
 - [x] 14. Local storage and leaderboard persistence

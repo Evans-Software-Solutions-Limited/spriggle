@@ -1,70 +1,26 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import {
+  findConnectedGroup,
+  type Board,
+  type GameState,
+} from "@spriggle/engine";
 import { useTheme, fonts, radii, spacing } from "../src/theme";
 import { GameBoard } from "../src/components/board";
 import type { BoardData } from "../src/components/board";
 import { useGameInteraction } from "../src/hooks/useGameInteraction";
-import type { PlantTypeName } from "../src/components/plants";
+import { useGameSession } from "../src/hooks/useGameSession";
+import { getLocalStorageService } from "../src/services/localStorage";
 
-const PLANT_TYPES: PlantTypeName[] = [
-  "watermelon",
-  "flower",
-  "aubergine",
-  "tomato",
-  "pumpkin",
-];
-
-/** Generate a mock board for display (real engine wiring is a later task). */
-function generateMockBoard(): BoardData {
-  const board: BoardData = Array.from({ length: 8 }, () =>
-    Array.from({ length: 8 }, () => null),
-  );
-  // Spawn 10 random plants (matching engine init)
-  let placed = 0;
-  while (placed < 10) {
-    const r = Math.floor(Math.random() * 8);
-    const c = Math.floor(Math.random() * 8);
-    if (board[r][c] === null) {
-      board[r][c] = PLANT_TYPES[Math.floor(Math.random() * 5)];
-      placed++;
-    }
-  }
-  return board;
-}
-
-/** Simple BFS group finder for the interaction hook (mirrors engine logic). */
-function findConnectedGroup(
-  board: (PlantTypeName | null)[][],
-  row: number,
-  col: number,
-): { row: number; col: number }[] {
-  const type = board[row]?.[col];
-  if (!type) return [];
-  const seen = new Set<string>();
-  const stack = [{ row, col }];
-  const result: { row: number; col: number }[] = [];
-  while (stack.length) {
-    const p = stack.pop()!;
-    const key = `${p.row}-${p.col}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    if (board[p.row]?.[p.col] !== type) continue;
-    result.push(p);
-    for (const [dr, dc] of [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
-    ]) {
-      const nr = p.row + dr;
-      const nc = p.col + dc;
-      if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-        stack.push({ row: nr, col: nc });
-      }
-    }
-  }
-  return result;
+/**
+ * Adapter mapping the interaction hook's `(board, row, col)` signature onto the
+ * engine's `findConnectedGroup(board, position)`. This is the SAME BFS the
+ * engine uses for dig validation/removal — no forked copy — so the highlighted
+ * group and the group `executeDig` removes are always identical.
+ */
+function findGroup(board: BoardData, row: number, col: number) {
+  return findConnectedGroup(board as Board, { row, col });
 }
 
 /**
@@ -75,18 +31,96 @@ function findConnectedGroup(
 export default function GameScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const [board] = useState<BoardData>(generateMockBoard);
-  const [score] = useState(0);
+  const session = useGameSession();
+  const board = session.state.board as BoardData;
+  const score = session.state.score;
 
-  const interaction = useGameInteraction(board, findConnectedGroup, {
-    onDig: () => {
-      /* Engine wiring in later task */
+  // Hydration: attempt to resume a persisted, still-in-progress game on mount;
+  // otherwise start fresh. `hydrated` gates the persistence effect so we never
+  // save the initial board over a game we're about to load.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const store = await getLocalStorageService();
+        const saved = await store.loadGameState();
+        if (!cancelled && saved && !saved.isGameOver) {
+          session.loadState(saved as GameState);
+        }
+      } catch {
+        /* best-effort resume; fall back to the fresh board */
+      }
+      if (!cancelled) setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist after every state change once hydrated. On game over we clear the
+  // snapshot so the next launch starts fresh rather than resuming a dead board.
+  useEffect(() => {
+    if (!hydrated) return;
+    const snapshot = session.state;
+    (async () => {
+      try {
+        const store = await getLocalStorageService();
+        if (snapshot.isGameOver) await store.clearGameState();
+        else await store.saveGameState(snapshot);
+      } catch {
+        /* best-effort persistence */
+      }
+    })();
+  }, [hydrated, session.state]);
+
+  // Route to the game-over screen exactly once when the board fills with no
+  // valid group left. `isBest` is computed against the local leaderboard's
+  // current top score *before* this run is recorded there (gameover.tsx records
+  // it), so a tie is not a new best.
+  const gameOverHandled = useRef(false);
+  const handleGameOver = useCallback(
+    async (finalState: GameState) => {
+      if (gameOverHandled.current) return;
+      gameOverHandled.current = true;
+      let isBest = false;
+      try {
+        const store = await getLocalStorageService();
+        const leaderboard = await store.getLeaderboard();
+        const prevBest = leaderboard.reduce((m, e) => Math.max(m, e.score), 0);
+        isBest = finalState.score > prevBest;
+        await store.clearGameState();
+      } catch {
+        /* best-effort; default isBest=false */
+      }
+      router.replace({
+        pathname: "/gameover",
+        params: {
+          score: String(finalState.score),
+          isBest: String(isBest),
+        },
+      });
     },
-    onSwap: () => {
-      /* Engine wiring in later task */
+    [router],
+  );
+
+  const interaction = useGameInteraction(board, findGroup, {
+    onDig: (row, col) => {
+      const result = session.dig({ row, col });
+      if (result.success && result.newState.isGameOver) {
+        void handleGameOver(result.newState);
+      }
+    },
+    onSwap: (r1, c1, r2, c2) => {
+      const result = session.swap({ row: r1, col: c1 }, { row: r2, col: c2 });
+      if (result.success && result.newState.isGameOver) {
+        void handleGameOver(result.newState);
+      }
     },
     onInvalidAction: () => {
-      /* Shake animation in later task */
+      /* Shake animation + toast wired in M3 */
     },
   });
 
