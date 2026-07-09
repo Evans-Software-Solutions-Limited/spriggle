@@ -9,9 +9,15 @@ import {
 import { useTheme, fonts, radii, spacing } from "../src/theme";
 import { GameBoard } from "../src/components/board";
 import type { BoardData } from "../src/components/board";
+import { useFrameSize } from "../src/components/layout/DesignFrame";
 import { useGameInteraction } from "../src/hooks/useGameInteraction";
 import { useGameSession } from "../src/hooks/useGameSession";
 import { getLocalStorageService } from "../src/services/localStorage";
+
+/** Horizontal gap between the board column and the rail (design px). */
+const COLUMN_GAP = 26;
+/** Board column's share of the row (see styles.boardCol `flex`). */
+const BOARD_COL_FLEX = 0.6;
 
 /**
  * Adapter mapping the interaction hook's `(board, row, col)` signature onto the
@@ -31,9 +37,16 @@ function findGroup(board: BoardData, row: number, col: number) {
 export default function GameScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const frame = useFrameSize();
   const session = useGameSession();
   const board = session.state.board as BoardData;
   const score = session.state.score;
+
+  // The board is square and must fit inside its column, constrained by whichever
+  // of the column width or the frame height is smaller. Deriving the size here
+  // (the container) keeps GameBoard a pure presenter.
+  const boardColWidth = (frame.width - COLUMN_GAP) * BOARD_COL_FLEX;
+  const boardAvailableSize = Math.min(boardColWidth, frame.height);
 
   // Hydration: attempt to resume a persisted, still-in-progress game on mount;
   // otherwise start fresh. `hydrated` gates the persistence effect so we never
@@ -133,6 +146,7 @@ export default function GameScreen() {
           highlightedCells={interaction.highlightedCells}
           selectedCell={interaction.selectedCell}
           onCellPress={interaction.handleCellPress}
+          availableSize={boardAvailableSize}
         />
       </View>
 
@@ -322,14 +336,14 @@ export default function GameScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, flexDirection: "row", gap: 26 },
+  screen: { flex: 1, flexDirection: "row", gap: COLUMN_GAP },
   boardCol: {
-    flex: 0.6,
+    flex: BOARD_COL_FLEX,
     alignItems: "center",
     justifyContent: "center",
   },
   rail: {
-    flex: 0.4,
+    flex: 1 - BOARD_COL_FLEX,
     paddingVertical: spacing.s4,
     paddingRight: spacing.s4,
     gap: 14,
