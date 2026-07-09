@@ -105,6 +105,29 @@ function fiveWatermelonRow(): GameState {
   };
 }
 
+const FIVE_TYPES: PlantType[] = [
+  "watermelon",
+  "flower",
+  "aubergine",
+  "tomato",
+  "pumpkin",
+];
+
+/**
+ * A completely FULL board on a diagonal (r+c)%5 pattern: every cell's four
+ * orthogonal neighbours are a different type, so every connected group is a
+ * singleton — no group ≥ 5 anywhere. A valid swap keeps it full (0 empty cells
+ * → refill is a no-op) and creates at most a pair, so `executeSwap` reports a
+ * genuine game-over. This is the ONLY action that can end the game: a dig nets
+ * +2 empty cells (removes ≥5, refills 3), so it can never fill the board.
+ */
+function fullNoGroupBoard(score: number): GameState {
+  const board: Board = Array.from({ length: 8 }, (_, r) =>
+    Array.from({ length: 8 }, (_, c) => FIVE_TYPES[(r + c) % 5]),
+  );
+  return { board, score, turns: 0, isGameOver: false };
+}
+
 function renderGame() {
   return render(
     <ThemeProvider>
@@ -142,32 +165,26 @@ describe("GameScreen ↔ engine integration (M1)", () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it("routes to /gameover when a dig ends the game", async () => {
-    mockInit.mockReturnValue(fiveWatermelonRow());
-    // Force the engine to report game-over on this dig (deterministic; real
-    // refill is random so a genuine full-board end can't be constructed here).
-    mockDig.mockReturnValue({
-      success: true,
-      newState: {
-        board: boardWith({}),
-        score: 42,
-        turns: 1,
-        isGameOver: true,
-      },
-      removedPositions: [],
-      refillPositions: [],
-    });
+  it("routes to /gameover when a real swap ends the game (full board, no group)", async () => {
+    // Real engine throughout — no executeSwap mock. A swap on a full board
+    // keeps it full with no 5-group, so the engine genuinely reports game-over.
+    mockInit.mockReturnValue(fullNoGroupBoard(30));
 
     const screen = renderGame();
+    // Switch to the swap tool, then swap the two adjacent, different-type cells
+    // at (0,0)=watermelon and (0,1)=flower (first of each in row-major order).
+    fireEvent.press(screen.getByLabelText("Swap tool"));
     fireEvent.press(screen.getAllByLabelText("watermelon at cell")[0]);
-    fireEvent.press(screen.getAllByLabelText("watermelon at cell")[0]);
+    fireEvent.press(screen.getAllByLabelText("flower at cell")[0]);
 
     await waitFor(() =>
       expect(mockReplace).toHaveBeenCalledWith({
         pathname: "/gameover",
-        params: { score: "42", isBest: "true" },
+        // Swap does not change score; leaderboard is empty so 30 is a new best.
+        params: { score: "30", isBest: "true" },
       }),
     );
+    expect(mockSwap).toHaveBeenCalledTimes(1);
   });
 
   it("resumes a persisted in-progress game instead of starting fresh", async () => {
