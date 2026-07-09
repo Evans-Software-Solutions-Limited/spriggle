@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "../src/theme";
 import { AuthProvider } from "../src/auth/AuthContext";
-import { DesignFrame } from "../src/components/layout/DesignFrame";
 import { startConnectivitySync } from "../src/services/sync";
 
 const queryClient = new QueryClient();
@@ -22,22 +21,25 @@ export default function RootLayout() {
           <AuthProvider>
             <ThemeProvider>
               <StatusBar hidden />
-              <DesignFrame>
-                <Stack
-                  screenOptions={{ headerShown: false, animation: "fade" }}
-                >
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="game" />
-                  <Stack.Screen name="gameover" />
-                  <Stack.Screen name="leaderboard" />
-                  <Stack.Screen name="settings" />
-                  <Stack.Screen name="onboarding" />
-                  <Stack.Screen
-                    name="signin"
-                    options={{ presentation: "modal" }}
-                  />
-                </Stack>
-              </DesignFrame>
+              {/* Each screen wraps its own content in <DesignFrame> so the
+                  1194×834 canvas is scaled inside that screen's view tree. We
+                  deliberately do NOT wrap <Stack> here: expo-router uses
+                  native-stack (react-native-screens), so each screen is a
+                  native view controller laid out against the window — a JS
+                  transform on the navigator does not compose onto native
+                  frames, and native modals present on the window regardless. */}
+              <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="game" />
+                <Stack.Screen name="gameover" />
+                <Stack.Screen name="leaderboard" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen
+                  name="signin"
+                  options={{ presentation: "modal" }}
+                />
+              </Stack>
             </ThemeProvider>
           </AuthProvider>
         </QueryClientProvider>

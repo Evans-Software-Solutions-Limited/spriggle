@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme, fonts, radii } from "../src/theme";
 import { useAuth } from "../src/auth/AuthContext";
+import { DesignFrame } from "../src/components/layout/DesignFrame";
 
 /**
  * Home / Hub screen — container.
@@ -19,246 +20,262 @@ export default function HomeScreen() {
   const identitySub = isAuthenticated ? "Signed in" : "Tap to sign in";
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.paper }]}>
-      {/* Left identity panel */}
-      <View style={styles.leftPanel}>
-        <View style={styles.brandLockup}>
-          <Text style={[styles.brand, { color: colors.primary }]}>
-            Spriggle
-          </Text>
-          <Text style={[styles.tagline, { color: colors.accent700 }]}>
-            Dig · Swap · Grow
-          </Text>
+    <DesignFrame>
+      <View style={[styles.screen, { backgroundColor: colors.paper }]}>
+        {/* Left identity panel */}
+        <View style={styles.leftPanel}>
+          <View style={styles.brandLockup}>
+            <Text style={[styles.brand, { color: colors.primary }]}>
+              Spriggle
+            </Text>
+            <Text style={[styles.tagline, { color: colors.accent700 }]}>
+              Dig · Swap · Grow
+            </Text>
+          </View>
+
+          {/* Mascot area */}
+          <View style={styles.mascotArea}>
+            <View
+              style={[styles.mascotShadow, { backgroundColor: colors.grass }]}
+            />
+          </View>
+
+          {/* Identity + coins */}
+          <View style={styles.identityRow}>
+            <Pressable
+              style={[
+                styles.idChip,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceLine,
+                },
+              ]}
+              onPress={() => router.push("/signin")}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isAuthenticated
+                  ? `Signed in as ${displayName}`
+                  : "Sign in or continue as guest"
+              }
+            >
+              <View
+                style={[styles.avatar, { backgroundColor: colors.primary300 }]}
+              >
+                <Text style={[styles.avatarText, { color: colors.onPrimary }]}>
+                  {avatarInitial}
+                </Text>
+              </View>
+              <View>
+                <Text style={[styles.idName, { color: colors.ink }]}>
+                  {displayName}
+                </Text>
+                <Text style={[styles.idSub, { color: colors.inkSoft }]}>
+                  {identitySub}
+                </Text>
+              </View>
+            </Pressable>
+            <View
+              style={[
+                styles.coinChip,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceLine,
+                },
+              ]}
+            >
+              <View style={styles.coin}>
+                <Text style={styles.coinSymbol}>¢</Text>
+              </View>
+              <Text style={[styles.coinValue, { color: colors.ink }]}>0</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Mascot area */}
-        <View style={styles.mascotArea}>
-          <View
-            style={[styles.mascotShadow, { backgroundColor: colors.grass }]}
-          />
-        </View>
-
-        {/* Identity + coins */}
-        <View style={styles.identityRow}>
+        {/* Right menu panel */}
+        <View style={styles.rightPanel}>
+          {/* Play Classic — primary card */}
           <Pressable
             style={[
-              styles.idChip,
+              styles.menuCard,
+              styles.playCard,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.surfaceLine,
+                backgroundColor: colors.primary,
+                borderColor: colors.primary700,
               },
             ]}
-            onPress={() => router.push("/signin")}
+            onPress={() => router.push("/game")}
             accessibilityRole="button"
-            accessibilityLabel={
-              isAuthenticated
-                ? `Signed in as ${displayName}`
-                : "Sign in or continue as guest"
-            }
+            accessibilityLabel="Play Classic"
           >
-            <View
-              style={[styles.avatar, { backgroundColor: colors.primary300 }]}
-            >
-              <Text style={[styles.avatarText, { color: colors.onPrimary }]}>
-                {avatarInitial}
+            <View style={styles.playContent}>
+              <View
+                style={[styles.cardIcon, { backgroundColor: colors.accent }]}
+              >
+                <Text style={styles.cardIconText}>▶</Text>
+              </View>
+              <Text
+                style={[
+                  styles.cardTitle,
+                  styles.playTitle,
+                  { color: colors.onPrimary },
+                ]}
+              >
+                Play Classic
               </Text>
-            </View>
-            <View>
-              <Text style={[styles.idName, { color: colors.ink }]}>
-                {displayName}
-              </Text>
-              <Text style={[styles.idSub, { color: colors.inkSoft }]}>
-                {identitySub}
+              <Text
+                style={[
+                  styles.cardSub,
+                  { color: colors.onPrimary, opacity: 0.82 },
+                ]}
+              >
+                Endless · chase your best
               </Text>
             </View>
           </Pressable>
-          <View
-            style={[
-              styles.coinChip,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.surfaceLine,
-              },
-            ]}
-          >
-            <View style={styles.coin}>
-              <Text style={styles.coinSymbol}>¢</Text>
+
+          {/* 2×2 grid — using explicit rows for proper iPad layout */}
+          <View style={styles.gridContainer}>
+            <View style={styles.gridRow}>
+              <Pressable
+                style={[
+                  styles.menuCard,
+                  styles.gridCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.surfaceLine,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Levels"
+              >
+                <View style={styles.badgeWrap}>
+                  <Text
+                    style={[
+                      styles.badge,
+                      {
+                        backgroundColor: colors.accent,
+                        color: colors.onAccent,
+                      },
+                    ]}
+                  >
+                    Soon
+                  </Text>
+                </View>
+                <View
+                  style={[styles.cardIcon, { backgroundColor: colors.paper2 }]}
+                >
+                  <Text style={{ color: colors.primary, fontSize: 18 }}>
+                    🗺
+                  </Text>
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.ink }]}>
+                  Levels
+                </Text>
+                <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
+                  Campaign & objectives
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.menuCard,
+                  styles.gridCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.surfaceLine,
+                  },
+                ]}
+                onPress={() => router.push("/leaderboard")}
+                accessibilityRole="button"
+                accessibilityLabel="Leaderboard"
+              >
+                <View
+                  style={[styles.cardIcon, { backgroundColor: colors.paper2 }]}
+                >
+                  <Text style={{ color: colors.goldDeep, fontSize: 18 }}>
+                    🏆
+                  </Text>
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.ink }]}>
+                  Leaderboard
+                </Text>
+                <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
+                  Where do you rank?
+                </Text>
+              </Pressable>
             </View>
-            <Text style={[styles.coinValue, { color: colors.ink }]}>0</Text>
+
+            <View style={styles.gridRow}>
+              <Pressable
+                style={[
+                  styles.menuCard,
+                  styles.gridCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.surfaceLine,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Shop"
+              >
+                <View style={styles.badgeWrap}>
+                  <Text
+                    style={[
+                      styles.badge,
+                      {
+                        backgroundColor: colors.accent,
+                        color: colors.onAccent,
+                      },
+                    ]}
+                  >
+                    Soon
+                  </Text>
+                </View>
+                <View
+                  style={[styles.cardIcon, { backgroundColor: colors.paper2 }]}
+                >
+                  <Text style={{ color: colors.accent, fontSize: 18 }}>🛒</Text>
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.ink }]}>
+                  Shop
+                </Text>
+                <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
+                  Coins, power-ups, themes
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.menuCard,
+                  styles.gridCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.surfaceLine,
+                  },
+                ]}
+                onPress={() => router.push("/settings")}
+                accessibilityRole="button"
+                accessibilityLabel="Settings"
+              >
+                <View
+                  style={[styles.cardIcon, { backgroundColor: colors.paper2 }]}
+                >
+                  <Text style={{ color: colors.inkSoft, fontSize: 18 }}>
+                    ⚙️
+                  </Text>
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.ink }]}>
+                  Settings
+                </Text>
+                <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
+                  Sound, account, more
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
-
-      {/* Right menu panel */}
-      <View style={styles.rightPanel}>
-        {/* Play Classic — primary card */}
-        <Pressable
-          style={[
-            styles.menuCard,
-            styles.playCard,
-            {
-              backgroundColor: colors.primary,
-              borderColor: colors.primary700,
-            },
-          ]}
-          onPress={() => router.push("/game")}
-          accessibilityRole="button"
-          accessibilityLabel="Play Classic"
-        >
-          <View style={styles.playContent}>
-            <View style={[styles.cardIcon, { backgroundColor: colors.accent }]}>
-              <Text style={styles.cardIconText}>▶</Text>
-            </View>
-            <Text
-              style={[
-                styles.cardTitle,
-                styles.playTitle,
-                { color: colors.onPrimary },
-              ]}
-            >
-              Play Classic
-            </Text>
-            <Text
-              style={[
-                styles.cardSub,
-                { color: colors.onPrimary, opacity: 0.82 },
-              ]}
-            >
-              Endless · chase your best
-            </Text>
-          </View>
-        </Pressable>
-
-        {/* 2×2 grid — using explicit rows for proper iPad layout */}
-        <View style={styles.gridContainer}>
-          <View style={styles.gridRow}>
-            <Pressable
-              style={[
-                styles.menuCard,
-                styles.gridCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceLine,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Levels"
-            >
-              <View style={styles.badgeWrap}>
-                <Text
-                  style={[
-                    styles.badge,
-                    { backgroundColor: colors.accent, color: colors.onAccent },
-                  ]}
-                >
-                  Soon
-                </Text>
-              </View>
-              <View
-                style={[styles.cardIcon, { backgroundColor: colors.paper2 }]}
-              >
-                <Text style={{ color: colors.primary, fontSize: 18 }}>🗺</Text>
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.ink }]}>
-                Levels
-              </Text>
-              <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
-                Campaign & objectives
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={[
-                styles.menuCard,
-                styles.gridCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceLine,
-                },
-              ]}
-              onPress={() => router.push("/leaderboard")}
-              accessibilityRole="button"
-              accessibilityLabel="Leaderboard"
-            >
-              <View
-                style={[styles.cardIcon, { backgroundColor: colors.paper2 }]}
-              >
-                <Text style={{ color: colors.goldDeep, fontSize: 18 }}>🏆</Text>
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.ink }]}>
-                Leaderboard
-              </Text>
-              <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
-                Where do you rank?
-              </Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.gridRow}>
-            <Pressable
-              style={[
-                styles.menuCard,
-                styles.gridCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceLine,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Shop"
-            >
-              <View style={styles.badgeWrap}>
-                <Text
-                  style={[
-                    styles.badge,
-                    { backgroundColor: colors.accent, color: colors.onAccent },
-                  ]}
-                >
-                  Soon
-                </Text>
-              </View>
-              <View
-                style={[styles.cardIcon, { backgroundColor: colors.paper2 }]}
-              >
-                <Text style={{ color: colors.accent, fontSize: 18 }}>🛒</Text>
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.ink }]}>
-                Shop
-              </Text>
-              <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
-                Coins, power-ups, themes
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={[
-                styles.menuCard,
-                styles.gridCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceLine,
-                },
-              ]}
-              onPress={() => router.push("/settings")}
-              accessibilityRole="button"
-              accessibilityLabel="Settings"
-            >
-              <View
-                style={[styles.cardIcon, { backgroundColor: colors.paper2 }]}
-              >
-                <Text style={{ color: colors.inkSoft, fontSize: 18 }}>⚙️</Text>
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.ink }]}>
-                Settings
-              </Text>
-              <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
-                Sound, account, more
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </View>
+    </DesignFrame>
   );
 }
 

@@ -15,6 +15,7 @@ import {
   type LocalLeaderboardEntry,
 } from "../src/services/localStorage";
 import { useGlobalLeaderboard } from "../src/hooks/useGlobalLeaderboard";
+import { DesignFrame } from "../src/components/layout/DesignFrame";
 
 type Scope = "local" | "global";
 
@@ -132,100 +133,107 @@ export default function LeaderboardScreen() {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.paper }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          style={[
-            styles.backBtn,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.surfaceLine,
-            },
-          ]}
-          onPress={() => router.back()}
-          accessibilityLabel="Go back"
-        >
-          <Text style={{ color: colors.ink, fontSize: 18 }}>‹</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.ink }]}>Leaderboard</Text>
-        <View style={styles.seg}>
-          {renderSegButton("local", "Local")}
-          {renderSegButton("global", "Global")}
+    <DesignFrame>
+      <View style={[styles.screen, { backgroundColor: colors.paper }]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable
+            style={[
+              styles.backBtn,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.surfaceLine,
+              },
+            ]}
+            onPress={() => router.back()}
+            accessibilityLabel="Go back"
+          >
+            <Text style={{ color: colors.ink, fontSize: 18 }}>‹</Text>
+          </Pressable>
+          <Text style={[styles.title, { color: colors.ink }]}>Leaderboard</Text>
+          <View style={styles.seg}>
+            {renderSegButton("local", "Local")}
+            {renderSegButton("global", "Global")}
+          </View>
         </View>
-      </View>
 
-      {/* Body */}
-      {isErrorBody ? (
-        <View style={styles.emptyState}>
-          <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-            Couldn&apos;t load the global leaderboard
-          </Text>
-          <Text style={[styles.emptySub, { color: colors.inkSoft }]}>
-            Check your connection and try again.
-          </Text>
-        </View>
-      ) : isLoadingBody ? (
-        <View style={styles.emptyState}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
-      ) : rows.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-            No scores yet
-          </Text>
-          <Text style={[styles.emptySub, { color: colors.inkSoft }]}>
-            {effectiveScope === "global"
-              ? "Be the first to land on the global board."
-              : "Play a game to plant your first score here."}
-          </Text>
-        </View>
-      ) : (
-        <ScrollView
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
-        >
-          {rows.map((entry) => (
-            <View
-              key={entry.key}
-              style={[
-                styles.row,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceLine,
-                },
-                entry.rank === 1 && styles.topRow,
-              ]}
-            >
-              <Text style={[styles.rank, { color: colors.inkSoft }]}>
-                {entry.rank === 1 ? "🏆" : `${entry.rank}`}
-              </Text>
+        {/* Body */}
+        {isErrorBody ? (
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+              Couldn&apos;t load the global leaderboard
+            </Text>
+            <Text style={[styles.emptySub, { color: colors.inkSoft }]}>
+              Check your connection and try again.
+            </Text>
+          </View>
+        ) : isLoadingBody ? (
+          <View style={styles.emptyState}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : rows.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+              No scores yet
+            </Text>
+            <Text style={[styles.emptySub, { color: colors.inkSoft }]}>
+              {effectiveScope === "global"
+                ? "Be the first to land on the global board."
+                : "Play a game to plant your first score here."}
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+          >
+            {rows.map((entry) => (
               <View
-                style={[styles.avatar, { backgroundColor: colors.primary300 }]}
+                key={entry.key}
+                style={[
+                  styles.row,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.surfaceLine,
+                  },
+                  entry.rank === 1 && styles.topRow,
+                ]}
               >
-                <Text style={[styles.avatarText, { color: colors.onPrimary }]}>
-                  {entry.playerName[0]?.toUpperCase() ?? "?"}
+                <Text style={[styles.rank, { color: colors.inkSoft }]}>
+                  {entry.rank === 1 ? "🏆" : `${entry.rank}`}
                 </Text>
-              </View>
-              <View style={styles.nameCol}>
-                <Text
-                  style={[styles.name, { color: colors.ink }]}
-                  numberOfLines={1}
+                <View
+                  style={[
+                    styles.avatar,
+                    { backgroundColor: colors.primary300 },
+                  ]}
                 >
-                  {entry.playerName}
-                </Text>
-                <Text style={[styles.date, { color: colors.inkSoft }]}>
-                  {formatDate(entry.date)}
+                  <Text
+                    style={[styles.avatarText, { color: colors.onPrimary }]}
+                  >
+                    {entry.playerName[0]?.toUpperCase() ?? "?"}
+                  </Text>
+                </View>
+                <View style={styles.nameCol}>
+                  <Text
+                    style={[styles.name, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
+                    {entry.playerName}
+                  </Text>
+                  <Text style={[styles.date, { color: colors.inkSoft }]}>
+                    {formatDate(entry.date)}
+                  </Text>
+                </View>
+                <Text style={[styles.score, { color: colors.ink }]}>
+                  {entry.score.toLocaleString()}
                 </Text>
               </View>
-              <Text style={[styles.score, { color: colors.ink }]}>
-                {entry.score.toLocaleString()}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-      )}
-    </View>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+    </DesignFrame>
   );
 }
 

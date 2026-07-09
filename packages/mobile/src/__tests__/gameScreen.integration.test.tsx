@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as engine from "@spriggle/engine";
 import type { Board, GameState, PlantType } from "@spriggle/engine";
 
@@ -130,9 +131,16 @@ function fullNoGroupBoard(score: number): GameState {
 
 function renderGame() {
   return render(
-    <ThemeProvider>
-      <GameScreen />
-    </ThemeProvider>,
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 1194, height: 834 },
+        insets: { top: 0, left: 0, right: 0, bottom: 0 },
+      }}
+    >
+      <ThemeProvider>
+        <GameScreen />
+      </ThemeProvider>
+    </SafeAreaProvider>,
   );
 }
 

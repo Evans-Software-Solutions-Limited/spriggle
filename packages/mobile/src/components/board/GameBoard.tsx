@@ -80,15 +80,14 @@ export function GameBoard({
               {row.map((cell, c) => {
                 const key = `${r}-${c}`;
                 return (
-                  <View key={key} style={{ marginRight: c < 7 ? GAP : 0 }}>
-                    <BoardCell
-                      plant={cell}
-                      highlighted={highlightedCells?.has(key) ?? false}
-                      selected={selectedCell === key}
-                      onPress={() => onCellPress?.(r, c)}
-                      size={cellSize}
-                    />
-                  </View>
+                  <BoardCell
+                    key={key}
+                    plant={cell}
+                    highlighted={highlightedCells?.has(key) ?? false}
+                    selected={selectedCell === key}
+                    onPress={() => onCellPress?.(r, c)}
+                    size={cellSize}
+                  />
                 );
               })}
             </View>
@@ -123,10 +122,11 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   grid: {
-    gap: GAP,
+    gap: GAP, // vertical spacing between rows
   },
   row: {
     flexDirection: "row",
+    gap: GAP, // horizontal spacing between cells (single gap mechanism)
   },
   // Tuft positions matching prototype
   tuftPos1: { position: "absolute", top: -14, left: "6%" },

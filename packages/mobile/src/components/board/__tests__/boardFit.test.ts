@@ -3,6 +3,8 @@ import {
   BOARD_CHROME,
   MIN_CELL_SIZE,
   BOARD_SIZE,
+  COLUMN_GAP,
+  BOARD_COL_FLEX,
 } from "../boardLayout";
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from "../../layout/DesignFrame";
 
@@ -16,10 +18,6 @@ import { DESIGN_WIDTH, DESIGN_HEIGHT } from "../../layout/DesignFrame";
  * scales the whole thing to the device), so these are constant checks: if
  * someone reintroduces height-based or window-relative sizing, they break.
  */
-
-// Must mirror game.tsx's COLUMN_GAP / BOARD_COL_FLEX.
-const COLUMN_GAP = 26;
-const BOARD_COL_FLEX = 0.6;
 
 function boardFootprint(availableSize: number): number {
   return cellSizeFor(availableSize) * BOARD_SIZE + BOARD_CHROME;

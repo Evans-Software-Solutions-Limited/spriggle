@@ -6,6 +6,7 @@ import { getLocalStorageService } from "../src/services/localStorage";
 import { useAuth } from "../src/auth/AuthContext";
 import { canSubmitGlobalScore } from "../src/services/auth";
 import { getSyncService } from "../src/services/sync";
+import { DesignFrame } from "../src/components/layout/DesignFrame";
 
 /** Fallback name for local-only leaderboard entries when no display name exists. */
 const FALLBACK_PLAYER_NAME = "Guest";
@@ -63,75 +64,79 @@ export default function GameOverScreen() {
   }, [score, playerName, user]);
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.paper }]}>
-      <View
-        style={[
-          styles.sheet,
-          { backgroundColor: colors.paper, borderColor: colors.surfaceLine },
-        ]}
-      >
-        {isBest && (
-          <Text style={[styles.bestBanner, { color: colors.gold }]}>
-            🌟 New best! 🌟
-          </Text>
-        )}
-        <Text style={[styles.heading, { color: colors.ink }]}>
-          {isBest ? "A record harvest" : "Run complete"}
-        </Text>
-        <Text style={[styles.sub, { color: colors.inkSoft }]}>
-          {isBest
-            ? "Your patch has never grown bigger."
-            : "Better luck next time!"}
-        </Text>
-
-        {/* Score display */}
+    <DesignFrame>
+      <View style={[styles.screen, { backgroundColor: colors.paper }]}>
         <View
           style={[
-            styles.scoreBox,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.surfaceLine,
-            },
+            styles.sheet,
+            { backgroundColor: colors.paper, borderColor: colors.surfaceLine },
           ]}
         >
-          <Text style={[styles.scoreLabel, { color: colors.accent700 }]}>
-            Final score
-          </Text>
-          <Text style={[styles.scoreValue, { color: colors.ink }]}>
-            {score.toLocaleString()}
-          </Text>
-        </View>
-
-        {/* Actions */}
-        <View style={styles.actions}>
-          <Pressable
-            style={[styles.btn, { backgroundColor: colors.primary }]}
-            onPress={() => router.replace("/game")}
-            accessibilityRole="button"
-            accessibilityLabel="Replay"
-          >
-            <Text style={[styles.btnText, { color: colors.onPrimary }]}>
-              Replay
+          {isBest && (
+            <Text style={[styles.bestBanner, { color: colors.gold }]}>
+              🌟 New best! 🌟
             </Text>
-          </Pressable>
-          <Pressable
+          )}
+          <Text style={[styles.heading, { color: colors.ink }]}>
+            {isBest ? "A record harvest" : "Run complete"}
+          </Text>
+          <Text style={[styles.sub, { color: colors.inkSoft }]}>
+            {isBest
+              ? "Your patch has never grown bigger."
+              : "Better luck next time!"}
+          </Text>
+
+          {/* Score display */}
+          <View
             style={[
-              styles.btn,
-              styles.btnGhost,
+              styles.scoreBox,
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.surfaceLine,
               },
             ]}
-            onPress={() => router.replace("/")}
-            accessibilityRole="button"
-            accessibilityLabel="Garden (home)"
           >
-            <Text style={[styles.btnText, { color: colors.ink }]}>Garden</Text>
-          </Pressable>
+            <Text style={[styles.scoreLabel, { color: colors.accent700 }]}>
+              Final score
+            </Text>
+            <Text style={[styles.scoreValue, { color: colors.ink }]}>
+              {score.toLocaleString()}
+            </Text>
+          </View>
+
+          {/* Actions */}
+          <View style={styles.actions}>
+            <Pressable
+              style={[styles.btn, { backgroundColor: colors.primary }]}
+              onPress={() => router.replace("/game")}
+              accessibilityRole="button"
+              accessibilityLabel="Replay"
+            >
+              <Text style={[styles.btnText, { color: colors.onPrimary }]}>
+                Replay
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.btn,
+                styles.btnGhost,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceLine,
+                },
+              ]}
+              onPress={() => router.replace("/")}
+              accessibilityRole="button"
+              accessibilityLabel="Garden (home)"
+            >
+              <Text style={[styles.btnText, { color: colors.ink }]}>
+                Garden
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
-    </View>
+    </DesignFrame>
   );
 }
 

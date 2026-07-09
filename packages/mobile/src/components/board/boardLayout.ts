@@ -8,6 +8,13 @@ export const CELL_GAP = 6;
 export const PATCH_PADDING = 18;
 export const SOIL_PADDING = 14;
 
+/**
+ * Game-screen layout split between the board column and the rail. Shared by
+ * game.tsx (which sizes the board) and the fit tests so they can't drift.
+ */
+export const COLUMN_GAP = 26;
+export const BOARD_COL_FLEX = 0.6;
+
 /** Chrome around the 8×8 grid: patch padding + soil padding + inter-cell gaps. */
 export const BOARD_CHROME =
   PATCH_PADDING * 2 + SOIL_PADDING * 2 + CELL_GAP * (BOARD_SIZE - 1);

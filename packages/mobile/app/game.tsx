@@ -9,15 +9,17 @@ import {
 import { useTheme, fonts, radii, spacing } from "../src/theme";
 import { GameBoard } from "../src/components/board";
 import type { BoardData } from "../src/components/board";
-import { useFrameSize } from "../src/components/layout/DesignFrame";
+import {
+  COLUMN_GAP,
+  BOARD_COL_FLEX,
+} from "../src/components/board/boardLayout";
+import {
+  DesignFrame,
+  useFrameSize,
+} from "../src/components/layout/DesignFrame";
 import { useGameInteraction } from "../src/hooks/useGameInteraction";
 import { useGameSession } from "../src/hooks/useGameSession";
 import { getLocalStorageService } from "../src/services/localStorage";
-
-/** Horizontal gap between the board column and the rail (design px). */
-const COLUMN_GAP = 26;
-/** Board column's share of the row (see styles.boardCol `flex`). */
-const BOARD_COL_FLEX = 0.6;
 
 /**
  * Adapter mapping the interaction hook's `(board, row, col)` signature onto the
@@ -30,11 +32,24 @@ function findGroup(board: BoardData, row: number, col: number) {
 }
 
 /**
- * Game screen — container.
+ * Game screen. The outer component owns the DesignFrame (fixed 1194×834 canvas
+ * scaled to the device); the inner container reads the frame size and drives
+ * the game. Splitting them keeps `useFrameSize` inside the frame's provider.
+ */
+export default function GameScreen() {
+  return (
+    <DesignFrame>
+      <GameScreenContent />
+    </DesignFrame>
+  );
+}
+
+/**
+ * Game screen container.
  * Landscape two-panel: board-col (left ~60%) + rail (right ~40%).
  * Matches prototype's Screens.game layout.
  */
-export default function GameScreen() {
+function GameScreenContent() {
   const router = useRouter();
   const { colors } = useTheme();
   const frame = useFrameSize();

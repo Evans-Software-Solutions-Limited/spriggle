@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import NetInfo from "@react-native-community/netinfo";
 
 import LeaderboardScreen from "../../app/leaderboard";
@@ -25,9 +26,16 @@ function setConnectivity(isConnected: boolean) {
 
 function renderScreen() {
   return render(
-    <ThemeProvider>
-      <LeaderboardScreen />
-    </ThemeProvider>,
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 1194, height: 834 },
+        insets: { top: 0, left: 0, right: 0, bottom: 0 },
+      }}
+    >
+      <ThemeProvider>
+        <LeaderboardScreen />
+      </ThemeProvider>
+    </SafeAreaProvider>,
   );
 }
 
