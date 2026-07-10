@@ -141,10 +141,10 @@ export default function SettingsScreen() {
                 About
               </Text>
               <Text style={[styles.cardSub, { color: colors.inkSoft }]}>
-                Coded by Bradley · Graphics by Nicole · Tested by Libby
+                Spriggle — by Evans Software Solutions
               </Text>
               <Text style={[styles.version, { color: colors.inkFaint }]}>
-                Spriggle v1.0
+                Version 1.0.0
               </Text>
             </View>
           </View>

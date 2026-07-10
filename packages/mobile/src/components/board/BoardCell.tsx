@@ -110,6 +110,9 @@ const styles = StyleSheet.create({
   cellEmpty: {
     backgroundColor: "#241708",
   },
+  // Pre-dig group highlight — matches the prototype's `.cell.hl::after`
+  // (spriggle.css): a crisp 3px gold ring plus a wide soft gold glow
+  // (box-shadow 0 0 0 3px gold, 0 0 16px 2px gold@70%).
   highlightRing: {
     position: "absolute",
     top: -3,
@@ -117,24 +120,27 @@ const styles = StyleSheet.create({
     right: -3,
     bottom: -3,
     borderWidth: 3,
-    borderColor: "#d9a23c",
+    borderColor: "#d9a23c", // --gold (garden)
     shadowColor: "#d9a23c",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
-    shadowRadius: 8,
+    shadowRadius: 16,
   },
+  // Swap-selection ring — the prototype leaves `.cell.sel` unstyled, so this is
+  // a deliberate fill-in using the terracotta accent so a picked cell reads
+  // clearly and distinctly from the gold dig highlight.
   selectRing: {
     position: "absolute",
-    top: -2,
-    left: -2,
-    right: -2,
-    bottom: -2,
+    top: -3,
+    left: -3,
+    right: -3,
+    bottom: -3,
     borderWidth: 3,
-    borderColor: "#7a9a5b",
-    shadowColor: "#7a9a5b",
+    borderColor: "#c8693f", // --accent (garden)
+    shadowColor: "#c8693f",
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
+    shadowOpacity: 0.65,
+    shadowRadius: 14,
   },
   plantClip: {
     overflow: "hidden",
