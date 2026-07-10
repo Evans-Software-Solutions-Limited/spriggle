@@ -20,7 +20,8 @@
         "EXPO_PUBLIC_API_URL": "https://api.staging.spriggle.evans-software-solutions.com"
       },
       "ios": {
-        "resourceClass": "m-medium"
+        "resourceClass": "m-medium",
+        "image": "macos-sequoia-15.6-xcode-26.2"
       }
     },
     "production": {
@@ -31,7 +32,8 @@
         "EXPO_PUBLIC_API_URL": "https://n854zrrf78.execute-api.us-east-1.amazonaws.com"
       },
       "ios": {
-        "resourceClass": "m-medium"
+        "resourceClass": "m-medium",
+        "image": "macos-sequoia-15.6-xcode-26.2"
       }
     }
   },
