@@ -51,16 +51,17 @@ CocoaPods for linear-gradient + haptics. After prebuild:
   `typecheck`, `test:unit` (97 mobile tests), and a clean `expo export`
   (Metro) bundle for iOS.
 
-## [manual] Backend — production stage
+## Backend — production stage
 
-- `bunx sst deploy --stage production` (provisions the DynamoDB table + API
-  Gateway + Lambda). Note the API URL.
-- **[agent, once URL known]** Set `APPLE_CLIENT_ID` (= the app bundle id /
-  Services id) in the production infra env so Apple token verification works,
-  and replace `eas.json` → `build.production.env.EXPO_PUBLIC_API_URL` (currently
-  the placeholder **`SET_AFTER_SST_DEPLOY`**) with the deployed API URL.
-- Smoke-test the deployed endpoints: health, leaderboard, and an authed score
-  submit + profile with a real Apple identity token.
+- **[done]** Backend deployed:
+  `https://n854zrrf78.execute-api.us-east-1.amazonaws.com` (us-east-1).
+- **[agent, done]** `eas.json` → `build.production.env.EXPO_PUBLIC_API_URL` now
+  points at that URL (was the `SET_AFTER_SST_DEPLOY` placeholder).
+- **[agent, done]** `APPLE_CLIENT_ID` is set in the infra env
+  (`infra/api.ts` → `com.bradleyevans96.spriggle`, the app bundle id) for all
+  stages, so Apple token verification works in production.
+- **[manual]** Smoke-test the deployed endpoints: health, leaderboard, and an
+  authed score submit + profile with a real Apple identity token.
 - Note: the rate limiter is per-container / in-memory — acceptable for launch;
   a shared store (DynamoDB/Redis) is a post-launch hardening item.
 
