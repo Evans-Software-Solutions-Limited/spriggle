@@ -1,6 +1,9 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { BoardCell } from "./BoardCell";
+import { LinearGradient } from "expo-linear-gradient";
+import { AnimatedCell } from "./AnimatedCell";
+import type { CellAnimationState } from "./AnimatedCell";
+import { ScorePopup } from "./ScorePopup";
 import { GrassTuft } from "./GrassTuft";
 import type { PlantTypeName } from "../plants";
 import {
@@ -13,6 +16,18 @@ import {
 /** Board data: 8×8 grid where each cell is a PlantTypeName or null. */
 export type BoardData = (PlantTypeName | null)[][];
 
+/** A floating score popup anchored at a point in the grid's coordinate space. */
+export interface BoardScorePopup {
+  id: string;
+  score: number;
+  x: number;
+  y: number;
+  isBig: boolean;
+}
+
+/** Per-cell spawn stagger so refilled plants grow in one after another. */
+const SPAWN_STAGGER_MS = 45;
+
 export interface GameBoardProps {
   /** 8×8 board state. board[row][col]. */
   board: BoardData;
@@ -22,6 +37,12 @@ export interface GameBoardProps {
   selectedCell?: string | null;
   /** Called when a cell is tapped. Receives (row, col). */
   onCellPress?: (row: number, col: number) => void;
+  /** Map of "row-col" → animation state (clearing/spawning/shaking). */
+  cellAnimations?: Map<string, CellAnimationState>;
+  /** Active floating score popups. */
+  popups?: BoardScorePopup[];
+  /** Called when a popup finishes animating and should be removed. */
+  onPopupComplete?: (id: string) => void;
   /**
    * The square edge length (in design px) the patch may occupy — the smaller
    * of the board column's width and height. The container (game.tsx) owns this
@@ -33,6 +54,14 @@ export interface GameBoardProps {
 
 const GAP = CELL_GAP;
 const DEFAULT_AVAILABLE_SIZE = 600;
+
+// Prototype "garden" gradient stops (spriggle.css). The board is always the
+// garden palette today; a theme switch (M4) can make these theme-aware.
+const GRASS_TOP = "#6aa64b"; // --grass
+const GRASS_MID = "#5b8f3e"; // --grass-2
+const GRASS_DEEP = "#4f8033"; // --grass-deep
+const SOIL_TOP = "#4e3623"; // --soil
+const SOIL_BOTTOM = "#5a4029"; // --soil-2
 
 /**
  * Game board grid presenter — renders the soil-patch with 8×8 grid of cells.
@@ -48,12 +77,23 @@ export function GameBoard({
   highlightedCells,
   selectedCell,
   onCellPress,
+  cellAnimations,
+  popups,
+  onPopupComplete,
   availableSize = DEFAULT_AVAILABLE_SIZE,
 }: GameBoardProps) {
   const cellSize = cellSizeFor(availableSize);
 
+  // Stagger the spawn animation across the cells currently spawning, in
+  // row-major order, so refilled plants grow in one after another.
+  let spawnIndex = 0;
+
   return (
-    <View style={styles.patch}>
+    <LinearGradient
+      // Grass "patch" frame — 3-stop vertical gradient from the prototype.
+      colors={[GRASS_TOP, GRASS_MID, GRASS_DEEP]}
+      style={styles.patch}
+    >
       {/* Grass tufts overlapping edges */}
       <View style={[styles.tuftPos1]}>
         <GrassTuft scale={0.95} />
@@ -71,30 +111,49 @@ export function GameBoard({
         <GrassTuft scale={1.0} />
       </View>
 
-      {/* Soil area */}
-      <View style={styles.soil}>
+      {/* Soil area — tilled-earth gradient */}
+      <LinearGradient colors={[SOIL_TOP, SOIL_BOTTOM]} style={styles.soil}>
         {/* Grid */}
         <View style={styles.grid}>
           {board.map((row, r) => (
             <View key={r} style={styles.row}>
               {row.map((cell, c) => {
                 const key = `${r}-${c}`;
+                const animationState = cellAnimations?.get(key) ?? "idle";
+                const staggerDelay =
+                  animationState === "spawning"
+                    ? spawnIndex++ * SPAWN_STAGGER_MS
+                    : 0;
                 return (
-                  <BoardCell
+                  <AnimatedCell
                     key={key}
                     plant={cell}
                     highlighted={highlightedCells?.has(key) ?? false}
                     selected={selectedCell === key}
                     onPress={() => onCellPress?.(r, c)}
                     size={cellSize}
+                    animationState={animationState}
+                    staggerDelay={staggerDelay}
                   />
                 );
               })}
             </View>
           ))}
         </View>
-      </View>
-    </View>
+
+        {/* Floating score popups (over the grid, non-interactive) */}
+        {popups?.map((popup) => (
+          <ScorePopup
+            key={popup.id}
+            score={popup.score}
+            x={popup.x}
+            y={popup.y}
+            isBig={popup.isBig}
+            onComplete={() => onPopupComplete?.(popup.id)}
+          />
+        ))}
+      </LinearGradient>
+    </LinearGradient>
   );
 }
 
@@ -103,9 +162,7 @@ const styles = StyleSheet.create({
     position: "relative",
     borderRadius: 30,
     padding: PATCH_PADDING,
-    // Grass gradient background
-    backgroundColor: "#6aa64b",
-    // Card shadow matching prototype
+    // Card shadow matching prototype (background is the LinearGradient itself)
     shadowColor: "rgba(40,30,12,1)",
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.45,
@@ -114,7 +171,6 @@ const styles = StyleSheet.create({
   soil: {
     borderRadius: 22,
     padding: SOIL_PADDING,
-    backgroundColor: "#4e3623",
     // Inset shadow approximation
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },

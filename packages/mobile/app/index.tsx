@@ -297,14 +297,12 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 58,
     lineHeight: 62,
     letterSpacing: -0.5,
   },
   tagline: {
-    fontFamily: fonts.ui,
-    fontWeight: "800",
+    fontFamily: fonts.uiExtra,
     fontSize: 14,
     letterSpacing: 2.5,
     textTransform: "uppercase",
@@ -345,17 +343,14 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 14,
   },
   idName: {
-    fontFamily: fonts.ui,
-    fontWeight: "800",
+    fontFamily: fonts.uiExtra,
     fontSize: 13.5,
   },
   idSub: {
     fontFamily: fonts.ui,
-    fontWeight: "700",
     fontSize: 11.5,
     marginTop: 1,
   },
@@ -380,13 +375,11 @@ const styles = StyleSheet.create({
   },
   coinSymbol: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 13,
     color: "#7a5512",
   },
   coinValue: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 20,
   },
   // Right panel — fills remaining space
@@ -446,7 +439,6 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 22,
     lineHeight: 24,
   },
@@ -456,7 +448,6 @@ const styles = StyleSheet.create({
   },
   cardSub: {
     fontFamily: fonts.ui,
-    fontWeight: "700",
     fontSize: 12.5,
   },
   badgeWrap: {
@@ -465,8 +456,7 @@ const styles = StyleSheet.create({
     right: 14,
   },
   badge: {
-    fontFamily: fonts.ui,
-    fontWeight: "900",
+    fontFamily: fonts.uiBlack,
     fontSize: 10,
     letterSpacing: 0.8,
     textTransform: "uppercase",

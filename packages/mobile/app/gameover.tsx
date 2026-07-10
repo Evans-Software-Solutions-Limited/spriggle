@@ -157,20 +157,17 @@ const styles = StyleSheet.create({
   },
   bestBanner: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 14,
     textTransform: "uppercase",
     letterSpacing: 1.5,
   },
   heading: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 28,
     textAlign: "center",
   },
   sub: {
     fontFamily: fonts.ui,
-    fontWeight: "700",
     fontSize: 15,
     textAlign: "center",
   },
@@ -183,15 +180,13 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   scoreLabel: {
-    fontFamily: fonts.ui,
-    fontWeight: "800",
+    fontFamily: fonts.uiExtra,
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 2,
   },
   scoreValue: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 56,
     lineHeight: 60,
   },
@@ -211,8 +206,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   btnText: {
-    fontFamily: fonts.display,
-    fontWeight: "600",
+    fontFamily: fonts.displaySemi,
     fontSize: 18,
   },
 });

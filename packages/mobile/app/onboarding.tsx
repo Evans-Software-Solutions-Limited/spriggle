@@ -42,15 +42,14 @@ const styles = StyleSheet.create({
     padding: spacing.s8,
     gap: 20,
   },
-  heading: { fontFamily: fonts.display, fontWeight: "700", fontSize: 36 },
+  heading: { fontFamily: fonts.display, fontSize: 36 },
   body: {
     fontFamily: fonts.ui,
-    fontWeight: "700",
     fontSize: 18,
     lineHeight: 30,
     textAlign: "center",
     maxWidth: 500,
   },
   btn: { borderRadius: radii.md, paddingHorizontal: 32, paddingVertical: 16 },
-  btnText: { fontFamily: fonts.display, fontWeight: "700", fontSize: 20 },
+  btnText: { fontFamily: fonts.display, fontSize: 20 },
 });
