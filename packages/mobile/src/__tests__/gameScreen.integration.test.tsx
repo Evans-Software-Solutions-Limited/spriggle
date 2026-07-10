@@ -238,4 +238,17 @@ describe("GameScreen ↔ engine integration (M1)", () => {
     // which the container surfaces as a toast.
     await waitFor(() => expect(screen.getByText(/Need 5\+/)).toBeTruthy());
   });
+
+  // M4: the pause button opens a sheet (it used to just router.back()).
+  it("opens the pause sheet from the rail pause button", async () => {
+    mockInit.mockReturnValue(fiveWatermelonRow());
+
+    const screen = renderGame();
+    fireEvent.press(screen.getByLabelText("Pause"));
+
+    await waitFor(() => expect(screen.getByText("Paused")).toBeTruthy());
+    expect(screen.getByLabelText("Resume")).toBeTruthy();
+    expect(screen.getByLabelText("Restart run")).toBeTruthy();
+    expect(screen.getByLabelText("Quit to garden")).toBeTruthy();
+  });
 });

@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useTheme, fonts, radii } from "../src/theme";
 import { useAuth } from "../src/auth/AuthContext";
 import { DesignFrame } from "../src/components/layout/DesignFrame";
+import { Mascot } from "../src/components/mascot";
 
 /**
  * Home / Hub screen — container.
@@ -35,6 +36,7 @@ export default function HomeScreen() {
 
           {/* Mascot area */}
           <View style={styles.mascotArea}>
+            <Mascot pose="dig" size={210} animated />
             <View
               style={[styles.mascotShadow, { backgroundColor: colors.grass }]}
             />

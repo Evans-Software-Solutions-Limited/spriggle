@@ -22,6 +22,7 @@ import {
   DesignFrame,
   useFrameSize,
 } from "../src/components/layout/DesignFrame";
+import { Mascot } from "../src/components/mascot";
 import { useGameInteraction } from "../src/hooks/useGameInteraction";
 import { useGameSession } from "../src/hooks/useGameSession";
 import { useGameAnimations } from "../src/hooks/useGameAnimations";
@@ -98,6 +99,8 @@ function GameScreenContent() {
     [cellSize],
   );
 
+  const [paused, setPaused] = useState(false);
+
   // Transient toast for invalid actions ("Need 5+ …" / "Pick two different…").
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -159,6 +162,18 @@ function GameScreenContent() {
   // current top score *before* this run is recorded there (gameover.tsx records
   // it), so a tie is not a new best.
   const gameOverHandled = useRef(false);
+
+  // Restart the current run from the pause sheet: fresh board, clear the saved
+  // snapshot, and re-arm game-over handling.
+  const restartRun = useCallback(() => {
+    gameOverHandled.current = false;
+    session.newGame();
+    getLocalStorageService()
+      .then((s) => s.clearGameState())
+      .catch(() => {});
+    setPaused(false);
+  }, [session]);
+
   const handleGameOver = useCallback(
     async (finalState: GameState) => {
       if (gameOverHandled.current) return;
@@ -268,7 +283,7 @@ function GameScreenContent() {
                 borderColor: colors.surfaceLine,
               },
             ]}
-            onPress={() => router.back()}
+            onPress={() => setPaused(true)}
             accessibilityLabel="Pause"
           >
             <Text style={{ color: colors.ink, fontSize: 16 }}>⏸</Text>
@@ -309,6 +324,11 @@ function GameScreenContent() {
             },
           ]}
         >
+          {/* Mascot follows the selected tool */}
+          <View style={styles.mascotStage}>
+            <Mascot pose={interaction.tool} size={96} animated />
+          </View>
+
           <View style={styles.speechBubble}>
             <Text style={[styles.speechText, { color: colors.ink }]}>
               {interaction.tool === "dig"
@@ -435,6 +455,97 @@ function GameScreenContent() {
         </View>
       </View>
 
+      {/* Pause sheet */}
+      {paused && (
+        <View style={styles.scrim}>
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: colors.paper,
+                borderColor: colors.surfaceLine,
+              },
+            ]}
+          >
+            <Text style={[styles.sheetTitle, { color: colors.ink }]}>
+              Paused
+            </Text>
+            <Pressable
+              style={[styles.sheetBtn, { backgroundColor: colors.primary }]}
+              onPress={() => setPaused(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Resume"
+            >
+              <Text style={[styles.sheetBtnText, { color: colors.onPrimary }]}>
+                Resume
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.sheetBtn,
+                styles.sheetBtnGhost,
+                { borderColor: colors.surfaceLine },
+              ]}
+              onPress={restartRun}
+              accessibilityRole="button"
+              accessibilityLabel="Restart run"
+            >
+              <Text style={[styles.sheetBtnText, { color: colors.ink }]}>
+                Restart run
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.sheetBtn,
+                styles.sheetBtnGhost,
+                { borderColor: colors.surfaceLine },
+              ]}
+              onPress={() => {
+                setPaused(false);
+                router.push("/onboarding");
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="How to play"
+            >
+              <Text style={[styles.sheetBtnText, { color: colors.ink }]}>
+                How to play
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.sheetBtn,
+                styles.sheetBtnGhost,
+                { borderColor: colors.surfaceLine },
+              ]}
+              onPress={() => {
+                setPaused(false);
+                router.push("/settings");
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+            >
+              <Text style={[styles.sheetBtnText, { color: colors.ink }]}>
+                Settings
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.sheetBtn,
+                styles.sheetBtnGhost,
+                { borderColor: colors.err },
+              ]}
+              onPress={() => router.replace("/")}
+              accessibilityRole="button"
+              accessibilityLabel="Quit to garden"
+            >
+              <Text style={[styles.sheetBtnText, { color: colors.err }]}>
+                Quit to garden
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
       {/* Invalid-action toast */}
       {toast && (
         <View style={styles.toastWrap} pointerEvents="none">
@@ -505,6 +616,7 @@ const styles = StyleSheet.create({
     padding: spacing.s4,
     gap: 12,
   },
+  mascotStage: { alignItems: "center", paddingTop: 4 },
   speechBubble: { paddingVertical: 6 },
   speechText: {
     fontFamily: fonts.ui,
@@ -532,6 +644,33 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   toolBtnSub: { fontFamily: fonts.ui, fontWeight: "700", fontSize: 11 },
+  scrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(40,30,12,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheet: {
+    width: 360,
+    maxWidth: "80%",
+    borderRadius: radii.xl,
+    borderWidth: 3,
+    padding: spacing.s6,
+    gap: 10,
+  },
+  sheetTitle: {
+    fontFamily: fonts.display,
+    fontSize: 24,
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  sheetBtn: {
+    borderRadius: radii.md,
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  sheetBtnGhost: { borderWidth: 2 },
+  sheetBtnText: { fontFamily: fonts.displaySemi, fontSize: 16 },
   toastWrap: {
     position: "absolute",
     bottom: 24,
