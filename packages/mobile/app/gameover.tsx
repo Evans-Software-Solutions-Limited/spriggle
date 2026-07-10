@@ -7,6 +7,7 @@ import { useAuth } from "../src/auth/AuthContext";
 import { canSubmitGlobalScore } from "../src/services/auth";
 import { getSyncService } from "../src/services/sync";
 import { DesignFrame } from "../src/components/layout/DesignFrame";
+import { Mascot } from "../src/components/mascot";
 
 /** Fallback name for local-only leaderboard entries when no display name exists. */
 const FALLBACK_PLAYER_NAME = "Guest";
@@ -72,6 +73,7 @@ export default function GameOverScreen() {
             { backgroundColor: colors.paper, borderColor: colors.surfaceLine },
           ]}
         >
+          <Mascot pose={isBest ? "swap" : "idle"} size={110} animated />
           {isBest && (
             <Text style={[styles.bestBanner, { color: colors.gold }]}>
               🌟 New best! 🌟
