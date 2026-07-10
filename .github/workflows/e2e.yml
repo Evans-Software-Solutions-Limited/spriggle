@@ -72,6 +72,14 @@ jobs:
       - name: Prebuild iOS native project
         run: bunx expo prebuild --platform ios --clean
 
+      # Detox ships its runtime as a prebuilt Detox.framework cached under
+      # ~/Library/Detox, keyed by a hash that depends on the Xcode/Detox version.
+      # It's normally produced by Detox's npm postinstall, which bun does not run
+      # — so `detox test` fails with "Detox.framework could not be found". Build
+      # it explicitly here, after Xcode 26.2 is selected so the cache matches.
+      - name: Build Detox framework cache
+        run: bunx detox build-framework-cache
+
       - name: Detox build (Release)
         # Release bundles the JS, so no Metro packager is needed on CI (Debug
         # would require a running `expo start`).
