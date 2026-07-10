@@ -58,10 +58,9 @@ export default function RootLayout() {
                 <Stack.Screen name="leaderboard" />
                 <Stack.Screen name="settings" />
                 <Stack.Screen name="onboarding" />
-                <Stack.Screen
-                  name="signin"
-                  options={{ presentation: "modal" }}
-                />
+                {/* Full-screen (not a modal): a native iPad modal renders as a
+                    smaller sheet, which mis-scales the DesignFrame canvas. */}
+                <Stack.Screen name="signin" />
               </Stack>
             </ThemeProvider>
           </AuthProvider>

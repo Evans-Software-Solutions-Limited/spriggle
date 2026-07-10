@@ -10,13 +10,15 @@ import { useRouter } from "expo-router";
 import { useTheme, fonts, radii } from "../src/theme";
 import { useAuth } from "../src/auth/AuthContext";
 import { DesignFrame } from "../src/components/layout/DesignFrame";
+import { Mascot } from "../src/components/mascot";
 
 type Provider = "apple" | "gamecenter" | "guest";
 
 /**
- * Sign-in screen — pick an identity provider (Apple 10.1, Game Center 10.2) or
- * continue as a guest (local-only, 10.5/10.6). Presented as a modal from the
- * home identity chip; dismisses back on success.
+ * Sign-in screen. Guest is the primary path (the game plays fully offline);
+ * signing in only owns your leaderboard name across devices. Presented
+ * full-screen (see _layout) so the DesignFrame canvas scales correctly.
+ * Matches the prototype's Screens.signin layout.
  */
 export default function SignInScreen() {
   const router = useRouter();
@@ -72,33 +74,65 @@ export default function SignInScreen() {
   return (
     <DesignFrame>
       <View style={[styles.screen, { backgroundColor: colors.paper }]}>
-        <View style={styles.leftPanel}>
-          <Text style={[styles.brand, { color: colors.primary }]}>
+        {/* Left: branded hero */}
+        <View style={[styles.leftPanel, { backgroundColor: colors.primary }]}>
+          <Mascot pose="idle" size={150} />
+          <Text style={[styles.brand, { color: colors.onPrimary }]}>
             Spriggle
           </Text>
-          <Text style={[styles.tagline, { color: colors.accent700 }]}>
-            Sign in to climb the global leaderboard
+          <Text style={[styles.tagline, { color: colors.onPrimary }]}>
+            A cosy little harvesting puzzle.
           </Text>
+        </View>
+
+        {/* Right: guest-first sign-in */}
+        <View style={styles.rightPanel}>
+          <Text style={[styles.heading, { color: colors.ink }]}>
+            Welcome to the garden
+          </Text>
+          <Text style={[styles.sub, { color: colors.inkSoft }]}>
+            Jump straight in — no account needed. Sign in only if you want to
+            own your leaderboard name across devices.
+          </Text>
+
           <Pressable
-            style={styles.guestLink}
+            style={[styles.guestBtn, { backgroundColor: colors.primary }]}
             onPress={() => run("guest", async () => auth.playAsGuest())}
             disabled={busy !== null}
             accessibilityRole="button"
             accessibilityLabel="Continue as guest"
           >
-            <Text style={[styles.guestText, { color: colors.inkSoft }]}>
-              Continue as guest →
-            </Text>
+            {busy === "guest" ? (
+              <ActivityIndicator color={colors.onPrimary} />
+            ) : (
+              <Text style={[styles.guestText, { color: colors.onPrimary }]}>
+                Continue as guest
+              </Text>
+            )}
           </Pressable>
-        </View>
 
-        <View style={styles.rightPanel}>
-          {providerButton("apple", "Continue with Apple", auth.signInWithApple)}
+          <View style={styles.dividerRow}>
+            <View
+              style={[styles.divider, { backgroundColor: colors.surfaceLine }]}
+            />
+            <Text style={[styles.dividerText, { color: colors.inkFaint }]}>
+              OR
+            </Text>
+            <View
+              style={[styles.divider, { backgroundColor: colors.surfaceLine }]}
+            />
+          </View>
+
+          {providerButton("apple", "Sign in with Apple", auth.signInWithApple)}
           {providerButton(
             "gamecenter",
-            "Continue with Game Center",
+            "Sign in with Game Center",
             auth.signInWithGameCenter,
           )}
+
+          <Text style={[styles.offline, { color: colors.inkFaint }]}>
+            Plays fully offline · scores sync when you&apos;re back online
+          </Text>
 
           {error && (
             <Text style={[styles.error, { color: colors.accent700 }]}>
@@ -112,17 +146,42 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, flexDirection: "row", padding: 30, gap: 30 },
-  leftPanel: { flex: 0.42, justifyContent: "center", gap: 10 },
+  screen: { flex: 1, flexDirection: "row" },
+  leftPanel: {
+    flex: 0.42,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    padding: 30,
+  },
   brand: {
     fontFamily: fonts.display,
     fontSize: 48,
     letterSpacing: -0.5,
   },
-  tagline: { fontFamily: fonts.ui, fontSize: 15 },
-  guestLink: { marginTop: 18 },
-  guestText: { fontFamily: fonts.uiExtra, fontSize: 14 },
-  rightPanel: { flex: 0.58, justifyContent: "center", gap: 12 },
+  tagline: { fontFamily: fonts.ui, fontSize: 15, opacity: 0.9 },
+  rightPanel: {
+    flex: 0.58,
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 40,
+  },
+  heading: { fontFamily: fonts.display, fontSize: 30 },
+  sub: { fontFamily: fonts.ui, fontSize: 15, lineHeight: 22, marginBottom: 6 },
+  guestBtn: {
+    borderRadius: radii.md,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  guestText: { fontFamily: fonts.display, fontSize: 18 },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginVertical: 4,
+  },
+  divider: { flex: 1, height: 2, borderRadius: 1 },
+  dividerText: { fontFamily: fonts.uiExtra, fontSize: 12 },
   providerBtn: {
     borderRadius: radii.md,
     borderWidth: 2,
@@ -130,6 +189,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   providerText: { fontFamily: fonts.display, fontSize: 16 },
+  offline: {
+    fontFamily: fonts.ui,
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 4,
+  },
   error: {
     fontFamily: fonts.ui,
     fontSize: 13,
