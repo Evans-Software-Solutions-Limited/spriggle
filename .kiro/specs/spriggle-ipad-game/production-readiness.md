@@ -1,36 +1,36 @@
 # Spriggle — Production Readiness Handoff (M5)
 
 Status of Task 23 (App Store submission readiness). **[agent]** = done in this
-PR; **[manual]** = needs Brad's Apple/AWS accounts, a Mac with Xcode, or a
-device/simulator. The app is code-complete and playable after M1–M4; what
-remains is native regeneration, a backend deploy, account/portal config, and
-device verification — none of which can be done from this environment.
+PR; **[manual]** = needs Brad's Apple/AWS accounts or a device/simulator. The
+app is code-complete and playable after M1–M4; what remains is running the
+existing production pipeline, account/portal config, and device verification.
 
-## ⚠️ Do this first — the native project is stale
+## Native project is generated, not committed (CNG)
 
-M3 added two **native** modules — `expo-linear-gradient` and `expo-haptics` —
-and `ios/Podfile.lock` does not contain them. The committed `ios/` project also
-predates the M1–M4 JS (that's fine — JS is bundled by Metro) but it is missing
-those native pods. **You must regenerate the native project before building:**
+`ios/` is **gitignored** (`packages/mobile/.gitignore`), so this repo uses
+Continuous Native Generation — the native project is regenerated from
+`app.json` at build time, never committed. Consequences:
 
-```
-cd packages/mobile
-rm -rf ios
-bunx expo prebuild -p ios --clean
-```
+- **The production ship path prebuilds automatically.** `production.yml` runs
+  `eas build --platform ios --profile production`; with no `ios/` uploaded,
+  **EAS Build runs `expo prebuild` on its servers each build**, generating a
+  fresh `Spriggle`-branded project from `app.json` with the current native
+  modules (incl. M3's `expo-linear-gradient` + `expo-haptics`), the `spriggle`
+  scheme, landscape/iPad lock, Game Center, Apple Sign In, icon/splash, and the
+  privacy manifest. **No manual prebuild is needed to ship.**
+- Any `ios/` folder on a dev machine is a **local artifact** (a leftover clone
+  may even be named `persistencemobile`) and does not affect CI. Only run
+  `bunx expo prebuild -p ios --clean` locally if you want a **local** native
+  build or a local Detox run.
 
-This regenerates a `Spriggle`-branded iOS project from `app.json` with: the
-`spriggle` URL scheme, landscape-only + iPad-only lock, Game Center entitlement,
-Apple Sign In, the new icon/splash, the privacy manifest, and — critically —
-CocoaPods for linear-gradient + haptics. After prebuild:
+### ⚠️ E2E CI gap — `e2e.yml` is missing a prebuild step
 
-- **[agent, then verify]** Confirm the generated `ios/*.xcworkspace` name is
-  `Spriggle` (matches `.detoxrc.js`); if Expo sanitised it differently, update
-  `.detoxrc.js`.
-- **[verify]** Confirm the regenerated `Info.plist` / entitlements contain **no**
-  unused sensitive capabilities (HealthKit, in-app-payments merchant, camera /
-  microphone / photo-library usage strings, `aps-environment`). `app.json`
-  doesn't declare them, so `--clean` should drop them.
+`.github/workflows/e2e.yml` runs `pod install` in `packages/mobile/ios` with no
+`expo prebuild` before it. Since `ios/` is gitignored, that directory doesn't
+exist on a fresh checkout, so the Detox job fails at `pod install`. Fix: add an
+`npx expo prebuild -p ios --clean` step before the CocoaPods/Detox steps (EAS
+does this for the build path, but Detox builds the app locally on the runner
+and needs the native project generated first).
 
 ## [agent] Done in this PR (config only — no native build performed)
 
