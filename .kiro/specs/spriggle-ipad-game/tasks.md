@@ -4,6 +4,26 @@
 
 Incremental implementation starting with the pure game engine (fully testable without UI), then building the client app layer, and finally the standalone backend. Each step builds on the previous, with property tests placed close to the code they validate.
 
+## Remediation status (2026-07-10)
+
+A 2026-07-09 audit found the "complete" app was broken (engine never wired to
+the UI, board didn't fit the iPad, fonts/animations/mascot never shipped) —
+see [`remediation.md`](./remediation.md). The fix landed as a stacked PR chain:
+
+- **M1** — wire the engine into the play screen (dig/swap/score/game-over/
+  resume). Restores tasks 11.2, 13.2.
+- **M2** — fit every iPad via a fixed design-frame scaled per screen.
+  Restores task 11.1.
+- **M3** — load real fonts, wire the built animation system, haptics, soil
+  gradient. Restores task 12.
+- **M4** — mascot, real settings (theme switch), pause sheet, how-to-play.
+- **M5** — production-readiness config + handoff, see
+  [`production-readiness.md`](./production-readiness.md).
+
+Tasks 11–13 below are therefore complete again (via M1–M3). Task 23 is the
+remaining App Store work; its `[agent]` items are done (M5), `[manual]` items
+are tracked in `production-readiness.md`.
+
 ## Tasks
 
 - [x] 1. Project scaffolding and core types
@@ -131,9 +151,9 @@ Incremental implementation starting with the pure game engine (fully testable wi
     - **Property (example-based): Accessibility labels on plant SVGs**
     - **Validates: Requirements 8.3**
 
-- [ ] 11. Game board UI and touch interactions
+- [x] 11. Game board UI and touch interactions
       _AUDIT 2026-07-09: was marked [x] but incomplete — see remediation.md._
-  - [ ] 11.1 Implement game board grid component
+  - [x] 11.1 Implement game board grid component
     - Create `src/components/GameBoard.tsx` rendering 8×8 grid with plant SVGs
     - Implement responsive layout for iPad screen sizes (Mini through Pro 12.9")
     - Handle touch/tap for cell selection
@@ -141,7 +161,7 @@ Incremental implementation starting with the pure game engine (fully testable wi
       column — board overflows/clips on 10.2"/11"/12.9" iPads; no safe-area
       handling. Layout requirement NOT met (remediation M2)._
     - _Requirements: 7.2, 7.3_
-  - [ ] 11.2 Implement game action handling (dig and swap gestures)
+  - [x] 11.2 Implement game action handling (dig and swap gestures)
     - Map single-tap to select cell, second tap to confirm dig group or swap target
     - Connect touch handlers to game engine functions
     - Display visual feedback for invalid actions
@@ -150,9 +170,9 @@ Incremental implementation starting with the pure game engine (fully testable wi
       the app; board is a static mock. NOT done (remediation M1)._
     - _Requirements: 9.4_
 
-- [ ] 12. Game animations
+- [x] 12. Game animations
       _AUDIT 2026-07-09: was marked [x] but animations never run — see remediation.md._
-  - [ ] 12.1 Implement dig, swap, and refill animations
+  - [x] 12.1 Implement dig, swap, and refill animations
     - Animate plant removal on dig (fade/shrink)
     - Animate plant exchange on swap (slide)
     - Animate new plants appearing on refill (grow/fade-in)
@@ -163,9 +183,9 @@ Incremental implementation starting with the pure game engine (fully testable wi
       except the highlight bob (remediation M3)._
     - _Requirements: 9.1, 9.2, 9.3_
 
-- [ ] 13. Screen navigation and game flow
+- [x] 13. Screen navigation and game flow
       _AUDIT 2026-07-09: was marked [x] but flow is broken — see remediation.md._
-  - [ ] 13.1 Implement screen navigation with Expo Router
+  - [x] 13.1 Implement screen navigation with Expo Router
     - Create screens: Main Menu, Game, Game Over, Leaderboard, Settings, Onboarding
     - Wire navigation between screens per design state diagram
     - _AUDIT: screens exist as files, but Onboarding is unreachable (no
@@ -173,7 +193,7 @@ Incremental implementation starting with the pure game engine (fully testable wi
       /gameover is never navigated to from gameplay. Partially done
       (remediation M1/M4)._
     - _Requirements: 7.1_
-  - [ ] 13.2 Implement game session lifecycle
+  - [x] 13.2 Implement game session lifecycle
     - New game start → play loop → game over → score display
     - Resume interrupted game from serialized state
     - _AUDIT: useGameSession is dead code (zero imports); no play loop, no

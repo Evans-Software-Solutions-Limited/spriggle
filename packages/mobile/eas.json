@@ -28,7 +28,7 @@
       "environment": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "SET_AFTER_SST_DEPLOY"
+        "EXPO_PUBLIC_API_URL": "https://n854zrrf78.execute-api.us-east-1.amazonaws.com"
       },
       "ios": {
         "resourceClass": "m-medium"
