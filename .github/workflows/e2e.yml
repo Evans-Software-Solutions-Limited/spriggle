@@ -39,8 +39,16 @@ jobs:
         working-directory: .
 
       - name: Install applesimutils
+        env:
+          # Homebrew 5.1.15+ refuses to load formulae from untrusted third-party
+          # taps. Trust the wix tap explicitly (the forward-looking fix per
+          # docs.brew.sh/Tap-Trust); HOMEBREW_NO_REQUIRE_TAP_TRUST is the
+          # documented transitional fallback (removed in a later brew), kept as
+          # belt-and-suspenders across the current brew versions on the runner.
+          HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
         run: |
           brew tap wix/brew
+          brew trust wix/brew || true
           brew install applesimutils
 
       # `ios/` is gitignored (Continuous Native Generation), so it doesn't exist
