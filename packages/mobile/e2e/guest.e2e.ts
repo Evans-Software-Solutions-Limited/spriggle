@@ -13,10 +13,10 @@ describe("Guest mode → local-only", () => {
 
   it("continues as a guest from the sign-in screen", async () => {
     await element(by.label("Sign in or continue as guest")).tap();
-    await waitFor(element(by.text("Continue as guest →")))
+    await waitFor(element(by.text("Continue as guest")))
       .toBeVisible()
       .withTimeout(10000);
-    await element(by.text("Continue as guest →")).tap();
+    await element(by.text("Continue as guest")).tap();
     // Back on home as a guest.
     await waitFor(element(by.label("Play Classic")))
       .toBeVisible()

@@ -16,10 +16,10 @@ describe("Sign-in → global leaderboard", () => {
 
   it("offers the provider sign-in options", async () => {
     await element(by.label("Sign in or continue as guest")).tap();
-    await waitFor(element(by.label("Continue with Apple")))
+    await waitFor(element(by.label("Sign in with Apple")))
       .toBeVisible()
       .withTimeout(10000);
-    await expect(element(by.label("Continue with Game Center"))).toBeVisible();
+    await expect(element(by.label("Sign in with Game Center"))).toBeVisible();
   });
 
   it("opens the Global leaderboard tab", async () => {
