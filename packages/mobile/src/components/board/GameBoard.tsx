@@ -35,6 +35,12 @@ export interface GameBoardProps {
   highlightedCells?: Set<string>;
   /** "row-col" key of the currently selected cell (for swap). */
   selectedCell?: string | null;
+  /**
+   * Set of "row-col" keys to draw the swap-selection ring on. Used by the
+   * tutorial to ring both swap targets at once; renders the same ring as
+   * `selectedCell`. Optional and additive — the game passes only `selectedCell`.
+   */
+  ringedCells?: Set<string>;
   /** Called when a cell is tapped. Receives (row, col). */
   onCellPress?: (row: number, col: number) => void;
   /** Map of "row-col" → animation state (clearing/spawning/shaking). */
@@ -76,6 +82,7 @@ export function GameBoard({
   board,
   highlightedCells,
   selectedCell,
+  ringedCells,
   onCellPress,
   cellAnimations,
   popups,
@@ -129,7 +136,9 @@ export function GameBoard({
                     key={key}
                     plant={cell}
                     highlighted={highlightedCells?.has(key) ?? false}
-                    selected={selectedCell === key}
+                    selected={
+                      selectedCell === key || (ringedCells?.has(key) ?? false)
+                    }
                     onPress={() => onCellPress?.(r, c)}
                     size={cellSize}
                     animationState={animationState}

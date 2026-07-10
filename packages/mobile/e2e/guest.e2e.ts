@@ -11,14 +11,19 @@ describe("Guest mode → local-only", () => {
     await device.launchApp({ delete: true, newInstance: true });
   });
 
-  it("continues as a guest from the sign-in screen", async () => {
-    await element(by.label("Sign in or continue as guest")).tap();
+  it("continues as a guest and completes first-run onboarding", async () => {
+    // A first launch routes straight to sign-in (the first-run gate in
+    // app/_layout). Guest hands off into the interactive tutorial; skipping it
+    // marks the app onboarded and drops the player into the game.
     await waitFor(element(by.text("Continue as guest")))
       .toBeVisible()
       .withTimeout(10000);
     await element(by.text("Continue as guest")).tap();
-    // Back on home as a guest.
-    await waitFor(element(by.label("Play Classic")))
+    await waitFor(element(by.label("Skip tutorial")))
+      .toBeVisible()
+      .withTimeout(10000);
+    await element(by.label("Skip tutorial")).tap();
+    await waitFor(element(by.label("Pause")))
       .toBeVisible()
       .withTimeout(10000);
   });

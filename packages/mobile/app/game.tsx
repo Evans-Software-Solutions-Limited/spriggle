@@ -501,7 +501,10 @@ function GameScreenContent() {
               ]}
               onPress={() => {
                 setPaused(false);
-                router.push("/onboarding");
+                router.push({
+                  pathname: "/onboarding",
+                  params: { from: "game" },
+                });
               }}
               accessibilityRole="button"
               accessibilityLabel="How to play"
