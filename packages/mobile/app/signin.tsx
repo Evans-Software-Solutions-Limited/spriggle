@@ -9,6 +9,7 @@ import {
 import { useRouter } from "expo-router";
 import { useTheme, fonts, radii } from "../src/theme";
 import { useAuth } from "../src/auth/AuthContext";
+import { useOnboarding } from "../src/onboarding";
 import { DesignFrame } from "../src/components/layout/DesignFrame";
 import { Mascot } from "../src/components/mascot";
 
@@ -24,6 +25,7 @@ export default function SignInScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const auth = useAuth();
+  const { isOnboarded } = useOnboarding();
 
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,10 @@ export default function SignInScreen() {
     setBusy(provider);
     try {
       await action();
-      dismiss();
+      // First-run (guest included): hand off into the tutorial rather than
+      // dismissing. Returning users just close the sheet.
+      if (!isOnboarded) router.replace("/onboarding");
+      else dismiss();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Sign-in failed");
     } finally {

@@ -209,3 +209,20 @@ group forces a Swap, whose Refill then can't place all 6 → Game_Over._
 1. WHEN the application moves to the background, THE Application SHALL serialize the current game state (Game_Board, Score, turn count) to device storage
 2. WHEN the application resumes, THE Application SHALL deserialize the saved game state and restore play from the exact saved position
 3. FOR ALL valid game states, serializing then deserializing SHALL produce an equivalent game state (round-trip property)
+
+### Requirement 17: First-Run Onboarding Tutorial
+
+**User Story:** As a first-time player, I want a short interactive tutorial, so that I learn the dig and swap mechanics before playing.
+
+Authoritative reference: the prototype's `onboarding.js` (a scripted 3-beat tutorial) and its `finish()`/`done()` routing. See phase-2-corrections.md C5.
+
+#### Acceptance Criteria
+
+1. THE Application SHALL persist an `onboarded` flag in device storage that records whether the tutorial has been completed
+2. WHEN the application launches AND the player has not completed the tutorial, THE Application SHALL route the player through sign-in and then the tutorial before the home screen
+3. WHEN the application launches AND the player has completed the tutorial, THE Application SHALL NOT show the tutorial and SHALL proceed to the home screen
+4. THE Tutorial SHALL present three scripted beats on the real game board — (a) dig a seeded 5-group, (b) swap two ringed cells to line up a 5-group, (c) dig the newly formed group — advancing only when the scripted cell is tapped
+5. WHEN the player taps a cell that is not part of the current beat's scripted target, THE Tutorial SHALL give a shake/haptic rejection and SHALL NOT advance
+6. WHEN the tutorial is completed or skipped, THE Application SHALL set the `onboarded` flag and route into the game
+7. WHEN a first-run sign-in (guest included) succeeds, THE Application SHALL route into the tutorial rather than dismissing to the home screen
+8. THE Tutorial SHALL remain reachable after first run from the in-game pause sheet ("How to play"), and completing it from there SHALL return to the game without restarting it

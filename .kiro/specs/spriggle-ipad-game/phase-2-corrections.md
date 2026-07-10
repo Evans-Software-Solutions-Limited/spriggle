@@ -89,7 +89,20 @@ assets and `app.json` are correct — this is purely the stale artifact.
 
 ## P1 — Frontend fidelity
 
-### C5 — Interactive onboarding tutorial + first-run routing
+### C5 — Interactive onboarding tutorial + first-run routing — ✅ DONE (P2-D)
+
+Implemented: `app/onboarding.tsx` is now the scripted 3-beat interactive tutorial
+driving the real `GameBoard` + `@spriggle/engine` (`findConnectedGroup`), with
+tap-gating (wrong taps shake), progress dots, mascot-per-tool, speech + hint, and
+a Skip button. First-run routing added via `src/onboarding/OnboardingContext`
+(`@spriggle/onboarded` AsyncStorage flag) + a root-navigator gate
+(`needsOnboardingRedirect`): first-time users go sign-in → tutorial → game;
+returning users skip straight through. Sign-in hand-off wired (first-run
+sign-in/guest → tutorial). Pause "How to play" opens the tutorial with a
+`from=game` intent and returns to the game. `requirements.md` Requirement 17
+added. Tests: tutorialData (engine-verified boards), routing gate, context
+hydration/persistence, and tap-gating/flow integration. Optional animated splash
+deferred (native splash remains).
 
 Current onboarding is static "how-to-play" cards; the prototype
 (`onboarding.js`) is a scripted **3-step interactive** tutorial on a real board:
