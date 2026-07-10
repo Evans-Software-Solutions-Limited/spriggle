@@ -43,9 +43,13 @@ jobs:
           brew tap wix/brew
           brew install applesimutils
 
-      - name: Install CocoaPods
-        run: pod install
-        working-directory: packages/mobile/ios
+      # `ios/` is gitignored (Continuous Native Generation), so it doesn't exist
+      # on a fresh checkout. Generate it from app.json before building — this
+      # also runs `pod install`. (EAS Build does this on its servers for the
+      # production ship path; Detox builds locally on the runner, so it must be
+      # done here explicitly.)
+      - name: Prebuild iOS native project
+        run: bunx expo prebuild --platform ios --clean
 
       - name: Detox build (Release)
         # Release bundles the JS, so no Metro packager is needed on CI (Debug
