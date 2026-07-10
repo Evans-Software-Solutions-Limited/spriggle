@@ -6,10 +6,10 @@
   refill-starvation game-over, scoring confirmed correct) — merged (#31).
 - ✅ **P2-B** About (Evans Software Solutions) + selection styling — merged (#32).
 - ✅ **P2-C** sign-in full-screen + guest-first layout — merged (#33).
-- ⏳ **P2-D** interactive tutorial + first-run routing — NOT STARTED (largest
-  item; port `design-prototype/spriggle/onboarding.js` scripted 3-step flow,
-  add `onboarded` flag + startup routing, and the sign-in → onboarding hand-off
-  deferred from P2-C).
+- ✅ **P2-D** interactive tutorial + first-run routing — implemented in PR #35
+  (scripted 3-beat tutorial on the real board/engine, `onboarded` AsyncStorage
+  flag + `RootNavigator` startup gate, sign-in → onboarding hand-off). Pending
+  Brad's on-device confirmation. See C5 below.
 - ✅ **B1** Xcode-16 / expo-modules-core Swift-concurrency build failure —
   RESOLVED. Root cause: Expo SDK 55 dropped Xcode 15/16 support and requires
   Xcode 26 (expo/expo#42525). The production EAS build was never actually
