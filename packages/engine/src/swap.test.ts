@@ -78,6 +78,14 @@ describe("isValidSwap", () => {
     );
   });
 
+  it("rejects swapping a cell with itself", () => {
+    const board = emptyBoard();
+    board[3][3] = "watermelon";
+    expect(isValidSwap(board, { row: 3, col: 3 }, { row: 3, col: 3 })).toBe(
+      false,
+    );
+  });
+
   it("rejects swap involving an empty cell (first empty)", () => {
     const board = emptyBoard();
     board[4][5] = "flower";
