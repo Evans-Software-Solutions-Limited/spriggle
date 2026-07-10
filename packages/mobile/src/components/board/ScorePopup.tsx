@@ -15,7 +15,7 @@ interface ScorePopupProps {
   /** Position (x, y) in the board coordinate space. */
   x: number;
   y: number;
-  /** Whether this was a large dig (7+ plants) — shows bigger + emoji. */
+  /** Whether this was a large dig (8+ plants) — shows bigger + emoji. */
   isBig?: boolean;
   /** Called when the animation completes (to unmount the popup). */
   onComplete?: () => void;

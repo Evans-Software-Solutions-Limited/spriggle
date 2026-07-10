@@ -15,6 +15,7 @@ import {
   COLUMN_GAP,
   BOARD_COL_FLEX,
   CELL_GAP,
+  SOIL_PADDING,
   cellSizeFor,
 } from "../src/components/board/boardLayout";
 import {
@@ -85,12 +86,14 @@ function GameScreenContent() {
   const boardAvailableSize = Math.min(boardColWidth, frame.height);
   const cellSize = cellSizeFor(boardAvailableSize);
 
-  // Convert a cell centroid to a pixel point in the grid's coordinate space,
-  // for anchoring the floating score popup.
+  // Convert a cell centroid to a pixel point for the floating score popup.
+  // The popup is absolutely positioned inside the soil gradient (RN measures
+  // absolute offsets from the border box), whereas the grid is inset by
+  // SOIL_PADDING — so add that inset to land on the true cell centre.
   const cellCentreToPx = useCallback(
     (c: { row: number; col: number }) => ({
-      x: c.col * (cellSize + CELL_GAP) + cellSize / 2,
-      y: c.row * (cellSize + CELL_GAP) + cellSize / 2,
+      x: SOIL_PADDING + c.col * (cellSize + CELL_GAP) + cellSize / 2,
+      y: SOIL_PADDING + c.row * (cellSize + CELL_GAP) + cellSize / 2,
     }),
     [cellSize],
   );
@@ -193,10 +196,26 @@ function GameScreenContent() {
       const delta = result.newState.score - prevScore;
       const group = result.removedPositions;
       const { x, y } = cellCentreToPx(centroid(group));
+      // Refill lands in just-cleared cells, so refillPositions ⊆ removedPositions.
+      // Only run the (visually no-op) clearing state on the dug cells that were
+      // NOT refilled — otherwise animateDig's 320ms cleanup would reset the
+      // refilled cells mid-spawn and snap them to full size early.
+      const refillKeys = new Set(
+        result.refillPositions.map((p) => `${p.row}-${p.col}`),
+      );
+      const clearingOnly = group.filter(
+        (p) => !refillKeys.has(`${p.row}-${p.col}`),
+      );
       void Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success,
       ).catch(() => {});
-      void anim.animateDig(group, delta, x, y, group.length >= BIG_DIG_SIZE);
+      void anim.animateDig(
+        clearingOnly,
+        delta,
+        x,
+        y,
+        group.length >= BIG_DIG_SIZE,
+      );
       void anim.animateSpawn(result.refillPositions);
       if (result.newState.isGameOver) void handleGameOver(result.newState);
     },
