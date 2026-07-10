@@ -42,10 +42,10 @@ module.exports = {
       type: "ios.simulator",
       device: {
         // iPad target (landscape-only game). "iPad Pro 13-inch (M4)" is the
-        // 13" iPad Pro simulator shipped with Xcode 16 / iOS 18 (CI selects
-        // Xcode 16 — RN 0.83's Podfile requires it). Override locally via
-        // DETOX_IPAD_DEVICE if your installed Xcode names it differently
-        // (e.g. Xcode 15 uses "iPad Pro (12.9-inch) (6th generation)").
+        // 13" iPad Pro simulator shipped with Xcode 26 (CI selects Xcode 26 —
+        // Expo SDK 55 requires it; see .github/workflows/e2e.yml). Override
+        // locally via DETOX_IPAD_DEVICE if your installed Xcode names it
+        // differently.
         type: process.env.DETOX_IPAD_DEVICE || "iPad Pro 13-inch (M4)",
       },
     },

@@ -11,7 +11,10 @@ on:
 jobs:
   detox-ios:
     name: Detox iPad
-    runs-on: macos-14
+    # macos-15 (Sequoia) is required: Expo SDK 55 needs Xcode 26 (see the Xcode
+    # select step). macos-14 tops out at Xcode 16.x, which SDK 55 no longer
+    # supports. macos-15 ships Xcode 26.2/26.3 alongside 16.x.
+    runs-on: macos-15
     timeout-minutes: 60
     defaults:
       run:
@@ -38,11 +41,15 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: .
 
-      # React Native 0.83's Podfile requires Xcode 16+; macos-14 defaults to
-      # 15.4 (`pod install` fails with "Please upgrade XCode"). Select an
-      # installed Xcode 16.x explicitly.
-      - name: Select Xcode 16.2
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      # Expo SDK 55 requires Xcode 26: expo-modules-core@55.0.25 fails to compile
+      # under Xcode 15/16 with a Swift strict-concurrency error in
+      # SwiftUIVirtualView.swift ("main actor-isolated property 'props' can not
+      # be referenced from a nonisolated context"). Expo dropped Xcode 15/16
+      # support for SDK 55 (expo/expo#42525), and EAS builds SDK 55 on
+      # `macos-sequoia-15.6-xcode-26.2`. Match that toolchain here so the E2E
+      # compile mirrors the production EAS build.
+      - name: Select Xcode 26.2
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app
 
       - name: Install applesimutils
         env:

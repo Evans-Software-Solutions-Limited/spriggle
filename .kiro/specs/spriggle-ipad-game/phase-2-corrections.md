@@ -1,5 +1,27 @@
 # Spriggle — Phase 2: Correctness & Fidelity (pre-release)
 
+## Status (2026-07-10)
+
+- ✅ **P2-A** game logic (swap no-adjacency, single-tap dig, legacy
+  refill-starvation game-over, scoring confirmed correct) — merged (#31).
+- ✅ **P2-B** About (Evans Software Solutions) + selection styling — merged (#32).
+- ✅ **P2-C** sign-in full-screen + guest-first layout — merged (#33).
+- ⏳ **P2-D** interactive tutorial + first-run routing — NOT STARTED (largest
+  item; port `design-prototype/spriggle/onboarding.js` scripted 3-step flow,
+  add `onboarded` flag + startup routing, and the sign-in → onboarding hand-off
+  deferred from P2-C).
+- ✅ **B1** Xcode-16 / expo-modules-core Swift-concurrency build failure —
+  RESOLVED. Root cause: Expo SDK 55 dropped Xcode 15/16 support and requires
+  Xcode 26 (expo/expo#42525). The production EAS build was never actually
+  blocked (EAS's SDK-55 image is `macos-sequoia-15.6-xcode-26.2`); only the E2E
+  workflow was, because it pinned the unsupported Xcode 16.2. Fix: E2E now runs
+  on macos-15 + Xcode 26.2, and the EAS staging/production images are pinned to
+  the same known-good toolchain. Validated by the E2E run on `main`.
+
+Remaining work is best picked up fresh (this session is very long); all context
+is here + in `memory/` and the legacy at `~/Documents/projects/personal/
+GardenerGame`.
+
 Raised after Brad played the built app (2026-07-10). Milestones M1–M5 wired the
 engine, fit the iPad, loaded fonts/animations, added the mascot, and staged
 production — but on-device play exposed gameplay-logic and fidelity defects that
@@ -173,17 +195,27 @@ Legacy mechanism, not "100% full + no group".
 
 Surfaced while getting E2E green. Under Xcode 16.2, `expo-modules-core@55.0.25`
 fails to compile (`main actor-isolated property 'props' can not be referenced
-from a nonisolated context` — Swift strict-concurrency). RN 0.83's Podfile
-_requires_ Xcode 16+, so this isn't avoidable by staying on 15.4.
+from a nonisolated context` — Swift strict-concurrency).
 
-- **This likely also affects the production EAS build** (whatever Xcode EAS uses
-  for SDK 55). Must be resolved before shipping.
-- Investigate: an expo-modules-core patch bump (`expo install --fix`), pinning
-  the EAS build image / a specific Xcode 16.x (try 16.1 vs 16.2), or a Swift
-  language-version / strict-concurrency build setting.
-- Until resolved, the Detox E2E workflow can't build. (Prior E2E fixes —
-  tap-trust, prebuild, Xcode-16 select, iOS-18 simulator name — are all merged
-  and working; this compile error is the remaining wall.)
+**RESOLUTION (2026-07-10).** This is not a bug to patch — it's an unsupported
+toolchain. Expo dropped Xcode 15/16 support for SDK 55; the maintainer confirmed
+the build works on Xcode 26 and closed expo/expo#42525 as "Xcode 15 (and 16 as
+well) are not supported anymore." `expo-modules-core@55.0.25` is already the
+latest SDK-55 patch, so `expo install --fix` is a no-op.
+
+- **The production EAS build was never blocked.** EAS builds SDK 55 on
+  `macos-sequoia-15.6-xcode-26.2` (the `auto`/`sdk-55` image → Xcode 26.2), where
+  expo-modules-core compiles. The earlier "likely affects production" worry was
+  an untested hypothesis; it does not.
+- **E2E fix:** the workflow pinned Xcode 16.2 (unsupported). Moved it to
+  `runs-on: macos-15` + `Xcode_26.2.app` — the macos-15 runner ships Xcode
+  26.2/26.3 — so the E2E compile mirrors the production EAS toolchain exactly.
+- **EAS pin:** `eas.json` staging + production now pin
+  `ios.image = macos-sequoia-15.6-xcode-26.2` so the shipped build uses the same
+  CI-proven, Expo-supported toolchain and is immune to a future `auto`/`latest`
+  image flip (e.g. `latest` already points at Tahoe/Xcode 26.6).
+- Prior E2E fixes — tap-trust, prebuild, Xcode select, iPad-simulator name — are
+  all still in place; only the Xcode major changed (16.2 → 26.2).
 
 ---
 
