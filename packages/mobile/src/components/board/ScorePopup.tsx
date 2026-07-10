@@ -7,6 +7,7 @@ import Animated, {
   Easing,
   runOnJS,
 } from "react-native-reanimated";
+import { fonts } from "../../theme";
 
 interface ScorePopupProps {
   /** Score value to display (e.g. "+30"). */
@@ -100,8 +101,7 @@ const styles = StyleSheet.create({
     shadowRadius: 40,
   },
   scoreText: {
-    fontFamily: "Fredoka",
-    fontWeight: "700",
+    fontFamily: fonts.display,
     fontSize: 20,
     color: "#d9a23c",
     lineHeight: 24,

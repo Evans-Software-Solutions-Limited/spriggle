@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import {
   findConnectedGroup,
   type Board,
   type GameState,
+  type Position,
 } from "@spriggle/engine";
 import { useTheme, fonts, radii, spacing } from "../src/theme";
 import { GameBoard } from "../src/components/board";
@@ -12,6 +14,8 @@ import type { BoardData } from "../src/components/board";
 import {
   COLUMN_GAP,
   BOARD_COL_FLEX,
+  CELL_GAP,
+  cellSizeFor,
 } from "../src/components/board/boardLayout";
 import {
   DesignFrame,
@@ -19,7 +23,13 @@ import {
 } from "../src/components/layout/DesignFrame";
 import { useGameInteraction } from "../src/hooks/useGameInteraction";
 import { useGameSession } from "../src/hooks/useGameSession";
+import { useGameAnimations } from "../src/hooks/useGameAnimations";
 import { getLocalStorageService } from "../src/services/localStorage";
+
+/** Big-dig threshold (matches the prototype's 8+ celebration). */
+const BIG_DIG_SIZE = 8;
+/** How long an invalid-action toast stays up (ms). */
+const TOAST_MS = 2100;
 
 /**
  * Adapter mapping the interaction hook's `(board, row, col)` signature onto the
@@ -29,6 +39,16 @@ import { getLocalStorageService } from "../src/services/localStorage";
  */
 function findGroup(board: BoardData, row: number, col: number) {
   return findConnectedGroup(board as Board, { row, col });
+}
+
+/** Mean position of a group, in cell coordinates. */
+function centroid(positions: Position[]): { row: number; col: number } {
+  const sum = positions.reduce(
+    (acc, p) => ({ row: acc.row + p.row, col: acc.col + p.col }),
+    { row: 0, col: 0 },
+  );
+  const n = positions.length || 1;
+  return { row: sum.row / n, col: sum.col / n };
 }
 
 /**
@@ -54,6 +74,7 @@ function GameScreenContent() {
   const { colors } = useTheme();
   const frame = useFrameSize();
   const session = useGameSession();
+  const anim = useGameAnimations();
   const board = session.state.board as BoardData;
   const score = session.state.score;
 
@@ -62,6 +83,32 @@ function GameScreenContent() {
   // (the container) keeps GameBoard a pure presenter.
   const boardColWidth = (frame.width - COLUMN_GAP) * BOARD_COL_FLEX;
   const boardAvailableSize = Math.min(boardColWidth, frame.height);
+  const cellSize = cellSizeFor(boardAvailableSize);
+
+  // Convert a cell centroid to a pixel point in the grid's coordinate space,
+  // for anchoring the floating score popup.
+  const cellCentreToPx = useCallback(
+    (c: { row: number; col: number }) => ({
+      x: c.col * (cellSize + CELL_GAP) + cellSize / 2,
+      y: c.row * (cellSize + CELL_GAP) + cellSize / 2,
+    }),
+    [cellSize],
+  );
+
+  // Transient toast for invalid actions ("Need 5+ …" / "Pick two different…").
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
+  }, []);
+  useEffect(
+    () => () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    },
+    [],
+  );
 
   // Hydration: attempt to resume a persisted, still-in-progress game on mount;
   // otherwise start fresh. `hydrated` gates the persistence effect so we never
@@ -136,19 +183,38 @@ function GameScreenContent() {
 
   const interaction = useGameInteraction(board, findGroup, {
     onDig: (row, col) => {
+      const prevScore = session.state.score;
       const result = session.dig({ row, col });
-      if (result.success && result.newState.isGameOver) {
-        void handleGameOver(result.newState);
-      }
+      if (!result.success) return;
+      // session.dig committed the new board synchronously; batching the
+      // animation setState in this same handler means refilled cells first
+      // paint in their "spawning" state (scale 0), so they grow in without a
+      // full-size flash.
+      const delta = result.newState.score - prevScore;
+      const group = result.removedPositions;
+      const { x, y } = cellCentreToPx(centroid(group));
+      void Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Success,
+      ).catch(() => {});
+      void anim.animateDig(group, delta, x, y, group.length >= BIG_DIG_SIZE);
+      void anim.animateSpawn(result.refillPositions);
+      if (result.newState.isGameOver) void handleGameOver(result.newState);
     },
     onSwap: (r1, c1, r2, c2) => {
       const result = session.swap({ row: r1, col: c1 }, { row: r2, col: c2 });
-      if (result.success && result.newState.isGameOver) {
-        void handleGameOver(result.newState);
-      }
+      if (!result.success) return;
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(
+        () => {},
+      );
+      void anim.animateSpawn(result.refillPositions);
+      if (result.newState.isGameOver) void handleGameOver(result.newState);
     },
-    onInvalidAction: () => {
-      /* Shake animation + toast wired in M3 */
+    onInvalidAction: (row, col, reason) => {
+      void Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Warning,
+      ).catch(() => {});
+      void anim.animateShake(row, col);
+      showToast(reason);
     },
   });
 
@@ -161,6 +227,9 @@ function GameScreenContent() {
           highlightedCells={interaction.highlightedCells}
           selectedCell={interaction.selectedCell}
           onCellPress={interaction.handleCellPress}
+          cellAnimations={anim.cellAnimations}
+          popups={anim.scorePopups}
+          onPopupComplete={anim.dismissPopup}
           availableSize={boardAvailableSize}
         />
       </View>
@@ -346,6 +415,15 @@ function GameScreenContent() {
           </View>
         </View>
       </View>
+
+      {/* Invalid-action toast */}
+      {toast && (
+        <View style={styles.toastWrap} pointerEvents="none">
+          <View style={[styles.toast, { backgroundColor: colors.err }]}>
+            <Text style={styles.toastText}>{toast}</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -387,8 +465,7 @@ const styles = StyleSheet.create({
     padding: spacing.s4,
   },
   scoreLabel: {
-    fontFamily: fonts.ui,
-    fontWeight: "800",
+    fontFamily: fonts.uiExtra,
     fontSize: 12,
     textTransform: "uppercase",
     letterSpacing: 1,
@@ -400,7 +477,7 @@ const styles = StyleSheet.create({
     lineHeight: 48,
   },
   bestRow: { flexDirection: "row", gap: 8, marginTop: 4 },
-  bestLabel: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 12 },
+  bestLabel: { fontFamily: fonts.uiExtra, fontSize: 12 },
   bestValue: { fontFamily: fonts.display, fontWeight: "700", fontSize: 14 },
   toolMod: {
     flex: 1,
@@ -421,7 +498,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  pillText: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 12 },
+  pillText: { fontFamily: fonts.uiExtra, fontSize: 12 },
   selector: { flexDirection: "row", gap: 10, marginTop: "auto" },
   toolBtn: {
     flex: 1,
@@ -436,4 +513,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   toolBtnSub: { fontFamily: fonts.ui, fontWeight: "700", fontSize: 11 },
+  toastWrap: {
+    position: "absolute",
+    bottom: 24,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  toast: {
+    borderRadius: radii.pill,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    maxWidth: "80%",
+  },
+  toastText: {
+    fontFamily: fonts.uiExtra,
+    fontSize: 14,
+    color: "#ffffff",
+    textAlign: "center",
+  },
 });

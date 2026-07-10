@@ -116,13 +116,12 @@ const styles = StyleSheet.create({
   leftPanel: { flex: 0.42, justifyContent: "center", gap: 10 },
   brand: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 48,
     letterSpacing: -0.5,
   },
-  tagline: { fontFamily: fonts.ui, fontWeight: "700", fontSize: 15 },
+  tagline: { fontFamily: fonts.ui, fontSize: 15 },
   guestLink: { marginTop: 18 },
-  guestText: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 14 },
+  guestText: { fontFamily: fonts.uiExtra, fontSize: 14 },
   rightPanel: { flex: 0.58, justifyContent: "center", gap: 12 },
   providerBtn: {
     borderRadius: radii.md,
@@ -130,10 +129,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
   },
-  providerText: { fontFamily: fonts.display, fontWeight: "700", fontSize: 16 },
+  providerText: { fontFamily: fonts.display, fontSize: 16 },
   error: {
     fontFamily: fonts.ui,
-    fontWeight: "700",
     fontSize: 13,
     textAlign: "center",
   },

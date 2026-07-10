@@ -16,24 +16,7 @@ import { ThemeProvider } from "../theme";
  * that unit tests (engine + hooks in isolation) never covered.
  */
 
-// Reanimated has no native runtime under jest — mock it to plain views/values
-// (mirrors the board component tests).
-jest.mock("react-native-reanimated", () => {
-  const View = require("react-native").View;
-  return {
-    __esModule: true,
-    default: {
-      createAnimatedComponent: (comp: unknown) => comp,
-      View,
-    },
-    useSharedValue: (v: number) => ({ value: v }),
-    useAnimatedStyle: (fn: () => object) => fn(),
-    withTiming: (v: number) => v,
-    withRepeat: (v: number) => v,
-    withSequence: (...args: number[]) => args[0],
-    Easing: { inOut: (e: unknown) => e, ease: {} },
-  };
-});
+// react-native-reanimated is mocked via __mocks__/react-native-reanimated.js.
 
 // Wrap the engine so board init / dig / swap can be steered per test while all
 // other functions (findConnectedGroup, scoring, game-over) stay real. The
@@ -225,5 +208,34 @@ describe("GameScreen ↔ engine integration (M1)", () => {
     // waitFor also lets the async hydration effect settle inside act().
     await waitFor(() => expect(mockDig).not.toHaveBeenCalled());
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  // M3: animation / feedback wiring. These fail against the pre-M3 screen,
+  // whose onDig/onInvalidAction were no-ops (no popup, no toast).
+  it("shows a floating score popup on a valid dig", async () => {
+    mockInit.mockReturnValue(fiveWatermelonRow());
+
+    const screen = renderGame();
+    fireEvent.press(screen.getAllByLabelText("watermelon at cell")[0]);
+    fireEvent.press(screen.getAllByLabelText("watermelon at cell")[0]);
+
+    // ScorePopup renders "+<delta>" (watermelon ×5 = 15).
+    await waitFor(() => expect(screen.getByText("+15")).toBeTruthy());
+  });
+
+  it("shows an error toast on an invalid action", async () => {
+    mockInit.mockReturnValue({
+      board: boardWith({ "0-0": "tomato", "0-1": "tomato" }),
+      score: 0,
+      turns: 0,
+      isGameOver: false,
+    });
+
+    const screen = renderGame();
+    fireEvent.press(screen.getAllByLabelText("tomato at cell")[0]);
+
+    // useGameInteraction rejects the <5 group with a "Need 5+ …" reason,
+    // which the container surfaces as a toast.
+    await waitFor(() => expect(screen.getByText(/Need 5\+/)).toBeTruthy());
   });
 });

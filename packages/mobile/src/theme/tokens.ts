@@ -3,9 +3,19 @@
  * Two themes: "garden" (default warm) and "moonlit" (dark).
  */
 
+/**
+ * Font family names. Custom fonts in React Native load as distinct per-weight
+ * families (there is no weight synthesis for a single family), so each token
+ * maps to a specific loaded weight. These names MUST match the keys registered
+ * in the root layout's `useFonts` call. `fontWeight` in styles is redundant
+ * once these are used (the family already encodes the weight) but harmless.
+ */
 export const fonts = {
-  display: "Fredoka",
-  ui: "Nunito",
+  display: "Fredoka_700Bold", // headings, wordmark, score, big numbers (weight 700)
+  displaySemi: "Fredoka_600SemiBold", // button labels (weight 600)
+  ui: "Nunito_700Bold", // body / default UI text (weight 700)
+  uiExtra: "Nunito_800ExtraBold", // labels (weight 800)
+  uiBlack: "Nunito_900Black", // emphatic caps labels (weight 900)
 } as const;
 
 export const radii = {

@@ -17,10 +17,12 @@
     "build": "echo 'Mobile build handled by EAS'"
   },
   "dependencies": {
+    "@expo-google-fonts/fredoka": "^0.4.1",
+    "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/vector-icons": "^15.1.1",
-    "@spriggle/engine": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
+    "@spriggle/engine": "workspace:*",
     "@tamagui/animations-react-native": "^2.0.0-rc.40",
     "@tamagui/babel-plugin": "^2.0.0-rc.40",
     "@tamagui/core": "^2.0.0-rc.40",
@@ -31,6 +33,8 @@
     "expo-constants": "~55.0.14",
     "expo-font": "~55.0.8",
     "expo-game-center": "^1.0.1",
+    "expo-haptics": "~55.0.15",
+    "expo-linear-gradient": "~55.0.15",
     "expo-linking": "~55.0.13",
     "expo-router": "~55.0.12",
     "expo-secure-store": "~55.0.15",

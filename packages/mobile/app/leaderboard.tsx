@@ -250,7 +250,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 32,
   },
   seg: { flexDirection: "row", gap: 8, marginLeft: "auto" },
@@ -260,7 +259,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  segLabel: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 13 },
+  segLabel: { fontFamily: fonts.uiExtra, fontSize: 13 },
   emptyState: {
     flex: 1,
     alignItems: "center",
@@ -270,13 +269,11 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 22,
     textAlign: "center",
   },
   emptySub: {
     fontFamily: fonts.ui,
-    fontWeight: "700",
     fontSize: 14,
     textAlign: "center",
   },
@@ -293,7 +290,6 @@ const styles = StyleSheet.create({
   topRow: { borderWidth: 3 },
   rank: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 18,
     width: 36,
     textAlign: "center",
@@ -307,11 +303,10 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: fonts.display,
-    fontWeight: "700",
     fontSize: 18,
   },
   nameCol: { flex: 1, gap: 2 },
-  name: { fontFamily: fonts.ui, fontWeight: "800", fontSize: 16 },
-  date: { fontFamily: fonts.ui, fontWeight: "700", fontSize: 12 },
-  score: { fontFamily: fonts.display, fontWeight: "700", fontSize: 18 },
+  name: { fontFamily: fonts.uiExtra, fontSize: 16 },
+  date: { fontFamily: fonts.ui, fontSize: 12 },
+  score: { fontFamily: fonts.display, fontSize: 18 },
 });

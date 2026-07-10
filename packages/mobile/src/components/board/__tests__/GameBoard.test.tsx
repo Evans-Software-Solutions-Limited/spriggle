@@ -3,23 +3,7 @@ import { render, fireEvent } from "@testing-library/react-native";
 import { GameBoard } from "../GameBoard";
 import type { BoardData } from "../GameBoard";
 
-// Mock reanimated for tests
-jest.mock("react-native-reanimated", () => {
-  const View = require("react-native").View;
-  return {
-    __esModule: true,
-    default: {
-      createAnimatedComponent: (comp: unknown) => comp,
-      View,
-    },
-    useSharedValue: (v: number) => ({ value: v }),
-    useAnimatedStyle: (fn: () => object) => fn(),
-    withTiming: (v: number) => v,
-    withRepeat: (v: number) => v,
-    withSequence: (...args: number[]) => args[0],
-    Easing: { inOut: (e: unknown) => e, ease: {} },
-  };
-});
+// react-native-reanimated is mocked via __mocks__/react-native-reanimated.js.
 
 /** Create an 8×8 board filled with a mix of plants and empty cells. */
 function createMockBoard(): BoardData {

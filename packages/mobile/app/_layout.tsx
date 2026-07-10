@@ -4,6 +4,16 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
+import {
+  useFonts,
+  Fredoka_600SemiBold,
+  Fredoka_700Bold,
+} from "@expo-google-fonts/fredoka";
+import {
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+} from "@expo-google-fonts/nunito";
 import { ThemeProvider } from "../src/theme";
 import { AuthProvider } from "../src/auth/AuthContext";
 import { startConnectivitySync } from "../src/services/sync";
@@ -13,6 +23,19 @@ const queryClient = new QueryClient();
 export default function RootLayout() {
   // Auto-drain the offline score queue whenever connectivity returns.
   useEffect(() => startConnectivitySync(), []);
+
+  // Load the design fonts up front. Family keys MUST match src/theme/tokens.ts.
+  // Until they resolve we render nothing, so no frame is shown in the system
+  // font (the previous behaviour, which made the app look unlike the design).
+  const [fontsLoaded] = useFonts({
+    Fredoka_600SemiBold,
+    Fredoka_700Bold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
+  });
+
+  if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
