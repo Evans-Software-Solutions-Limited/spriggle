@@ -50,39 +50,30 @@ function findGroup(
 }
 
 describe("useGameInteraction", () => {
-  it("starts in dig mode with no selections", () => {
+  it("starts in dig mode with no swap selection", () => {
     const board = boardWithGroup();
     const { result } = renderHook(() => useGameInteraction(board, findGroup));
     expect(result.current.tool).toBe("dig");
-    expect(result.current.highlightedCells.size).toBe(0);
     expect(result.current.selectedCell).toBeNull();
   });
 
-  it("highlights a valid dig group on first tap", () => {
-    const board = boardWithGroup();
-    const { result } = renderHook(() => useGameInteraction(board, findGroup));
-    act(() => result.current.handleCellPress(0, 0));
-    expect(result.current.highlightedCells.size).toBe(5);
-    expect(result.current.highlightedCells.has("0-0")).toBe(true);
-    expect(result.current.highlightedCells.has("0-4")).toBe(true);
-  });
-
-  it("calls onDig on second tap of highlighted group", () => {
+  it("digs a valid group on a SINGLE tap (no confirm step)", () => {
     const board = boardWithGroup();
     const onDig = jest.fn();
     const { result } = renderHook(() =>
       useGameInteraction(board, findGroup, { onDig }),
     );
-    act(() => result.current.handleCellPress(0, 2)); // highlight
-    act(() => result.current.handleCellPress(0, 2)); // confirm
+    act(() => result.current.handleCellPress(0, 2));
+    expect(onDig).toHaveBeenCalledTimes(1);
     expect(onDig).toHaveBeenCalledWith(0, 2);
   });
 
-  it("calls onInvalidAction for group < 5", () => {
+  it("calls onInvalidAction for a group < 5", () => {
     const board = boardWithGroup();
     const onInvalidAction = jest.fn();
+    const onDig = jest.fn();
     const { result } = renderHook(() =>
-      useGameInteraction(board, findGroup, { onInvalidAction }),
+      useGameInteraction(board, findGroup, { onInvalidAction, onDig }),
     );
     act(() => result.current.handleCellPress(2, 2)); // tomato alone
     expect(onInvalidAction).toHaveBeenCalledWith(
@@ -90,16 +81,22 @@ describe("useGameInteraction", () => {
       2,
       expect.stringContaining("1"),
     );
+    expect(onDig).not.toHaveBeenCalled();
   });
 
   it("ignores taps on empty cells in dig mode", () => {
     const board = boardWithGroup();
-    const { result } = renderHook(() => useGameInteraction(board, findGroup));
+    const onDig = jest.fn();
+    const onInvalidAction = jest.fn();
+    const { result } = renderHook(() =>
+      useGameInteraction(board, findGroup, { onDig, onInvalidAction }),
+    );
     act(() => result.current.handleCellPress(4, 4)); // empty
-    expect(result.current.highlightedCells.size).toBe(0);
+    expect(onDig).not.toHaveBeenCalled();
+    expect(onInvalidAction).not.toHaveBeenCalled();
   });
 
-  it("switches to swap mode and selects cells", () => {
+  it("switches to swap mode and swaps two selected cells", () => {
     const board = boardWithGroup();
     const onSwap = jest.fn();
     const { result } = renderHook(() =>
@@ -116,7 +113,7 @@ describe("useGameInteraction", () => {
     expect(result.current.selectedCell).toBeNull();
   });
 
-  it("deselects on tapping same cell in swap mode", () => {
+  it("deselects on tapping the same cell in swap mode", () => {
     const board = boardWithGroup();
     const { result } = renderHook(() => useGameInteraction(board, findGroup));
     act(() => result.current.setTool("swap"));
@@ -126,23 +123,24 @@ describe("useGameInteraction", () => {
     expect(result.current.selectedCell).toBeNull();
   });
 
-  it("clears selection when switching tools", () => {
+  it("clears the swap selection when switching tools", () => {
     const board = boardWithGroup();
     const { result } = renderHook(() => useGameInteraction(board, findGroup));
-    act(() => result.current.handleCellPress(0, 0)); // highlight in dig
-    expect(result.current.highlightedCells.size).toBe(5);
     act(() => result.current.setTool("swap"));
-    expect(result.current.highlightedCells.size).toBe(0);
+    act(() => result.current.handleCellPress(2, 2));
+    expect(result.current.selectedCell).toBe("2-2");
+    act(() => result.current.setTool("dig"));
+    expect(result.current.selectedCell).toBeNull();
   });
 
-  it("rejects swap of same-type plants with onInvalidAction", () => {
+  it("rejects a swap of same-type plants with onInvalidAction", () => {
     const board = boardWithGroup();
-    // Place two adjacent watermelons that aren't in the row-0 group
     board[4][0] = "tomato";
     board[4][1] = "tomato";
     const onInvalidAction = jest.fn();
+    const onSwap = jest.fn();
     const { result } = renderHook(() =>
-      useGameInteraction(board, findGroup, { onInvalidAction }),
+      useGameInteraction(board, findGroup, { onInvalidAction, onSwap }),
     );
     act(() => result.current.setTool("swap"));
     act(() => result.current.handleCellPress(4, 0));
@@ -152,22 +150,21 @@ describe("useGameInteraction", () => {
       1,
       expect.stringContaining("different"),
     );
+    expect(onSwap).not.toHaveBeenCalled();
   });
 
-  it("rejects swap of non-adjacent cells with onInvalidAction", () => {
+  it("ALLOWS swapping non-adjacent different-type cells (no adjacency rule)", () => {
     const board = boardWithGroup();
     board[0][7] = "flower";
+    const onSwap = jest.fn();
     const onInvalidAction = jest.fn();
     const { result } = renderHook(() =>
-      useGameInteraction(board, findGroup, { onInvalidAction }),
+      useGameInteraction(board, findGroup, { onSwap, onInvalidAction }),
     );
     act(() => result.current.setTool("swap"));
     act(() => result.current.handleCellPress(2, 2)); // tomato at (2,2)
-    act(() => result.current.handleCellPress(0, 7)); // flower at (0,7) — not adjacent
-    expect(onInvalidAction).toHaveBeenCalledWith(
-      0,
-      7,
-      expect.stringContaining("next to"),
-    );
+    act(() => result.current.handleCellPress(0, 7)); // flower at (0,7) — far away
+    expect(onSwap).toHaveBeenCalledWith(2, 2, 0, 7);
+    expect(onInvalidAction).not.toHaveBeenCalled();
   });
 });

@@ -51,10 +51,11 @@ const arbValidSwap = fc
   });
 
 /**
- * Generates an invalid swap scenario: one of
- * (a) non-adjacent positions, (b) same plant type, or (c) one empty cell.
+ * Generates a VALID non-adjacent swap: two different-type plants at
+ * non-adjacent positions (Manhattan distance > 1). The legacy GardenerGame
+ * has no adjacency requirement, so this is a valid swap.
  */
-const arbInvalidSwapNonAdjacent = fc
+const arbNonAdjacentSwap = fc
   .record({
     row1: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
     col1: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
@@ -65,7 +66,6 @@ const arbInvalidSwapNonAdjacent = fc
     score: fc.nat({ max: 100000 }),
   })
   .filter(({ row1, col1, row2, col2, type1, type2 }) => {
-    // Ensure non-adjacent (Manhattan distance > 1)
     const dist = Math.abs(row1 - row2) + Math.abs(col1 - col2);
     return dist > 1 && type1 !== type2;
   })
@@ -77,7 +77,7 @@ const arbInvalidSwapNonAdjacent = fc
     board[row2][col2] = type2;
     const pos1: Position = { row: row1, col: col1 };
     const pos2: Position = { row: row2, col: col2 };
-    return { board, pos1, pos2, score };
+    return { board, pos1, pos2, type1, type2, score };
   });
 
 const arbInvalidSwapSameType = fc
@@ -167,22 +167,27 @@ describe("Feature: spriggle-ipad-game, Property 7: Valid swap exchanges exactly 
 
 describe("Feature: spriggle-ipad-game, Property 8: Invalid swap leaves board unchanged", () => {
   /**
-   * **Validates: Requirements 3.2, 3.3, 3.5**
+   * **Validates: Requirements 3.2, 3.3**
    *
-   * For any swap attempt where the cells are (a) not orthogonally adjacent,
-   * (b) contain the same plant type, or (c) involve an empty cell, the action
-   * fails and the board state remains identical.
+   * A swap is invalid only when the cells (a) contain the same plant type, or
+   * (b) involve an empty cell. There is NO adjacency requirement — a
+   * non-adjacent different-type swap is VALID and exchanges the two cells.
    */
-  it("rejects non-adjacent swap and leaves state unchanged", () => {
+  it("accepts a non-adjacent different-type swap and exchanges the cells", () => {
     fc.assert(
-      fc.property(arbInvalidSwapNonAdjacent, ({ board, pos1, pos2, score }) => {
-        const state = makeState(board, score);
+      fc.property(
+        arbNonAdjacentSwap,
+        ({ board, pos1, pos2, type1, type2, score }) => {
+          const state = makeState(board, score);
 
-        expect(isValidSwap(board, pos1, pos2)).toBe(false);
-        const result = executeSwap(state, pos1, pos2);
-        expect(result.success).toBe(false);
-        expect(result.newState).toBe(state);
-      }),
+          expect(isValidSwap(board, pos1, pos2)).toBe(true);
+          const result = executeSwap(state, pos1, pos2);
+          expect(result.success).toBe(true);
+          // The two cells are exchanged in the new board.
+          expect(result.newState.board[pos1.row][pos1.col]).toBe(type2);
+          expect(result.newState.board[pos2.row][pos2.col]).toBe(type1);
+        },
+      ),
       { numRuns: 100 },
     );
   });

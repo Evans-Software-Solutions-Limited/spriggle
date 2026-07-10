@@ -145,8 +145,7 @@ describe("GameScreen ↔ engine integration (M1)", () => {
     // Board comes from the engine (5 watermelons), not the old random mock.
     expect(screen.getAllByLabelText("watermelon at cell")).toHaveLength(5);
 
-    // First tap highlights the connected group; second tap confirms the dig.
-    fireEvent.press(screen.getAllByLabelText("watermelon at cell")[0]);
+    // A SINGLE tap digs the group (no confirm step).
     fireEvent.press(screen.getAllByLabelText("watermelon at cell")[0]);
 
     // watermelon = 3 pts × 5 = 15. Proves executeDig ran and state advanced.
@@ -216,7 +215,6 @@ describe("GameScreen ↔ engine integration (M1)", () => {
     mockInit.mockReturnValue(fiveWatermelonRow());
 
     const screen = renderGame();
-    fireEvent.press(screen.getAllByLabelText("watermelon at cell")[0]);
     fireEvent.press(screen.getAllByLabelText("watermelon at cell")[0]);
 
     // ScorePopup renders "+<delta>" (watermelon ×5 = 15).

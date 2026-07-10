@@ -11,7 +11,7 @@ import {
 import { findConnectedGroup } from "./connected-groups";
 import { isInBounds } from "./grid-utils";
 import { refillBoard } from "./refill";
-import { isGameOver } from "./game-over";
+import { isRefillStarved } from "./game-over";
 
 /**
  * Deep-clones a board so dig execution stays pure (no input mutation).
@@ -98,7 +98,10 @@ export function executeDig(state: GameState, position: Position): DigResult {
     board: refilledBoard,
     score: state.score + calculateDigScore(plantType, group.length),
     turns: state.turns + 1,
-    isGameOver: isGameOver(refilledBoard),
+    // Game over if the 3-plant refill couldn't fully place. A dig frees ≥5
+    // cells so this is effectively never true after a dig, but we apply the
+    // same legacy spawn-starvation rule uniformly.
+    isGameOver: isRefillStarved(filledPositions.length, REFILL_AFTER_DIG),
   };
 
   return {

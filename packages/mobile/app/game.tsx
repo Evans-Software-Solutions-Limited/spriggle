@@ -258,7 +258,6 @@ function GameScreenContent() {
       <View style={styles.boardCol}>
         <GameBoard
           board={board}
-          highlightedCells={interaction.highlightedCells}
           selectedCell={interaction.selectedCell}
           onCellPress={interaction.handleCellPress}
           cellAnimations={anim.cellAnimations}

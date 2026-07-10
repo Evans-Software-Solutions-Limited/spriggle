@@ -10,7 +10,7 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 - **Plant**: One of five plant types (Watermelon, Flower, Aubergine, Tomato, Pumpkin) rendered as SVG
 - **Connected_Group**: A set of orthogonally adjacent cells on the Game_Board containing the same Plant type
 - **Dig**: A player action that removes a Connected_Group of 5 or more same-type Plants from the Game_Board
-- **Swap**: A player action that exchanges two orthogonally adjacent cells containing different Plant types
+- **Swap**: A player action that exchanges two cells (anywhere on the board) containing different Plant types (no adjacency requirement, per the legacy GardenerGame)
 - **Refill**: The system action of adding new random Plants to empty cells after a Dig (3 plants) or Swap (6 plants)
 - **Game_Over**: The state when the Game_Board is full and no Connected_Group of 5 or more exists
 - **Score**: The cumulative points earned by a player during a single game session
@@ -49,15 +49,16 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 
 ### Requirement 3: Swap Mechanic
 
-**User Story:** As a player, I want to swap adjacent plants, so that I can strategically rearrange the board to create diggable groups.
+**User Story:** As a player, I want to swap any two plants, so that I can strategically rearrange the board to create diggable groups.
 
 #### Acceptance Criteria
 
-1. WHEN a player selects two orthogonally adjacent cells containing different Plant types, THE Game_Engine SHALL exchange the Plants in those two cells
-2. WHEN a player attempts to swap two cells that are not orthogonally adjacent, THE Game_Engine SHALL reject the action
-3. WHEN a player attempts to swap two cells containing the same Plant type, THE Game_Engine SHALL reject the action
-4. WHEN a successful Swap completes, THE Game_Engine SHALL trigger a Refill of exactly 6 new random Plants into empty cells
-5. WHEN a player attempts to swap a cell that is empty, THE Game_Engine SHALL reject the action
+_Matches the legacy GardenerGame `swapPlants` — there is NO adjacency requirement._
+
+1. WHEN a player selects two cells (anywhere on the board) containing different Plant types, THE Game_Engine SHALL exchange the Plants in those two cells
+2. WHEN a player attempts to swap two cells containing the same Plant type, THE Game_Engine SHALL reject the action
+3. WHEN a successful Swap completes, THE Game_Engine SHALL trigger a Refill of exactly 6 new random Plants into empty cells
+4. WHEN a player attempts to swap a cell that is empty, THE Game_Engine SHALL reject the action
 
 ### Requirement 4: Board Refill
 
@@ -76,10 +77,16 @@ Spriggle is a landscape-only iPad match-3 gardening game built with React Native
 
 #### Acceptance Criteria
 
-1. WHEN the Game_Board is completely full and no Connected_Group of 5 or more same-type Plants exists, THE Game_Engine SHALL declare Game_Over
+_Matches the legacy GardenerGame `spawnPlants` game-over: the game ends when a
+Refill cannot place its full spawn count (the board runs out of empty cells
+mid-spawn). A Dig frees ≥5 cells so its 3-plant Refill always fits; a Swap ends
+the game when fewer than 6 empty cells remain. A full board with no diggable
+group forces a Swap, whose Refill then can't place all 6 → Game_Over._
+
+1. WHEN a Refill cannot place all of its requested Plants because fewer empty cells were available than the spawn count, THE Game_Engine SHALL declare Game_Over
 2. WHEN Game_Over is declared, THE Game_Engine SHALL preserve the final Score for leaderboard submission
-3. WHILE the Game_Board contains at least one Connected_Group of 5 or more, THE Game_Engine SHALL allow continued play regardless of how full the board is
-4. WHEN a Refill completes, THE Game_Engine SHALL evaluate whether Game_Over conditions are met
+3. WHILE any Refill can place its full spawn count, THE Game_Engine SHALL allow continued play
+4. WHEN a Refill completes (or fails to fully place), THE Game_Engine SHALL evaluate whether Game_Over conditions are met
 
 ### Requirement 6: Score Calculation
 

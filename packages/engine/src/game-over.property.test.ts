@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import * as fc from "fast-check";
-import { isGameOver } from "./game-over";
 import { executeDig } from "./dig";
 import { executeSwap } from "./swap";
 import {
@@ -8,90 +7,61 @@ import {
   GameState,
   Cell,
   BOARD_SIZE,
-  PLANT_TYPES,
   PlantType,
-  MIN_DIG_GROUP_SIZE,
+  REFILL_AFTER_SWAP,
 } from "./types";
-import { findAllConnectedGroups } from "./connected-groups";
 import { getEmptyCells } from "./board";
 
 function makeState(board: Board, score = 0): GameState {
   return { board, score, turns: 0, isGameOver: false };
 }
 
-/**
- * Generates a board with at least one null cell (partially filled).
- */
-const arbPartialBoard: fc.Arbitrary<Board> = fc
-  .record({
-    board: fc.array(
-      fc.array(
-        fc.oneof(
-          fc.constant(null as Cell),
-          fc.constantFrom(...(PLANT_TYPES as unknown as PlantType[])),
-        ),
-        { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
-      ),
-      { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
-    ),
-    emptyRow: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
-    emptyCol: fc.integer({ min: 0, max: BOARD_SIZE - 1 }),
-  })
-  .map(({ board, emptyRow, emptyCol }) => {
-    // Force at least one empty cell
-    board[emptyRow][emptyCol] = null;
-    return board as Board;
-  });
+/** A full board whose cycling pattern contains no connected group of 5+. */
+function fullBoardNoGroups(): Board {
+  const types: PlantType[] = ["watermelon", "flower", "aubergine", "tomato"];
+  const board: Board = [];
+  for (let row = 0; row < BOARD_SIZE; row++) {
+    const r: PlantType[] = [];
+    for (let col = 0; col < BOARD_SIZE; col++) {
+      r.push(types[(col + row * 2) % types.length]);
+    }
+    board.push(r);
+  }
+  return board;
+}
 
-describe("Feature: spriggle-ipad-game, Property 11: Game over if and only if full board with no valid group", () => {
+describe("Feature: spriggle-ipad-game, Property 11: Game over when a refill cannot place its full spawn count", () => {
   /**
-   * **Validates: Requirements 5.1, 5.3**
+   * **Validates: Requirements 5.1, 5.3, 5.4**
    *
-   * For any board state, isGameOver returns true if and only if
-   * the board is completely full (no null cells) AND no connected
-   * group of 5 or more same-type plants exists.
+   * Ports the legacy GardenerGame's spawn-starvation rule: after an action,
+   * the game is over iff the refill could not place all its plants (there were
+   * fewer empty cells than the spawn count). A swap requests 6, so it ends the
+   * game exactly when fewer than 6 empty cells were available before it.
    */
-  it("returns true iff board is full and has no group of 5+", () => {
-    const arbAnyBoard: fc.Arbitrary<Board> = fc
-      .array(
-        fc.array(
-          fc.oneof(
-            fc.constant(null as Cell),
-            fc.constantFrom(...(PLANT_TYPES as unknown as PlantType[])),
-          ),
-          { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
-        ),
-        { minLength: BOARD_SIZE, maxLength: BOARD_SIZE },
-      )
-      .map((b) => b as Board);
-
+  it("a swap reports game over iff fewer than 6 empty cells were available", () => {
     fc.assert(
-      fc.property(arbAnyBoard, (board) => {
-        const result = isGameOver(board);
-        const isEmpty = getEmptyCells(board).length > 0;
-        const hasLargeGroup = findAllConnectedGroups(board).some(
-          (g) => g.length >= MIN_DIG_GROUP_SIZE,
-        );
-
-        if (isEmpty) {
-          // Board not full → never game over
-          expect(result).toBe(false);
-        } else if (hasLargeGroup) {
-          // Full but has a diggable group → not game over
-          expect(result).toBe(false);
-        } else {
-          // Full and no diggable group → game over
-          expect(result).toBe(true);
+      fc.property(fc.integer({ min: 0, max: 12 }), (k) => {
+        // Full no-group board with k empty cells (row 0 kept intact so the
+        // (0,0)/(0,1) swap pair is always present and different-type).
+        const board = fullBoardNoGroups();
+        let nulled = 0;
+        for (let r = BOARD_SIZE - 1; r >= 1 && nulled < k; r--) {
+          for (let c = 0; c < BOARD_SIZE && nulled < k; c++) {
+            board[r][c] = null;
+            nulled++;
+          }
         }
-      }),
-      { numRuns: 100 },
-    );
-  });
-
-  it("a partially filled board is never game over", () => {
-    fc.assert(
-      fc.property(arbPartialBoard, (board) => {
-        expect(isGameOver(board)).toBe(false);
+        const emptiesBefore = getEmptyCells(board).length;
+        const result = executeSwap(
+          makeState(board),
+          { row: 0, col: 0 },
+          { row: 0, col: 1 },
+        );
+        expect(result.success).toBe(true);
+        expect(result.newState.isGameOver).toBe(
+          emptiesBefore < REFILL_AFTER_SWAP,
+        );
       }),
       { numRuns: 100 },
     );
@@ -103,22 +73,15 @@ describe("Feature: spriggle-ipad-game, Property 12: Score monotonicity", () => {
    * **Validates: Requirements 6.2**
    *
    * For any sequence of game operations within a single session,
-   * the score never decreases. We test this by applying random
-   * valid digs and swaps and asserting score is non-decreasing.
+   * the score never decreases.
    */
   it("score never decreases across a sequence of digs and swaps", () => {
-    /**
-     * Generates a board with a known diggable horizontal group and some
-     * room for swaps, then applies a sequence of random actions.
-     */
     fc.assert(
       fc.property(fc.integer({ min: 1, max: 5 }), (numDigs) => {
-        // Build a board with multiple diggable horizontal groups
         const board: Board = Array.from({ length: BOARD_SIZE }, () =>
           new Array<Cell>(BOARD_SIZE).fill(null),
         );
 
-        // Place diggable groups in different rows
         const type: PlantType = "tomato";
         for (let i = 0; i < Math.min(numDigs, BOARD_SIZE); i++) {
           for (let c = 0; c < 5; c++) {
@@ -129,7 +92,6 @@ describe("Feature: spriggle-ipad-game, Property 12: Score monotonicity", () => {
         let state = makeState(board);
         let previousScore = state.score;
 
-        // Execute digs on the placed groups
         for (let i = 0; i < Math.min(numDigs, BOARD_SIZE); i++) {
           const result = executeDig(state, { row: i, col: 0 });
           if (result.success) {
@@ -139,8 +101,6 @@ describe("Feature: spriggle-ipad-game, Property 12: Score monotonicity", () => {
           }
         }
 
-        // Try a swap if possible (score should stay the same or not decrease)
-        // Find two adjacent different-type cells for a swap
         for (let r = 0; r < BOARD_SIZE; r++) {
           for (let c = 0; c < BOARD_SIZE - 1; c++) {
             const cell1 = state.board[r][c];
@@ -155,7 +115,7 @@ describe("Feature: spriggle-ipad-game, Property 12: Score monotonicity", () => {
                 expect(swapResult.newState.score).toBeGreaterThanOrEqual(
                   previousScore,
                 );
-                return; // We proved monotonicity for this sequence
+                return;
               }
             }
           }
