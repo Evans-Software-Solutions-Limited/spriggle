@@ -15,11 +15,20 @@ describe("Sign-in → global leaderboard", () => {
   });
 
   it("offers the provider sign-in options", async () => {
-    await element(by.label("Sign in or continue as guest")).tap();
+    // A first launch routes straight to sign-in (the first-run gate in
+    // app/_layout), so the provider options are on screen immediately.
     await waitFor(element(by.label("Sign in with Apple")))
       .toBeVisible()
       .withTimeout(10000);
     await expect(element(by.label("Sign in with Game Center"))).toBeVisible();
+
+    // Complete first-run onboarding (guest → skip the tutorial) so the
+    // deep-link navigation below isn't bounced back to sign-in by the gate.
+    await element(by.text("Continue as guest")).tap();
+    await waitFor(element(by.label("Skip tutorial")))
+      .toBeVisible()
+      .withTimeout(10000);
+    await element(by.label("Skip tutorial")).tap();
   });
 
   it("opens the Global leaderboard tab", async () => {
