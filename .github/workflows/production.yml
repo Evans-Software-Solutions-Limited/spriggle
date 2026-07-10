@@ -93,22 +93,49 @@ jobs:
             eas.json > eas.tmp && mv eas.tmp eas.json
           cat eas.json | jq '.build.production.env'
 
+      # --wait so the build finishes before submit; otherwise `--latest`
+      # below would pick up a stale (previously finished) build.
       - name: EAS Build (iOS production)
         run: |
           eas build \
             --platform ios \
             --profile production \
             --non-interactive \
-            --no-wait
+            --wait
 
-      # Auth: EAS uses the App Store Connect API key registered globally via
-      # `eas credentials` (one-time local setup) — no per-run secrets needed.
+      # Auth: EAS reads the App Store Connect API key from the submit profile
+      # in eas.json (ascApiKeyPath/Id/IssuerId) — there are no CLI flags for
+      # it. Relying on a server-side "registered" key fails non-interactively
+      # ("API Keys cannot be set up in --non-interactive mode"), so inject the
+      # key from secrets here.
       - name: EAS Submit to App Store
         if: ${{ !inputs.skip_submit }}
+        env:
+          ASC_KEY: ${{ secrets.ASC_KEY }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
+          # Fail fast and legibly if a secret is missing, rather than deep
+          # inside submission with an opaque ASC-auth error.
+          [ -n "$ASC_KEY" ] || { echo "::error::ASC_KEY secret is empty"; exit 1; }
+          [ -n "$ASC_KEY_ID" ] || { echo "::error::ASC_KEY_ID secret is empty"; exit 1; }
+          [ -n "$ASC_ISSUER_ID" ] || { echo "::error::ASC_ISSUER_ID secret is empty"; exit 1; }
+          (umask 077; echo "$ASC_KEY" | base64 -d > /tmp/asc-key.p8)
+          [ -s /tmp/asc-key.p8 ] || { echo "::error::decoded ASC key is empty"; exit 1; }
+          jq --arg path /tmp/asc-key.p8 --arg id "$ASC_KEY_ID" --arg issuer "$ASC_ISSUER_ID" \
+            '.submit.production.ios.ascApiKeyPath = $path
+             | .submit.production.ios.ascApiKeyId = $id
+             | .submit.production.ios.ascApiKeyIssuerId = $issuer' \
+            eas.json > eas.tmp && mv eas.tmp eas.json
+          # No --wait: once EAS accepts the submission it processes on Apple's
+          # side asynchronously. Waiting here just risks the job timeout
+          # ("operation was canceled") long after the upload already succeeded.
           eas submit \
             --platform ios \
             --profile production \
             --latest \
-            --non-interactive \
-            --wait
+            --non-interactive
+
+      - name: Clean up ASC key
+        if: always()
+        run: rm -f /tmp/asc-key.p8
