@@ -5,9 +5,9 @@ import {
   SwapResult,
   REFILL_AFTER_SWAP,
 } from "./types";
-import { isInBounds, DIRECTIONS } from "./grid-utils";
+import { isInBounds } from "./grid-utils";
 import { refillBoard } from "./refill";
-import { isGameOver } from "./game-over";
+import { isRefillStarved } from "./game-over";
 
 /**
  * Deep-clones a board so swap execution stays pure (no input mutation).
@@ -17,27 +17,18 @@ function cloneBoard(board: Board): Board {
 }
 
 /**
- * Returns true if pos1 and pos2 are orthogonally adjacent (share an edge).
- */
-function areOrthogonallyAdjacent(pos1: Position, pos2: Position): boolean {
-  for (const dir of DIRECTIONS) {
-    if (pos1.row + dir.row === pos2.row && pos1.col + dir.col === pos2.col) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
  * Validates a swap between two positions.
  *
  * A swap is valid when:
  * - Both positions are within bounds
  * - Both cells are non-empty (occupied by a plant)
  * - The two cells contain DIFFERENT plant types
- * - The two cells are orthogonally adjacent (up/down/left/right)
  *
- * Requirements: 3.1, 3.2, 3.3, 3.5
+ * There is NO adjacency requirement — the legacy GardenerGame (`swapPlants` in
+ * `src/hooks/useGameLogic.ts`) rejects only empty cells and same-type; any two
+ * different-type plants anywhere on the board may be swapped.
+ *
+ * Requirements: 3.1, 3.2, 3.3
  */
 export function isValidSwap(
   board: Board,
@@ -46,6 +37,9 @@ export function isValidSwap(
 ): boolean {
   if (!isInBounds(pos1) || !isInBounds(pos2)) return false;
 
+  // Cannot swap a cell with itself
+  if (pos1.row === pos2.row && pos1.col === pos2.col) return false;
+
   const cell1 = board[pos1.row][pos1.col];
   const cell2 = board[pos2.row][pos2.col];
 
@@ -53,10 +47,7 @@ export function isValidSwap(
   if (cell1 === null || cell2 === null) return false;
 
   // Must be different plant types
-  if (cell1 === cell2) return false;
-
-  // Must be orthogonally adjacent
-  return areOrthogonallyAdjacent(pos1, pos2);
+  return cell1 !== cell2;
 }
 
 /**
@@ -99,7 +90,9 @@ export function executeSwap(
     board: refilledBoard,
     score: state.score, // Swap does NOT modify score (Requirement 6.4)
     turns: state.turns + 1,
-    isGameOver: isGameOver(refilledBoard),
+    // Game over if the 6-plant refill couldn't fully place (fewer than 6 empty
+    // cells were available) — the legacy GardenerGame's spawn-starvation rule.
+    isGameOver: isRefillStarved(filledPositions.length, REFILL_AFTER_SWAP),
   };
 
   return {

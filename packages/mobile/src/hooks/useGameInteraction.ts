@@ -17,25 +17,28 @@ export interface GameActionCallbacks {
 export interface GameInteractionState {
   /** Currently active tool. */
   tool: ToolMode;
-  /** Set of "row-col" keys currently highlighted (pre-dig preview). */
-  highlightedCells: Set<string>;
   /** "row-col" of the first swap selection, or null. */
   selectedCell: string | null;
   /** Switch the active tool. */
   setTool: (tool: ToolMode) => void;
-  /** Handle a cell press — routes to dig preview/confirm or swap selection. */
+  /** Handle a cell press — a single-tap dig, or a two-tap swap selection. */
   handleCellPress: (row: number, col: number) => void;
-  /** Clear all highlights and selections. */
+  /** Clear the swap selection. */
   clearSelection: () => void;
 }
 
+const MIN_DIG_GROUP_SIZE = 5;
+
 /**
- * Hook managing dig/swap interaction state.
- * This is the "container logic" for touch interactions on the board.
+ * Hook managing dig/swap interaction state, faithful to the legacy
+ * GardenerGame / prototype:
  *
- * - Dig mode: first tap highlights the connected group (caller provides findGroup),
- *   second tap on same group confirms the dig.
- * - Swap mode: first tap selects a cell, second tap on a different cell does the swap.
+ * - Dig mode: a SINGLE tap digs the maximal connected group under the tapped
+ *   cell if it's ≥ 5 same-type plants; otherwise it's an invalid action. There
+ *   is no tap-to-highlight-then-confirm step.
+ * - Swap mode: first tap selects a cell, second tap swaps with ANY other
+ *   non-empty cell of a DIFFERENT type — there is NO adjacency requirement
+ *   (legacy `swapPlants` rejects only empty/same-type).
  */
 export function useGameInteraction(
   board: (PlantTypeName | null)[][],
@@ -47,26 +50,16 @@ export function useGameInteraction(
   callbacks: GameActionCallbacks = {},
 ): GameInteractionState {
   const [tool, setToolState] = useState<ToolMode>("dig");
-  const [highlightedCells, setHighlightedCells] = useState<Set<string>>(
-    new Set(),
-  );
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
-  // Track which cell initiated the current highlight
-  const [highlightOrigin, setHighlightOrigin] = useState<string | null>(null);
 
   const clearSelection = useCallback(() => {
-    setHighlightedCells(new Set());
     setSelectedCell(null);
-    setHighlightOrigin(null);
   }, []);
 
-  const setTool = useCallback(
-    (newTool: ToolMode) => {
-      setToolState(newTool);
-      clearSelection();
-    },
-    [clearSelection],
-  );
+  const setTool = useCallback((newTool: ToolMode) => {
+    setToolState(newTool);
+    setSelectedCell(null);
+  }, []);
 
   const handleCellPress = useCallback(
     (row: number, col: number) => {
@@ -74,92 +67,57 @@ export function useGameInteraction(
       const cell = board[row]?.[col];
 
       if (tool === "dig") {
-        // Dig mode: tap empty cell = ignore
-        if (cell === null) return;
+        // Tapping an empty cell does nothing.
+        if (cell === null || cell === undefined) return;
 
-        // If this cell is in the current highlight, confirm the dig
-        if (highlightedCells.has(key) && highlightOrigin !== null) {
-          callbacks.onDig?.(row, col);
-          clearSelection();
-          return;
-        }
-
-        // Otherwise, find the connected group and highlight it
+        // Single tap digs the maximal same-type group if large enough.
         const group = findConnectedGroup(board, row, col);
-        if (group.length < 5) {
+        if (group.length < MIN_DIG_GROUP_SIZE) {
           callbacks.onInvalidAction?.(
             row,
             col,
             `Need 5+ — that patch has ${group.length}`,
           );
-          clearSelection();
           return;
         }
-
-        // Highlight the group
-        const newHighlight = new Set(group.map((p) => `${p.row}-${p.col}`));
-        setHighlightedCells(newHighlight);
-        setHighlightOrigin(key);
-      } else {
-        // Swap mode: tap empty cell = ignore
-        if (cell === null) return;
-
-        // First selection
-        if (selectedCell === null) {
-          setSelectedCell(key);
-          return;
-        }
-
-        // Tap same cell = deselect
-        if (selectedCell === key) {
-          setSelectedCell(null);
-          return;
-        }
-
-        // Second selection — validate and attempt swap
-        const [r1, c1] = selectedCell.split("-").map(Number);
-        const cellA = board[r1]?.[c1];
-
-        // Same type rejection (matching prototype's doSwap behaviour)
-        if (cellA === cell) {
-          callbacks.onInvalidAction?.(row, col, "Pick two different plants");
-          setSelectedCell(null);
-          return;
-        }
-
-        // Adjacency check (orthogonal only)
-        const isAdjacent =
-          (Math.abs(r1 - row) === 1 && c1 === col) ||
-          (Math.abs(c1 - col) === 1 && r1 === row);
-        if (!isAdjacent) {
-          callbacks.onInvalidAction?.(
-            row,
-            col,
-            "Plants must be next to each other",
-          );
-          setSelectedCell(null);
-          return;
-        }
-
-        callbacks.onSwap?.(r1, c1, row, col);
-        setSelectedCell(null);
+        callbacks.onDig?.(row, col);
+        return;
       }
+
+      // Swap mode.
+      if (cell === null || cell === undefined) return;
+
+      // First selection.
+      if (selectedCell === null) {
+        setSelectedCell(key);
+        return;
+      }
+
+      // Tapping the same cell deselects.
+      if (selectedCell === key) {
+        setSelectedCell(null);
+        return;
+      }
+
+      const [r1, c1] = selectedCell.split("-").map(Number);
+      const cellA = board[r1]?.[c1];
+
+      // Same-type rejection (legacy: "Cannot swap the same type of plant").
+      if (cellA === cell) {
+        callbacks.onInvalidAction?.(row, col, "Pick two different plants");
+        setSelectedCell(null);
+        return;
+      }
+
+      // No adjacency check — any two different-type plants can be swapped.
+      callbacks.onSwap?.(r1, c1, row, col);
+      setSelectedCell(null);
     },
-    [
-      tool,
-      board,
-      highlightedCells,
-      highlightOrigin,
-      selectedCell,
-      findConnectedGroup,
-      callbacks,
-      clearSelection,
-    ],
+    [tool, board, selectedCell, findConnectedGroup, callbacks],
   );
 
   return {
     tool,
-    highlightedCells,
     selectedCell,
     setTool,
     handleCellPress,

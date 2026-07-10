@@ -49,12 +49,23 @@ describe("isValidSwap", () => {
     );
   });
 
-  it("rejects diagonal swap", () => {
+  it("accepts a diagonal (non-adjacent) swap of different types", () => {
+    // No adjacency requirement (legacy GardenerGame): any two different-type
+    // non-empty cells may be swapped.
     const board = emptyBoard();
     board[0][0] = "tomato";
     board[1][1] = "flower";
     expect(isValidSwap(board, { row: 0, col: 0 }, { row: 1, col: 1 })).toBe(
-      false,
+      true,
+    );
+  });
+
+  it("accepts a far-apart swap of different types", () => {
+    const board = emptyBoard();
+    board[0][0] = "tomato";
+    board[7][7] = "pumpkin";
+    expect(isValidSwap(board, { row: 0, col: 0 }, { row: 7, col: 7 })).toBe(
+      true,
     );
   });
 
@@ -63,6 +74,14 @@ describe("isValidSwap", () => {
     board[2][2] = "pumpkin";
     board[2][3] = "pumpkin";
     expect(isValidSwap(board, { row: 2, col: 2 }, { row: 2, col: 3 })).toBe(
+      false,
+    );
+  });
+
+  it("rejects swapping a cell with itself", () => {
+    const board = emptyBoard();
+    board[3][3] = "watermelon";
+    expect(isValidSwap(board, { row: 3, col: 3 }, { row: 3, col: 3 })).toBe(
       false,
     );
   });
@@ -148,10 +167,10 @@ describe("executeSwap", () => {
     expect(result.newState.score).toBe(999);
   });
 
-  it("returns unchanged state for an invalid swap (diagonal)", () => {
+  it("returns unchanged state for an invalid swap (empty cell)", () => {
     const board = emptyBoard();
     board[2][2] = "tomato";
-    board[3][3] = "flower";
+    // (3,3) is empty → invalid swap.
     const state = stateOf(board, 50);
     const result = executeSwap(state, { row: 2, col: 2 }, { row: 3, col: 3 });
 
