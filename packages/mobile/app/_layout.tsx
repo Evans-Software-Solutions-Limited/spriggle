@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "../src/theme";
@@ -15,22 +16,34 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ThemeProvider>
-            <StatusBar hidden />
-            <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="game" />
-              <Stack.Screen name="gameover" />
-              <Stack.Screen name="leaderboard" />
-              <Stack.Screen name="settings" />
-              <Stack.Screen name="onboarding" />
-              <Stack.Screen name="signin" options={{ presentation: "modal" }} />
-            </Stack>
-          </ThemeProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ThemeProvider>
+              <StatusBar hidden />
+              {/* Each screen wraps its own content in <DesignFrame> so the
+                  1194×834 canvas is scaled inside that screen's view tree. We
+                  deliberately do NOT wrap <Stack> here: expo-router uses
+                  native-stack (react-native-screens), so each screen is a
+                  native view controller laid out against the window — a JS
+                  transform on the navigator does not compose onto native
+                  frames, and native modals present on the window regardless. */}
+              <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="game" />
+                <Stack.Screen name="gameover" />
+                <Stack.Screen name="leaderboard" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen
+                  name="signin"
+                  options={{ presentation: "modal" }}
+                />
+              </Stack>
+            </ThemeProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

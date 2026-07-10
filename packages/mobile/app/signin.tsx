@@ -9,6 +9,7 @@ import {
 import { useRouter } from "expo-router";
 import { useTheme, fonts, radii } from "../src/theme";
 import { useAuth } from "../src/auth/AuthContext";
+import { DesignFrame } from "../src/components/layout/DesignFrame";
 
 type Provider = "apple" | "gamecenter" | "guest";
 
@@ -69,40 +70,44 @@ export default function SignInScreen() {
   );
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.paper }]}>
-      <View style={styles.leftPanel}>
-        <Text style={[styles.brand, { color: colors.primary }]}>Spriggle</Text>
-        <Text style={[styles.tagline, { color: colors.accent700 }]}>
-          Sign in to climb the global leaderboard
-        </Text>
-        <Pressable
-          style={styles.guestLink}
-          onPress={() => run("guest", async () => auth.playAsGuest())}
-          disabled={busy !== null}
-          accessibilityRole="button"
-          accessibilityLabel="Continue as guest"
-        >
-          <Text style={[styles.guestText, { color: colors.inkSoft }]}>
-            Continue as guest →
+    <DesignFrame>
+      <View style={[styles.screen, { backgroundColor: colors.paper }]}>
+        <View style={styles.leftPanel}>
+          <Text style={[styles.brand, { color: colors.primary }]}>
+            Spriggle
           </Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.rightPanel}>
-        {providerButton("apple", "Continue with Apple", auth.signInWithApple)}
-        {providerButton(
-          "gamecenter",
-          "Continue with Game Center",
-          auth.signInWithGameCenter,
-        )}
-
-        {error && (
-          <Text style={[styles.error, { color: colors.accent700 }]}>
-            {error}
+          <Text style={[styles.tagline, { color: colors.accent700 }]}>
+            Sign in to climb the global leaderboard
           </Text>
-        )}
+          <Pressable
+            style={styles.guestLink}
+            onPress={() => run("guest", async () => auth.playAsGuest())}
+            disabled={busy !== null}
+            accessibilityRole="button"
+            accessibilityLabel="Continue as guest"
+          >
+            <Text style={[styles.guestText, { color: colors.inkSoft }]}>
+              Continue as guest →
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.rightPanel}>
+          {providerButton("apple", "Continue with Apple", auth.signInWithApple)}
+          {providerButton(
+            "gamecenter",
+            "Continue with Game Center",
+            auth.signInWithGameCenter,
+          )}
+
+          {error && (
+            <Text style={[styles.error, { color: colors.accent700 }]}>
+              {error}
+            </Text>
+          )}
+        </View>
       </View>
-    </View>
+    </DesignFrame>
   );
 }
 

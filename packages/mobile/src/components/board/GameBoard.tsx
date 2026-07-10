@@ -1,8 +1,14 @@
 import React from "react";
-import { View, StyleSheet, useWindowDimensions } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { BoardCell } from "./BoardCell";
 import { GrassTuft } from "./GrassTuft";
 import type { PlantTypeName } from "../plants";
+import {
+  CELL_GAP,
+  PATCH_PADDING,
+  SOIL_PADDING,
+  cellSizeFor,
+} from "./boardLayout";
 
 /** Board data: 8×8 grid where each cell is a PlantTypeName or null. */
 export type BoardData = (PlantTypeName | null)[][];
@@ -16,43 +22,35 @@ export interface GameBoardProps {
   selectedCell?: string | null;
   /** Called when a cell is tapped. Receives (row, col). */
   onCellPress?: (row: number, col: number) => void;
+  /**
+   * The square edge length (in design px) the patch may occupy — the smaller
+   * of the board column's width and height. The container (game.tsx) owns this
+   * measurement; the board is a pure presenter that fills the space it's given.
+   * Defaults to a sensible size for standalone rendering / tests.
+   */
+  availableSize?: number;
 }
 
-const BOARD_SIZE = 8;
-const GAP = 6;
+const GAP = CELL_GAP;
+const DEFAULT_AVAILABLE_SIZE = 600;
 
 /**
  * Game board grid presenter — renders the soil-patch with 8×8 grid of cells.
  * Matches the prototype's .patch > .soil > .grid structure.
  *
- * Responsive: calculates cell size from the constraining dimension.
- * - Landscape iPad (primary): uses height as constraint (~88% of viewport)
- * - Portrait / smaller screens: uses width as constraint (~92% of viewport)
- * Works across iPad Mini (1024×768) through iPad Pro 12.9" (2732×2048).
+ * Sizing is driven entirely by `availableSize` (the square space the container
+ * allots), so the board can never be wider than its column — the previous bug,
+ * where the cell size was derived from the full window height while the board
+ * lived in a 60%-width column, clipped the board on every iPad except the Mini.
  */
 export function GameBoard({
   board,
   highlightedCells,
   selectedCell,
   onCellPress,
+  availableSize = DEFAULT_AVAILABLE_SIZE,
 }: GameBoardProps) {
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const isLandscape = windowWidth > windowHeight;
-
-  // Calculate cell size from the constraining dimension
-  // Account for patch padding (18*2), soil padding (14*2), gaps between cells
-  const patchPadding = 18 * 2;
-  const soilPadding = 14 * 2;
-  const totalGaps = GAP * (BOARD_SIZE - 1);
-
-  // In landscape, height constrains. In portrait, width constrains.
-  const constrainingDimension = isLandscape
-    ? windowHeight * 0.88
-    : windowWidth * 0.92;
-
-  const availableForCells =
-    constrainingDimension - patchPadding - soilPadding - totalGaps;
-  const cellSize = Math.max(32, Math.floor(availableForCells / BOARD_SIZE));
+  const cellSize = cellSizeFor(availableSize);
 
   return (
     <View style={styles.patch}>
@@ -82,15 +80,14 @@ export function GameBoard({
               {row.map((cell, c) => {
                 const key = `${r}-${c}`;
                 return (
-                  <View key={key} style={{ marginRight: c < 7 ? GAP : 0 }}>
-                    <BoardCell
-                      plant={cell}
-                      highlighted={highlightedCells?.has(key) ?? false}
-                      selected={selectedCell === key}
-                      onPress={() => onCellPress?.(r, c)}
-                      size={cellSize}
-                    />
-                  </View>
+                  <BoardCell
+                    key={key}
+                    plant={cell}
+                    highlighted={highlightedCells?.has(key) ?? false}
+                    selected={selectedCell === key}
+                    onPress={() => onCellPress?.(r, c)}
+                    size={cellSize}
+                  />
                 );
               })}
             </View>
@@ -105,7 +102,7 @@ const styles = StyleSheet.create({
   patch: {
     position: "relative",
     borderRadius: 30,
-    padding: 18,
+    padding: PATCH_PADDING,
     // Grass gradient background
     backgroundColor: "#6aa64b",
     // Card shadow matching prototype
@@ -116,7 +113,7 @@ const styles = StyleSheet.create({
   },
   soil: {
     borderRadius: 22,
-    padding: 14,
+    padding: SOIL_PADDING,
     backgroundColor: "#4e3623",
     // Inset shadow approximation
     shadowColor: "#000",
@@ -125,10 +122,11 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   grid: {
-    gap: GAP,
+    gap: GAP, // vertical spacing between rows
   },
   row: {
     flexDirection: "row",
+    gap: GAP, // horizontal spacing between cells (single gap mechanism)
   },
   // Tuft positions matching prototype
   tuftPos1: { position: "absolute", top: -14, left: "6%" },

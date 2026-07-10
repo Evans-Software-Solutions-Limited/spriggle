@@ -9,6 +9,14 @@ import {
 import { useTheme, fonts, radii, spacing } from "../src/theme";
 import { GameBoard } from "../src/components/board";
 import type { BoardData } from "../src/components/board";
+import {
+  COLUMN_GAP,
+  BOARD_COL_FLEX,
+} from "../src/components/board/boardLayout";
+import {
+  DesignFrame,
+  useFrameSize,
+} from "../src/components/layout/DesignFrame";
 import { useGameInteraction } from "../src/hooks/useGameInteraction";
 import { useGameSession } from "../src/hooks/useGameSession";
 import { getLocalStorageService } from "../src/services/localStorage";
@@ -24,16 +32,36 @@ function findGroup(board: BoardData, row: number, col: number) {
 }
 
 /**
- * Game screen — container.
+ * Game screen. The outer component owns the DesignFrame (fixed 1194×834 canvas
+ * scaled to the device); the inner container reads the frame size and drives
+ * the game. Splitting them keeps `useFrameSize` inside the frame's provider.
+ */
+export default function GameScreen() {
+  return (
+    <DesignFrame>
+      <GameScreenContent />
+    </DesignFrame>
+  );
+}
+
+/**
+ * Game screen container.
  * Landscape two-panel: board-col (left ~60%) + rail (right ~40%).
  * Matches prototype's Screens.game layout.
  */
-export default function GameScreen() {
+function GameScreenContent() {
   const router = useRouter();
   const { colors } = useTheme();
+  const frame = useFrameSize();
   const session = useGameSession();
   const board = session.state.board as BoardData;
   const score = session.state.score;
+
+  // The board is square and must fit inside its column, constrained by whichever
+  // of the column width or the frame height is smaller. Deriving the size here
+  // (the container) keeps GameBoard a pure presenter.
+  const boardColWidth = (frame.width - COLUMN_GAP) * BOARD_COL_FLEX;
+  const boardAvailableSize = Math.min(boardColWidth, frame.height);
 
   // Hydration: attempt to resume a persisted, still-in-progress game on mount;
   // otherwise start fresh. `hydrated` gates the persistence effect so we never
@@ -133,6 +161,7 @@ export default function GameScreen() {
           highlightedCells={interaction.highlightedCells}
           selectedCell={interaction.selectedCell}
           onCellPress={interaction.handleCellPress}
+          availableSize={boardAvailableSize}
         />
       </View>
 
@@ -322,14 +351,14 @@ export default function GameScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, flexDirection: "row", gap: 26 },
+  screen: { flex: 1, flexDirection: "row", gap: COLUMN_GAP },
   boardCol: {
-    flex: 0.6,
+    flex: BOARD_COL_FLEX,
     alignItems: "center",
     justifyContent: "center",
   },
   rail: {
-    flex: 0.4,
+    flex: 1 - BOARD_COL_FLEX,
     paddingVertical: spacing.s4,
     paddingRight: spacing.s4,
     gap: 14,
