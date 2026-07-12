@@ -2,7 +2,6 @@ import React from "react";
 import { render, fireEvent, act, screen } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "../../src/theme";
-import { OnboardingProvider } from "../../src/onboarding";
 import OnboardingScreen from "../onboarding";
 
 // react-native-reanimated is mocked via __mocks__/react-native-reanimated.js;
@@ -15,6 +14,21 @@ let mockParams: Record<string, string> = {};
 jest.mock("expo-router", () => ({
   useRouter: () => ({ replace: mockReplace, back: mockBack, push: jest.fn() }),
   useLocalSearchParams: () => mockParams,
+}));
+
+// Stub the onboarding context synchronously. The real provider hydrates from
+// AsyncStorage in an effect; awaiting that flush via `act(async () => {})` under
+// fake timers is a known hang (React's async-act waits on a faked timer). The
+// screen only needs `setOnboarded`, so a synchronous stub keeps these tests
+// deterministic and fully sync. tutorialData is imported directly (not via this
+// barrel), so it stays real.
+jest.mock("../../src/onboarding", () => ({
+  useOnboarding: () => ({
+    isOnboarded: false,
+    isHydrating: false,
+    setOnboarded: jest.fn(),
+  }),
+  OnboardingProvider: ({ children }: { children?: unknown }) => children,
 }));
 
 // Timings mirror app/onboarding.tsx.
@@ -34,11 +48,9 @@ function renderTutorial() {
         insets: { top: 0, left: 0, right: 0, bottom: 0 },
       }}
     >
-      <OnboardingProvider>
-        <ThemeProvider>
-          <OnboardingScreen />
-        </ThemeProvider>
-      </OnboardingProvider>
+      <ThemeProvider>
+        <OnboardingScreen />
+      </ThemeProvider>
     </SafeAreaProvider>,
   );
 }
@@ -48,8 +60,6 @@ const cells = () => screen.getAllByLabelText(/at cell|Empty cell/);
 const tap = (row: number, col: number) =>
   fireEvent.press(cells()[row * 8 + col]);
 const advance = (ms: number) => act(() => jest.advanceTimersByTime(ms));
-/** Flush the providers' async hydration (AsyncStorage reads) after mount. */
-const flush = () => act(async () => {});
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -63,9 +73,8 @@ afterEach(() => {
 });
 
 describe("interactive onboarding — tap gating", () => {
-  it("ignores a tap on a non-scripted cell (wrong cell shakes, no advance)", async () => {
+  it("ignores a tap on a non-scripted cell (wrong cell shakes, no advance)", () => {
     renderTutorial();
-    await flush();
     expect(screen.getByText(STEP0)).toBeTruthy();
 
     // (0,0) is filler, not part of the dig group.
@@ -77,9 +86,8 @@ describe("interactive onboarding — tap gating", () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it("advances to the swap beat when the scripted dig cell is tapped", async () => {
+  it("advances to the swap beat when the scripted dig cell is tapped", () => {
     renderTutorial();
-    await flush();
 
     // (2,2) is the centre of the seeded dig group.
     tap(2, 2);
@@ -89,9 +97,8 @@ describe("interactive onboarding — tap gating", () => {
     expect(screen.queryByText(STEP0)).toBeNull();
   });
 
-  it("ignores Skip while a dig animation is still settling", async () => {
+  it("ignores Skip while a dig animation is still settling", () => {
     renderTutorial();
-    await flush();
 
     // Start the dig (locks interaction) then hit Skip mid-animation.
     tap(2, 2);
@@ -106,9 +113,8 @@ describe("interactive onboarding — tap gating", () => {
 });
 
 describe("interactive onboarding — full flow", () => {
-  it("completes all three beats and routes into the game (first-run)", async () => {
+  it("completes all three beats and routes into the game (first-run)", () => {
     renderTutorial();
-    await flush();
 
     // Beat 1: dig the seeded group.
     tap(2, 2);
@@ -129,10 +135,9 @@ describe("interactive onboarding — full flow", () => {
     expect(mockBack).not.toHaveBeenCalled();
   });
 
-  it("returns to the game (not /game) when opened from the pause sheet", async () => {
+  it("returns to the game (not /game) when opened from the pause sheet", () => {
     mockParams = { from: "game" };
     renderTutorial();
-    await flush();
 
     fireEvent.press(screen.getByLabelText("Skip tutorial"));
 
