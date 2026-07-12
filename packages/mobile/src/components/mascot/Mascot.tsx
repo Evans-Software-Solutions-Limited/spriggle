@@ -52,7 +52,16 @@ export function Mascot({
   style,
 }: MascotProps) {
   const gid = useId().replace(/:/g, "");
-  const height = (size * 240) / 220;
+  // The art (raised right arm + trowel, and the swap-pose flower) spills past
+  // the nominal 0–220 body box — to ~x=230 on the right and ~x=31 on the left.
+  // In the browser prototype the root <svg> shows that overflow; react-native-svg
+  // instead CLIPS to the viewBox, which lopped the arms/tool off ("boxed"). We
+  // widen the viewBox to -18..238 so all art fits, keeping the body centred, and
+  // scale `width` by the same factor so the character renders at the same size.
+  const VIEW_W = 256; // was 220
+  const VIEW_H = 240;
+  const width = (size * VIEW_W) / 220;
+  const height = (size * VIEW_H) / 220;
 
   // Gentle continuous sway: translateY 0 -> -5 and rotate -1deg -> 1deg, each
   // leg of the loop is a 1700ms-out/1700ms-back withSequence (~3400ms round
@@ -100,8 +109,8 @@ export function Mascot({
 
   const svg = (
     <Svg
-      viewBox="0 0 220 240"
-      width={size}
+      viewBox="-18 0 256 240"
+      width={width}
       height={height}
       accessibilityLabel="Spriggle mascot"
     >

@@ -36,11 +36,14 @@ export function BoardCell({
   onPress,
   size,
 }: BoardCellProps) {
-  // Bob animation for highlighted cells
+  // Bob animation. The prototype's only cell-attention animation is `cellBob`
+  // (a 1.6s ±3px bob on `.cell.hl`). We run it for both the pre-dig highlight
+  // AND the swap selection so a picked cell reads as "alive" and matches the
+  // prototype's motion (the selection ring alone was static).
   const bobY = useSharedValue(0);
 
   React.useEffect(() => {
-    if (highlighted) {
+    if (highlighted || selected) {
       bobY.value = withRepeat(
         withSequence(
           withTiming(-3, { duration: 800, easing: Easing.inOut(Easing.ease) }),
@@ -52,7 +55,7 @@ export function BoardCell({
     } else {
       bobY.value = withTiming(0, { duration: 200 });
     }
-  }, [highlighted, bobY]);
+  }, [highlighted, selected, bobY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bobY.value }],
