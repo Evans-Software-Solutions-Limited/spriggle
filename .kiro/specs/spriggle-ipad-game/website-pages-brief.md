@@ -50,10 +50,10 @@ not collected. Publishing it before the fix would make it inaccurate.
 
 Two new public pages, plus two links in the site footer.
 
-| Route | Purpose | Goes in ASC field |
-|---|---|---|
-| `/spriggle/privacy` | Privacy policy | App Information → Privacy Policy URL |
-| `/spriggle/support` | Support / contact | Version page → Support URL |
+| Route               | Purpose           | Goes in ASC field                    |
+| ------------------- | ----------------- | ------------------------------------ |
+| `/spriggle/privacy` | Privacy policy    | App Information → Privacy Policy URL |
+| `/spriggle/support` | Support / contact | Version page → Support URL           |
 
 Out of scope: a marketing page for Spriggle. The Marketing URL field in ASC is
 optional and can stay empty.
