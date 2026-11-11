@@ -96,6 +96,9 @@ jobs:
       # --wait so the build finishes before submit; otherwise `--latest`
       # below would pick up a stale (previously finished) build.
       - name: EAS Build (iOS production)
+        env:
+          # Silence the Expo Go advisory; it doesn't affect store builds.
+          EAS_BUILD_NO_EXPO_GO_WARNING: "true"
         run: |
           eas build \
             --platform ios \
